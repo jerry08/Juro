@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{26C3E98C-2FB1-48D0-84FE-14D41529A95A}"
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
+		Directory.Build.props = Directory.Build.props
 		README.md = README.md
 	EndProjectSection
 EndProject
