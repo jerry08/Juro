@@ -4,7 +4,7 @@ namespace Juro.Models.Manga;
 
 public class MangaChapterPage
 {
-    public string? Image { get; set; }
+    public string Image { get; set; } = default!;
 
     public int Page { get; set; }
 

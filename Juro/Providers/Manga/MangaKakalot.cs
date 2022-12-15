@@ -156,7 +156,7 @@ public class MangaKakalot : MangaParser
         var pages = document.DocumentNode.SelectNodes(".//div[@class='container-chapter-reader']/img")
             .Select(el => new MangaChapterPage()
             {
-                Image = el.Attributes["src"]?.Value,
+                Image = el.Attributes["src"]!.Value,
                 Page = i++,
                 Title = el.Attributes["alt"]?.Value
                     .Replace("- MangaNato.com", "")

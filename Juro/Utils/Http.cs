@@ -19,7 +19,7 @@ public static class Http
         //if (handler.SupportsAutomaticDecompression)
         //    handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-        handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+        //handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
 
         var httpClient = new HttpClient(handler, true);
 

@@ -55,7 +55,7 @@ public class FlixHQ : MovieParser
 
             movies.Add(new()
             {
-                Id = node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value[1..] ?? string.Empty,
+                Id = node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value.Substring(1) ?? string.Empty,
                 Title = node.SelectSingleNode(".//div[@class='film-detail']/h2/a")?.Attributes["title"]?.Value,
                 Url = $"{BaseUrl}{node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value}",
                 Image = node.SelectSingleNode(".//div[@class='film-poster']/img")?.Attributes["data-src"]?.Value,
@@ -80,7 +80,7 @@ public class FlixHQ : MovieParser
 
         var movieInfo = new MovieInfo()
         {
-            Id = new Stack<string>(mediaId.Split("to/")).Pop(),
+            Id = new Stack<string>(mediaId.Split(new[] { "to/" }, StringSplitOptions.None)).Pop(),
         };
 
         var response = await _http.ExecuteAsync(mediaId, cancellationToken);
@@ -137,7 +137,7 @@ public class FlixHQ : MovieParser
                     {
                         Id = nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1],
                         Title = nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1],
-                        Number = Convert.ToInt32(nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.Split(':')[0][3..].Trim()),
+                        Number = Convert.ToInt32(nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.Split(':')[0].Substring(3).Trim()),
                         Season = season,
                         Url = $"{BaseUrl}/ajax/v2/episode/servers/{nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1]}"
                     });
@@ -191,7 +191,7 @@ public class FlixHQ : MovieParser
             {
                 Name = mediaId.Contains("movie")
                     ? nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.ToLower()
-                    : nodes[i].SelectSingleNode(".//a").Attributes["title"].Value[6..].Trim().ToLower(),
+                    : nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.Substring(6).Trim().ToLower(),
                 Url = $"{BaseUrl}/{mediaId}.{(!mediaId.Contains("movie") ? nodes[i].SelectSingleNode(".//a").Attributes["data-id"].Value : nodes[i].SelectSingleNode(".//a").Attributes["data-linkid"].Value)}"
                     .Replace(!mediaId.Contains("movie") ? "/tv/" : "/movie/", !mediaId.Contains("movie") ? "/watch-tv/" : "/watch-movie/")
             });
@@ -221,7 +221,7 @@ public class FlixHQ : MovieParser
 
         var servers = await GetEpisodeServersAsync(episodeId, mediaId, cancellationToken);
 
-        var serverIndex = servers.FindIndex(x => x.Name.ToLower() == Enum.GetName(server)!.ToLower());
+        var serverIndex = servers.FindIndex(x => x.Name.ToLower() == Enum.GetName(typeof(StreamingServers), server)!.ToLower());
 
         if (serverIndex == -1)
             throw new Exception($"Server {server} not found");

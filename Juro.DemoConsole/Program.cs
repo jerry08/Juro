@@ -1,4 +1,5 @@
 ﻿using Juro.Clients;
+using Juro.Utils;
 
 namespace Juro.DemoConsole;
 
@@ -28,6 +29,12 @@ internal class Program
         //var results = await client.MangaKakalot.SearchAsync("Tomodachi Game");
         var results = await client.Mangadex.SearchAsync("solo leveling");
         var mangaInfo = await client.Mangadex.GetMangaInfoAsync(results[0].Id);
-        var chapters = await client.Mangadex.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
+        var pages = await client.Mangadex.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
+
+        // Download the image
+        var fileName = $@"{Environment.CurrentDirectory}\page1.png";
+
+        var downloader = new Downloader();
+        await downloader.DownloadAsync(pages[0].Image, pages[0].HeaderForImage, fileName);
     }
 }
