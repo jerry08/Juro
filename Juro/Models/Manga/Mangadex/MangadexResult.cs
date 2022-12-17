@@ -6,14 +6,14 @@ public class MangadexResult : MangaResult
 {
     public List<string> AltTitles { get; set; } = new();
 
-    public string Description { get; set; } = default!;
+    public List<MangadexDescription> Descriptions { get; set; } = new();
 
     public MediaStatus Status { get; set; }
     
     /// <summary>
     /// Year released
     /// </summary>
-    public int ReleaseDate { get; set; }
+    public int? ReleaseDate { get; set; }
     
     public string? ContentRating { get; set; }
 

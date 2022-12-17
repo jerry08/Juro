@@ -62,20 +62,25 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
         {
             Id = manga["id"]!.ToString(),
             Title = manga["attributes"]!["title"]!.ToList()[0].Value<JProperty>()!.Value.ToString(),
-            AltTitles = manga["attributes"]!["altTitles"]!
+            AltTitles = manga["attributes"]!["altTitles"]?
                 .Children<JObject>()
                 .OrderByDescending(x => "en")
                 .ThenBy(x => x.Properties().First().Name)
                 .Select(x => x.Properties().First().Value!.ToString())
-                .ToList(),
-            Description = manga["attributes"]!["description"]!["en"]!.ToString(),
-            Status = manga["attributes"]!["status"]!.ToString().ToLower() switch
+                .ToList() ?? new(),
+            //Description = manga["attributes"]!["description"]!["en"]!.ToString(),
+            Descriptions = manga["attributes"]!["description"]?.Select(x => new MangadexDescription()
+            {
+                Description = ((JProperty)x).Name,
+                Language = ((JProperty)x).Value?.ToString()
+            }).ToList() ?? new(),
+            Status = manga["attributes"]!["status"]?.ToString().ToLower() switch
             {
                 "completed" => MediaStatus.Completed,
                 "ongoing" => MediaStatus.Ongoing,
                 _ => MediaStatus.Unknown,
             },
-            ReleaseDate = Convert.ToInt32(manga["attributes"]!["year"]!),
+            ReleaseDate = int.TryParse(manga["attributes"]!["year"]?.ToString(), out int year) ? year : null,
             ContentRating = manga["attributes"]!["contentRating"]!.ToString(),
             LastVolume = manga["attributes"]!["lastVolume"]!.ToString(),
             LastChapter = manga["attributes"]!["lastChapter"]!.ToString(),

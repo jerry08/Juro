@@ -63,7 +63,6 @@ public class MangaKakalot : MangaParser
         };
 
         var url = mangaId.Contains("read") ? BaseUrl : "https://readmanganato.com";
-
         var response = await _http.ExecuteAsync($"{url}/{mangaId}", cancellationToken);
 
         var document = new HtmlDocument();
