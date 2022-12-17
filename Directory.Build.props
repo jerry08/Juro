@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Company>Jerro</Company>
     <Copyright>Copyright (C) Jerry Berry</Copyright>
     <LangVersion>latest</LangVersion>
@@ -19,8 +19,8 @@
     <Authors>$(Company)</Authors>
     <PackageTags>manga movie parser scraping crawler flixhq mangadex mangakakalot</PackageTags>
     <PackageProjectUrl>https://github.com/jerry08/Juro</PackageProjectUrl>
-    <!--<PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageIcon>favicon.png</PackageIcon>-->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!--<PackageIcon>favicon.png</PackageIcon>-->
     <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -28,9 +28,9 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
-  <!--<ItemGroup>
+  <ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="" Visible="false" />
-    <None Include="../favicon.png" Pack="true" PackagePath="" Visible="false" />
-  </ItemGroup>-->
+    <!--<None Include="../favicon.png" Pack="true" PackagePath="" Visible="false" />-->
+  </ItemGroup>
 
 </Project>
