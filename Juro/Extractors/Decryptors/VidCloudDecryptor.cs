@@ -111,23 +111,18 @@ internal class VidCloudDecryptor
 
             // Create the streams used for encryption.
             msEncrypt = new MemoryStream();
-            using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-            {
-                using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
-                {
+            using CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write);
+            using StreamWriter swEncrypt = new StreamWriter(csEncrypt);
 
-                    //Write all data to the stream.
-                    swEncrypt.Write(plainText);
-                    swEncrypt.Flush();
-                    swEncrypt.Close();
-                }
-            }
+            //Write all data to the stream.
+            swEncrypt.Write(plainText);
+            swEncrypt.Flush();
+            swEncrypt.Close();
         }
         finally
         {
             // Clear the RijndaelManaged object.
-            if (aesAlg != null)
-                aesAlg.Clear();
+            aesAlg?.Clear();
         }
 
         // Return the encrypted bytes from the memory stream.
@@ -163,25 +158,18 @@ internal class VidCloudDecryptor
             // Create a decrytor to perform the stream transform.
             var decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
             // Create the streams used for decryption.
-            using (var msDecrypt = new MemoryStream(cipherText))
-            {
-                using (var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                {
-                    using (var srDecrypt = new StreamReader(csDecrypt))
-                    {
-                        // Read the decrypted bytes from the decrypting stream
-                        // and place them in a string.
-                        plaintext = srDecrypt.ReadToEnd();
-                        srDecrypt.Close();
-                    }
-                }
-            }
+            using var msDecrypt = new MemoryStream(cipherText);
+            using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
+            using var srDecrypt = new StreamReader(csDecrypt);
+            // Read the decrypted bytes from the decrypting stream
+            // and place them in a string.
+            plaintext = srDecrypt.ReadToEnd();
+            srDecrypt.Close();
         }
         finally
         {
             // Clear the RijndaelManaged object.
-            if (aesAlg != null)
-                aesAlg.Clear();
+            aesAlg?.Clear();
         }
 
         return plaintext;

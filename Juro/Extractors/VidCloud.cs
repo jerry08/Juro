@@ -44,7 +44,8 @@ internal class VidCloud : VideoExtractor
 
         if (!JsonExtensions.IsValidJson(sourcesJson))
         {
-            var key = await _http.ExecuteAsync("https://raw.githubusercontent.com/consumet/rapidclown/rabbitstream/key.txt", cancellationToken);
+            //var key = await _http.ExecuteAsync("https://raw.githubusercontent.com/consumet/rapidclown/rabbitstream/key.txt", cancellationToken);
+            var key = await _http.ExecuteAsync("https://raw.githubusercontent.com/enimax-anime/key/e4/key.txt", cancellationToken);
 
             var decryptor = new VidCloudDecryptor();
             sourcesJson = decryptor.Decrypt(sourcesJson, key);
