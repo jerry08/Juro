@@ -12,11 +12,14 @@ public class MangaClient
 
     public MangaPill MangaPill { get; }
 
+    public MangaKatana MangaKatana { get; }
+
     public MangaClient(HttpClient httpClient)
     {
         MangaKakalot = new(httpClient);
         Mangadex = new(httpClient);
         MangaPill = new(httpClient);
+        MangaKatana = new(httpClient);
     }
 
     /// <summary>
