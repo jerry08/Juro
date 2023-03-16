@@ -1,14 +1,14 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
+using Juro.Extractors.Decryptors;
 using Juro.Models;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Juro.Extractors.Decryptors;
+using Newtonsoft.Json.Linq;
 
 namespace Juro.Extractors;
 
@@ -56,10 +56,10 @@ internal class VidCloud : VideoExtractor
         var subtitles = data["tracks"]!
             .Where(x => x["kind"]?.ToString() == "captions")
             .Select(track => new Subtitle()
-        {
-            Url = track["file"]!.ToString(),
-            Language = track["label"]!.ToString()
-        }).ToList();
+            {
+                Url = track["file"]!.ToString(),
+                Language = track["label"]!.ToString()
+            }).ToList();
 
         var list = sources.Select(source => new VideoSource()
         {

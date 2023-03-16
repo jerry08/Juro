@@ -1,7 +1,7 @@
-﻿using System.Net.Http;
+﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Juro.Models.Movies;
 using Juro.Models.Videos;
 
@@ -10,7 +10,7 @@ namespace Juro.Providers.Movies;
 public abstract class MovieParser<TMovieResult, TMovieInfo, TEpisodeServer, TVideoSource>
 {
     public HttpClient _http;
-    
+
     public abstract string Name { get; set; }
 
     public virtual string BaseUrl => default!;

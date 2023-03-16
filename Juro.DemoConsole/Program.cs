@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Juro.Clients;
-using Juro.Utils;
 using Juro.DemoConsole.Utils;
+using Juro.Utils;
 
 namespace Juro.DemoConsole;
 

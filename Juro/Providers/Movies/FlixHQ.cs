@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Net;
+using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using HtmlAgilityPack;
-using Newtonsoft.Json.Linq;
 using Juro.Extractors;
-using Juro.Models.Videos;
 using Juro.Models.Movies;
+using Juro.Models.Videos;
 using Juro.Utils.Extensions;
+using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Movies;
 
@@ -184,7 +184,7 @@ public class FlixHQ : MovieParser
         document.LoadHtml(response);
 
         var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
-       
+
         for (int i = 0; i < nodes.Count; i++)
         {
             servers.Add(new()

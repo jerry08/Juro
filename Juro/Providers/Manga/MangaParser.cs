@@ -1,7 +1,7 @@
-﻿using System.Net.Http;
+﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Juro.Models.Manga;
 
 namespace Juro.Providers.Manga;
@@ -9,7 +9,7 @@ namespace Juro.Providers.Manga;
 public abstract class MangaParser<TMangaResult, TMangaInfo, TMangaChapterPage>
 {
     public HttpClient _http;
-    
+
     public abstract string Name { get; set; }
 
     public virtual string BaseUrl => default!;

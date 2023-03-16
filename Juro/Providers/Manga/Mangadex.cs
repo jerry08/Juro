@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 using Juro.Models.Manga;
 using Juro.Models.Manga.Mangadex;
 using Juro.Utils.Extensions;
+using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Manga;
 
@@ -159,10 +159,10 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
             return new();
 
         var pages = data!["chapter"]!["data"]!.Select(id => new MangaChapterPage()
-            {
-                Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
-                Page = Convert.ToInt32(id.ToString().Split('-')[0])
-            }).ToList();
+        {
+            Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
+            Page = Convert.ToInt32(id.ToString().Split('-')[0])
+        }).ToList();
 
         return pages;
     }

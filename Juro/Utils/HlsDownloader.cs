@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using DotNetTools.JGrabber;
 using DotNetTools.JGrabber.Grabbed;
 
@@ -99,7 +99,8 @@ public class HlsDownloader : Downloader
             var total = 0;
 
             var tasks = Enumerable.Range(0, stream.Segments.Count).Select(i =>
-                Task.Run(async () => {
+                Task.Run(async () =>
+                {
                     using var access = await downloadSemaphore.AcquireAsync(cancellationToken);
 
                     var segment = stream.Segments[i];

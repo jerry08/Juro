@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
-using Juro.Utils;
 using Juro.Providers.Manga;
+using Juro.Utils;
 
 namespace Juro.Clients;
 
