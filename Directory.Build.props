@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
     <IsPackable>false</IsPackable>
+    <NoWarn>CA1304,RCS1155</NoWarn>
   </PropertyGroup>
 
   <!-- Disable nullability warnings on frameworks where BCL is not annotated -->

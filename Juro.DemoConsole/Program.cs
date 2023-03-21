@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Httpz;
 using Juro.Clients;
-using Juro.DemoConsole.Utils;
-using Juro.Utils;
 
 namespace Juro.DemoConsole;
 
@@ -12,11 +11,22 @@ internal class Program
     {
         Console.WriteLine("Hello, World!");
 
-        await TestMovie();
+        await TestAnime();
         //await TestManga();
+        //await TestMovie();
     }
 
-    static async Task TestMovie()
+    private static async Task TestAnime()
+    {
+        var client = new AnimeClient();
+        var animes = await client.Gogoanime.SearchAsync("anohana");
+        var animeInfo = await client.Gogoanime.GetAnimeInfoAsync(animes[0].Id);
+        var episodes = await client.Gogoanime.GetEpisodesAsync(animes[0].Id);
+        var videoServers = await client.Gogoanime.GetVideoServersAsync(episodes[0].Id);
+        var videos = await client.Gogoanime.GetVideosAsync(videoServers[4]);
+    }
+
+    private static async Task TestMovie()
     {
         var client = new MovieClient();
         var movies = await client.FlixHQ.SearchAsync("spongebob");
@@ -32,16 +42,16 @@ internal class Program
         // Download the stream
         var fileName = $@"{Environment.CurrentDirectory}\test1.ts";
 
-        var downloader = new HlsDownloader();
-
-        using var progress = new ConsoleProgress();
-
-        var qualities = await downloader.GetHlsStreamMetadatasAsync(sources[0].VideoUrl, sources[0].Headers);
-        var stream = await qualities[0].Stream;
-        await downloader.DownloadAllTsThenMergeAsync(stream, sources[0].Headers, fileName, progress, 15);
+        //var downloader = new HlsDownloader();
+        //
+        //using var progress = new ConsoleProgress();
+        //
+        //var qualities = await downloader.GetHlsStreamMetadatasAsync(sources[0].VideoUrl, sources[0].Headers);
+        //var stream = await qualities[0].Stream;
+        //await downloader.DownloadAllTsThenMergeAsync(stream, sources[0].Headers, fileName, progress, 15);
     }
 
-    static async Task TestManga()
+    private static async Task TestManga()
     {
         var client = new MangaClient();
         //var results = await client.MangaKakalot.SearchAsync("Tomodachi Game");
@@ -53,6 +63,10 @@ internal class Program
         var fileName = $@"{Environment.CurrentDirectory}\page1.png";
 
         var downloader = new Downloader();
-        await downloader.DownloadAsync(pages[0].Image, pages[0].HeaderForImage, fileName);
+        await downloader.DownloadAsync(
+            pages[0].Image,
+            fileName,
+            headers: pages[0].HeaderForImage
+        );
     }
 }

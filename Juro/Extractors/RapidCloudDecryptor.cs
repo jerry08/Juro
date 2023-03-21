@@ -4,12 +4,12 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Juro.Extractors.Decryptors;
+namespace Juro.Extractors;
 
 /// <summary>
 /// An Aes Encryptor/Decryptor
 /// </summary>
-internal class VidCloudDecryptor
+public class RapidCloudDecryptor
 {
     public string Encrypt(string plainText, string passphrase)
     {

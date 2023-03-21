@@ -44,7 +44,7 @@ public class MangaPill : MangaParser
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
-        var url = $"{BaseUrl}{mangaId}";
+        var url = BaseUrl + mangaId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         var document = new HtmlDocument();
@@ -81,13 +81,13 @@ public class MangaPill : MangaParser
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
-        var url = $"{BaseUrl}{chapterId}";
+        var url = BaseUrl + chapterId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         var document = new HtmlDocument();
         document.LoadHtml(response);
 
-        int i = 1;
+        var i = 1;
 
         return document.DocumentNode.SelectNodes(".//img[@class='js-page']")
             .Select(el => new MangaChapterPage()

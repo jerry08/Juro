@@ -80,7 +80,7 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
                 "ongoing" => MediaStatus.Ongoing,
                 _ => MediaStatus.Unknown,
             },
-            ReleaseDate = int.TryParse(manga["attributes"]!["year"]?.ToString(), out int year) ? year : null,
+            ReleaseDate = int.TryParse(manga["attributes"]!["year"]?.ToString(), out var year) ? year : null,
             ContentRating = manga["attributes"]!["contentRating"]!.ToString(),
             LastVolume = manga["attributes"]!["lastVolume"]!.ToString(),
             LastChapter = manga["attributes"]!["lastChapter"]!.ToString(),

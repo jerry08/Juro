@@ -150,7 +150,7 @@ public class MangaKakalot : MangaParser
         var document = new HtmlDocument();
         document.LoadHtml(response);
 
-        int i = 1;
+        var i = 1;
 
         var pages = document.DocumentNode.SelectNodes(".//div[@class='container-chapter-reader']/img")
             .Select(el => new MangaChapterPage()

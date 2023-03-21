@@ -57,7 +57,7 @@ public class FlixHQ : MovieParser
             {
                 Id = node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value.Substring(1) ?? string.Empty,
                 Title = node.SelectSingleNode(".//div[@class='film-detail']/h2/a")?.Attributes["title"]?.Value,
-                Url = $"{BaseUrl}{node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value}",
+                Url = BaseUrl + (node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value),
                 Image = node.SelectSingleNode(".//div[@class='film-poster']/img")?.Attributes["data-src"]?.Value,
                 ReleasedDate = releasedDate,
                 Type = document.DocumentNode.SelectSingleNode(".//div[@class='film-detail']/div[@class='fd-infor']/span[contains(@class, 'float-right')]")?.InnerText?.ToLower() == "movie"
@@ -131,7 +131,7 @@ public class FlixHQ : MovieParser
 
                 var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
 
-                for (int i = 0; i < nodes.Count; i++)
+                for (var i = 0; i < nodes.Count; i++)
                 {
                     movieInfo.Episodes.Add(new()
                     {
@@ -185,7 +185,7 @@ public class FlixHQ : MovieParser
 
         var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
 
-        for (int i = 0; i < nodes.Count; i++)
+        for (var i = 0; i < nodes.Count; i++)
         {
             servers.Add(new()
             {
