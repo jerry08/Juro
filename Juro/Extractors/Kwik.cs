@@ -87,8 +87,11 @@ public class Kwik : IVideoExtractor
 
         request.Content = formContent;
 
-        using var response2 = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead
-, cancellationToken);
+        using var response2 = await http.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
 
         var mp4Url = response2.Headers.Location!;
 

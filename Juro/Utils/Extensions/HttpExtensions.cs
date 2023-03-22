@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Juro.Utils.Extensions;
 
-public static class HttpExtensions
+internal static class HttpExtensions
 {
     public static async ValueTask<HttpResponseMessage> HeadAsync(
         this HttpClient http,
