@@ -150,7 +150,6 @@ public static class Http
             $"Chrome/{major}.0.{build}.{branchBuild} Safari/537.36";
     }
 
-
     private static readonly byte[] FirefoxVersions = { 64, 63, 62, 60, 58, 52, 51, 46, 45 };
 
     /// <summary>
