@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using Juro.Providers.Movies;
 using Juro.Utils;
 
@@ -8,15 +9,15 @@ public class MovieClient
 {
     public FlixHQ FlixHQ { get; }
 
-    public MovieClient(HttpClient httpClient)
+    public MovieClient(Func<HttpClient> httpClientProvider)
     {
-        FlixHQ = new(httpClient);
+        FlixHQ = new(httpClientProvider);
     }
 
     /// <summary>
     /// Initializes an instance of <see cref="MovieClient"/>.
     /// </summary>
-    public MovieClient() : this(Http.Client)
+    public MovieClient() : this(Http.ClientProvider)
     {
     }
 }

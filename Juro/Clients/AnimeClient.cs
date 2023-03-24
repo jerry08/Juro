@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using Juro.Providers.Anime;
 using Juro.Utils;
 
@@ -12,17 +13,20 @@ public class AnimeClient
 
     public AnimePahe AnimePahe { get; }
 
-    public AnimeClient(HttpClient httpClient)
+    /// <summary>
+    /// Initializes an instance of <see cref="AnimeClient"/>.
+    /// </summary>
+    public AnimeClient(Func<HttpClient> httpClientProvider)
     {
-        Gogoanime = new(httpClient);
-        Zoro = new(httpClient);
-        AnimePahe = new(httpClient);
+        Gogoanime = new(httpClientProvider);
+        Zoro = new(httpClientProvider);
+        AnimePahe = new(httpClientProvider);
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="MangaClient"/>.
+    /// Initializes an instance of <see cref="AnimeClient"/>.
     /// </summary>
-    public AnimeClient() : this(Http.Client)
+    public AnimeClient() : this(Http.ClientProvider)
     {
     }
 }

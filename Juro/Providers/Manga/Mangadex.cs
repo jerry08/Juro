@@ -13,6 +13,8 @@ namespace Juro.Providers.Manga;
 
 public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
 {
+    private readonly HttpClient _http;
+
     private readonly string _apiUrl = "https://api.mangadex.org";
 
     public override string Name { get; set; } = "Mangadex";
@@ -21,8 +23,9 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
 
     public override string Logo => "https://pbs.twimg.com/profile_images/1391016345714757632/xbt_jW78_400x400.jpg";
 
-    public Mangadex(HttpClient httpClient) : base(httpClient)
+    public Mangadex(Func<HttpClient> httpClientProvider)
     {
+        _http = httpClientProvider();
     }
 
     public override async Task<List<MangadexResult>> SearchAsync(

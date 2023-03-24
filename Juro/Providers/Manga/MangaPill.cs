@@ -12,14 +12,17 @@ namespace Juro.Providers.Manga;
 
 public class MangaPill : MangaParser
 {
+    private readonly HttpClient _http;
+
     public override string Name { get; set; } = "MangaPill";
 
     public override string BaseUrl => "https://mangapill.com";
 
     public override string Logo => "";
 
-    public MangaPill(HttpClient httpClient) : base(httpClient)
+    public MangaPill(Func<HttpClient> httpClientProvider)
     {
+        _http = httpClientProvider();
     }
 
     public override async Task<List<MangaResult>> SearchAsync(

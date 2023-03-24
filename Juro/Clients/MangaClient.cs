@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using Juro.Providers.Manga;
 using Juro.Utils;
 
@@ -14,18 +15,18 @@ public class MangaClient
 
     public MangaKatana MangaKatana { get; }
 
-    public MangaClient(HttpClient httpClient)
+    public MangaClient(Func<HttpClient> httpClientProvider)
     {
-        MangaKakalot = new(httpClient);
-        Mangadex = new(httpClient);
-        MangaPill = new(httpClient);
-        MangaKatana = new(httpClient);
+        MangaKakalot = new(httpClientProvider);
+        Mangadex = new(httpClientProvider);
+        MangaPill = new(httpClientProvider);
+        MangaKatana = new(httpClientProvider);
     }
 
     /// <summary>
     /// Initializes an instance of <see cref="MangaClient"/>.
     /// </summary>
-    public MangaClient() : this(Http.Client)
+    public MangaClient() : this(Http.ClientProvider)
     {
     }
 }

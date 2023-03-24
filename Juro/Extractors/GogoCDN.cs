@@ -19,24 +19,26 @@ namespace Juro.Extractors;
 /// </summary>
 public class GogoCDN : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     public string ServerName => "Gogo";
 
-    public GogoCDN(HttpClient http)
+    public GogoCDN(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _httpClientProvider = httpClientProvider;
     }
 
     public async Task<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
     {
+        var http = _httpClientProvider();
+
         var host = new Uri(url).Host;
 
         var list = new List<VideoSource>();
 
-        var response = await _http.ExecuteAsync(url, cancellationToken);
+        var response = await http.ExecuteAsync(url, cancellationToken);
 
         if (url.Contains("streaming.php"))
         {
@@ -67,7 +69,7 @@ public class GogoCDN : IVideoExtractor
 
             var link = $"https://{host}/encrypt-ajax.php?id={CryptoHandler(id, keys.Item1, keys.Item3, true)}{end}&alias={id}";
 
-            var encHtmlData = await _http.ExecuteAsync(link,
+            var encHtmlData = await http.ExecuteAsync(link,
                 new Dictionary<string, string>()
                 {
                     { "X-Requested-With", "XMLHttpRequest" },

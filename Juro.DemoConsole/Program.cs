@@ -11,22 +11,22 @@ internal class Program
     {
         Console.WriteLine("Hello, World!");
 
-        await TestAnime();
-        //await TestManga();
-        //await TestMovie();
+        await AnimeDemo();
+        //await MangaDemo();
+        //await MovieDemo();
     }
 
-    private static async Task TestAnime()
+    private static async Task AnimeDemo()
     {
         var client = new AnimeClient();
-        var animes = await client.Gogoanime.SearchAsync("anohana");
-        var animeInfo = await client.Gogoanime.GetAnimeInfoAsync(animes[0].Id);
-        var episodes = await client.Gogoanime.GetEpisodesAsync(animes[0].Id);
-        var videoServers = await client.Gogoanime.GetVideoServersAsync(episodes[0].Id);
-        var videos = await client.Gogoanime.GetVideosAsync(videoServers[4]);
+        var animes = await client.AnimePahe.SearchAsync("anohana");
+        var animeInfo = await client.AnimePahe.GetAnimeInfoAsync(animes[0].Id);
+        var episodes = await client.AnimePahe.GetEpisodesAsync(animes[0].Id);
+        var videoServers = await client.AnimePahe.GetVideoServersAsync(episodes[0].Id);
+        var videos = await client.AnimePahe.GetVideosAsync(videoServers[4]);
     }
 
-    private static async Task TestMovie()
+    private static async Task MovieDemo()
     {
         var client = new MovieClient();
         var movies = await client.FlixHQ.SearchAsync("spongebob");
@@ -51,7 +51,7 @@ internal class Program
         //await downloader.DownloadAllTsThenMergeAsync(stream, sources[0].Headers, fileName, progress, 15);
     }
 
-    private static async Task TestManga()
+    private static async Task MangaDemo()
     {
         var client = new MangaClient();
         //var results = await client.MangaKakalot.SearchAsync("Tomodachi Game");

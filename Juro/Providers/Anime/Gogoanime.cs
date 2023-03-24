@@ -22,6 +22,7 @@ namespace Juro.Providers.Anime;
 public class Gogoanime : IAnimeProvider
 {
     private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     public string Name => "Gogo";
 
@@ -31,9 +32,10 @@ public class Gogoanime : IAnimeProvider
 
     public string CdnUrl { get; private set; } = default!;
 
-    public Gogoanime(HttpClient http)
+    public Gogoanime(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _http = httpClientProvider();
+        _httpClientProvider = httpClientProvider;
     }
 
     private async Task EnsureUrlsSet(CancellationToken cancellationToken = default)
@@ -394,17 +396,17 @@ public class Gogoanime : IAnimeProvider
             || domainInfo.Domain.Contains("playgo")
             || domainInfo.Domain.Contains("anihdplay"))
         {
-            return new GogoCDN(_http);
+            return new GogoCDN(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("sb")
             || domainInfo.Domain.Contains("sss"))
         {
-            return new StreamSB(_http);
+            return new StreamSB(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("fplayer")
             || domainInfo.Domain.Contains("fembed"))
         {
-            return new FPlayer(_http);
+            return new FPlayer(_httpClientProvider);
         }
 
         return null;

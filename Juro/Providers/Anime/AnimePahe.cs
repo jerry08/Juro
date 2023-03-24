@@ -22,6 +22,7 @@ namespace Juro.Providers.Anime;
 public class AnimePahe : IAnimeProvider
 {
     private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     public string Name => "AnimePahe";
 
@@ -31,9 +32,10 @@ public class AnimePahe : IAnimeProvider
 
     private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
 
-    public AnimePahe(HttpClient http)
+    public AnimePahe(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _http = httpClientProvider();
+        _httpClientProvider = httpClientProvider;
     }
 
     public async Task<List<AnimeInfo>> SearchAsync(
@@ -239,6 +241,7 @@ public class AnimePahe : IAnimeProvider
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
             return new();
 
-        return await new Kwik(_http).ExtractAsync(server.Embed.Url, cancellationToken);
+        return await new Kwik(_httpClientProvider)
+            .ExtractAsync(server.Embed.Url, cancellationToken);
     }
 }

@@ -6,7 +6,7 @@ namespace Juro.Utils;
 
 public static class Http
 {
-    private static readonly Lazy<HttpClient> HttpClientLazy = new(() =>
+    public static Func<HttpClient> ClientProvider => () =>
     {
         var handler = new HttpClientHandler
         {
@@ -27,14 +27,12 @@ public static class Http
         {
             httpClient.DefaultRequestHeaders.Add(
                 "User-Agent",
-                Http.ChromeUserAgent()
+                ChromeUserAgent()
             );
         }
 
         return httpClient;
-    });
-
-    public static HttpClient Client => HttpClientLazy.Value;
+    };
 
     #region User Agent
 

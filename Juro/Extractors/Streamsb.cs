@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Juro.Models;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
@@ -14,21 +13,23 @@ namespace Juro.Extractors;
 
 public class StreamSB : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     private readonly char[] hexArray = "0123456789ABCDEF".ToCharArray();
 
     public string ServerName => "StreamSB";
 
-    public StreamSB(HttpClient http)
+    public StreamSB(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _httpClientProvider = httpClientProvider;
     }
 
     public async Task<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
     {
+        var http = _httpClientProvider();
+
         var id = url.FindBetween("/e/", ".html");
         if (string.IsNullOrEmpty(id))
             id = url.Split(new[] { "/e/" }, StringSplitOptions.None)[1];
@@ -36,7 +37,7 @@ public class StreamSB : IVideoExtractor
         var bytes = Encoding.ASCII.GetBytes($"||{id}||||streamsb");
         var bytesToHex = BytesToHex(bytes);
 
-        var source = await _http.ExecuteAsync(
+        var source = await http.ExecuteAsync(
             "https://raw.githubusercontent.com/jerry08/anistream-extras/main/streamsb.txt",
             cancellationToken
         );
@@ -51,10 +52,10 @@ public class StreamSB : IVideoExtractor
             { "Referer", url },
         };
 
-        var json = await _http.ExecuteAsync(jsonLink, headers, cancellationToken);
+        var response = await http.ExecuteAsync(jsonLink, headers, cancellationToken);
 
-        var jObj = JObject.Parse(json);
-        var masterUrl = jObj["stream_data"]?["file"]?.ToString().Trim('"')!;
+        var data = JObject.Parse(response);
+        var masterUrl = data["stream_data"]?["file"]?.ToString().Trim('"')!;
 
         return new List<VideoSource>
         {

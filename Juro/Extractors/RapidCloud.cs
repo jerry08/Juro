@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace Juro.Extractors;
 
 public class RapidCloud : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     public string ServerName => "RapidCloud";
 
@@ -20,18 +21,20 @@ public class RapidCloud : IVideoExtractor
     private readonly string _enimeApi = "https://api.enime.moe";
     private readonly string _host = "https://rapid-cloud.co";
 
-    public RapidCloud(HttpClient http)
+    public RapidCloud(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _httpClientProvider = httpClientProvider;
     }
 
     public async Task<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
     {
+        var http = _httpClientProvider();
+
         var id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
-        //var sId = await _http.ExecuteAsync(consumetApi + "/utils/rapid-cloud", cancellationToken);
-        var sId = await _http.ExecuteAsync(
+        //var sId = await http.ExecuteAsync(consumetApi + "/utils/rapid-cloud", cancellationToken);
+        var sId = await http.ExecuteAsync(
             $"{_enimeApi}/tool/rapid-cloud/server-id",
             new Dictionary<string, string>()
             {
@@ -42,7 +45,7 @@ public class RapidCloud : IVideoExtractor
 
         if (string.IsNullOrEmpty(sId))
         {
-            sId = await _http.ExecuteAsync(
+            sId = await http.ExecuteAsync(
                 $"{_enimeApi}/tool/rapid-cloud/server-id",
                 cancellationToken
             );
@@ -53,13 +56,13 @@ public class RapidCloud : IVideoExtractor
             { "X-Requested-With", "XMLHttpRequest" }
         };
 
-        var res = await _http.ExecuteAsync(
+        var res = await http.ExecuteAsync(
             $"{_host}/ajax/embed-6/getSources?id={id}&sId={sId}",
             headers,
             cancellationToken
         );
 
-        var decryptKey = await _http.ExecuteAsync(
+        var decryptKey = await http.ExecuteAsync(
             "https://raw.githubusercontent.com/consumet/rapidclown/main/key.txt",
             cancellationToken
         );
@@ -77,16 +80,15 @@ public class RapidCloud : IVideoExtractor
 
         var m3u8File = JArray.Parse(sources)[0]["file"]?.ToString()!;
 
-        var videoList = new List<VideoSource>();
-
-        videoList.Add(new()
+        return new List<VideoSource>
         {
-            VideoUrl = m3u8File,
-            Headers = headers,
-            Format = VideoType.M3u8,
-            Resolution = "Multi Quality"
-        });
-
-        return videoList;
+            new()
+            {
+                VideoUrl = m3u8File,
+                Headers = headers,
+                Format = VideoType.M3u8,
+                Resolution = "Multi Quality"
+            }
+        };
     }
 }

@@ -16,14 +16,19 @@ namespace Juro.Providers.Movies;
 
 public class FlixHQ : MovieParser
 {
+    private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
+
     public override string Name { get; set; } = "FlixHQ";
 
     public override string BaseUrl => "https://flixhq.to";
 
     public override string Logo => "https://img.flixhq.to/xxrz/400x400/100/ab/5f/ab5f0e1996cc5b71919e10e910ad593e/ab5f0e1996cc5b71919e10e910ad593e.png";
 
-    public FlixHQ(HttpClient httpClient) : base(httpClient)
+    public FlixHQ(Func<HttpClient> httpClientProvider)
     {
+        _http = httpClientProvider();
+        _httpClientProvider = httpClientProvider;
     }
 
     public override Task<List<MovieResult>> SearchAsync(
@@ -213,9 +218,11 @@ public class FlixHQ : MovieParser
             return server switch
             {
                 StreamingServers.MixDrop => new(),
-                StreamingServers.UpCloud => await new VidCloud(_http).ExtractAsync(serverUrl, cancellationToken),
+                StreamingServers.UpCloud => await new VidCloud(_httpClientProvider)
+                    .ExtractAsync(serverUrl, cancellationToken),
                 StreamingServers.VidCloud => new(),
-                _ => await new VidCloud(_http).ExtractAsync(serverUrl, cancellationToken),
+                _ => await new VidCloud(_httpClientProvider)
+                    .ExtractAsync(serverUrl, cancellationToken),
             };
         }
 

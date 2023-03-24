@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,19 +11,21 @@ namespace Juro.Extractors;
 
 public class FPlayer : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     public string ServerName => "FPlayer";
 
-    public FPlayer(HttpClient http)
+    public FPlayer(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _httpClientProvider = httpClientProvider;
     }
 
     public async Task<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
     {
+        var http = _httpClientProvider();
+
         var apiLink = url.Replace("/v/", "/api/source/");
 
         var list = new List<VideoSource>();
@@ -34,7 +37,7 @@ public class FPlayer : IVideoExtractor
                 { "Referer", url }
             };
 
-            var json = await _http.PostAsync(apiLink, headers, cancellationToken);
+            var json = await http.PostAsync(apiLink, headers, cancellationToken);
             if (!string.IsNullOrEmpty(json))
             {
                 var data = JArray.Parse(JObject.Parse(json)["data"]!.ToString());

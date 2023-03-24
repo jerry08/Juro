@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -14,7 +15,7 @@ namespace Juro.Extractors;
 
 public class VidCloud : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     private readonly string _host = "https://dokicloud.one";
     private readonly string _host2 = "https://rabbitstream.net";
@@ -22,9 +23,9 @@ public class VidCloud : IVideoExtractor
 
     public string ServerName => "VidCloud";
 
-    public VidCloud(HttpClient http, bool isAlternative = false)
+    public VidCloud(Func<HttpClient> httpClientProvider, bool isAlternative = false)
     {
-        _http = http;
+        _httpClientProvider = httpClientProvider;
         _isAlternative = isAlternative;
     }
 
@@ -32,6 +33,8 @@ public class VidCloud : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default!)
     {
+        var http = _httpClientProvider();
+
         var id = new Stack<string>(url.Split('/')).Pop()?.Split('?')[0];
         var headers = new Dictionary<string, string>()
         {
@@ -40,7 +43,7 @@ public class VidCloud : IVideoExtractor
             { "User-Agent", Http.RandomUserAgent() }
         };
 
-        var response = await _http.ExecuteAsync(
+        var response = await http.ExecuteAsync(
             $"{(_isAlternative ? _host2 : _host)}/ajax/embed-4/getSources?id={id}",
             headers,
             cancellationToken
@@ -52,7 +55,7 @@ public class VidCloud : IVideoExtractor
         if (!JsonExtensions.IsValidJson(sourcesJson))
         {
             //var key = await _http.ExecuteAsync("https://raw.githubusercontent.com/consumet/rapidclown/rabbitstream/key.txt", cancellationToken);
-            var key = await _http.ExecuteAsync(
+            var key = await http.ExecuteAsync(
                 "https://raw.githubusercontent.com/enimax-anime/key/e4/key.txt",
                 cancellationToken
             );

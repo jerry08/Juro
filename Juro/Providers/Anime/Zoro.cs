@@ -21,6 +21,7 @@ namespace Juro.Providers.Anime;
 public class Zoro : IAnimeProvider
 {
     private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     public string Name => "Zoro";
 
@@ -28,9 +29,10 @@ public class Zoro : IAnimeProvider
 
     public string BaseUrl => "https://zoro.to";
 
-    public Zoro(HttpClient http)
+    public Zoro(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _http = httpClientProvider();
+        _httpClientProvider = httpClientProvider;
     }
 
     public async Task<List<AnimeInfo>> SearchAsync(
@@ -326,15 +328,15 @@ public class Zoro : IAnimeProvider
 
         if (domainInfo.Domain.Contains("rapid"))
         {
-            return new RapidCloud(_http);
+            return new RapidCloud(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("sb"))
         {
-            return new StreamSB(_http);
+            return new StreamSB(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("streamta"))
         {
-            return new StreamTape(_http);
+            return new StreamTape(_httpClientProvider);
         }
 
         return null;

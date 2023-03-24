@@ -5,13 +5,36 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Juro.Utils.Extensions;
 
-internal static class HttpExtensions
+public static class HttpExtensions
 {
+    public static bool GetAllowAutoRedirect(this HttpClient http)
+    {
+        var handlerField = http.GetType().BaseType!.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(x => x.Name.Contains("handler"))!;
+        var handlerVal = handlerField.GetValue(http)!;
+
+        var allowAutoRedirectProp = handlerVal.GetType().GetProperty("AllowAutoRedirect", BindingFlags.Public | BindingFlags.Instance)!;
+        var allowAutoRedirectPropVal = allowAutoRedirectProp.GetValue(handlerVal)!;
+
+        return bool.Parse(allowAutoRedirectPropVal.ToString()!);
+    }
+
+    public static void SetAllowAutoRedirect(
+        this HttpClient http,
+        bool value)
+    {
+        var handlerField = http.GetType().BaseType!.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(x => x.Name.Contains("handler"))!;
+        var handlerVal = handlerField.GetValue(http)!;
+
+        var allowAutoRedirectProp = handlerVal.GetType().GetProperty("AllowAutoRedirect", BindingFlags.Public | BindingFlags.Instance)!;
+        allowAutoRedirectProp.SetValue(handlerVal, value);
+    }
+
     public static async ValueTask<HttpResponseMessage> HeadAsync(
         this HttpClient http,
         string requestUri,

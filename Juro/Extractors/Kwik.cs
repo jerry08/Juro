@@ -13,7 +13,7 @@ namespace Juro.Extractors;
 
 public class Kwik : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly Func<HttpClient> _httpClientProvider;
 
     private readonly string _host = "https://animepahe.com";
 
@@ -24,16 +24,18 @@ public class Kwik : IVideoExtractor
 
     public string ServerName => "Kwik";
 
-    public Kwik(HttpClient http)
+    public Kwik(Func<HttpClient> httpClientProvider)
     {
-        _http = http;
+        _httpClientProvider = httpClientProvider;
     }
 
     public async Task<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.ExecuteAsync(
+        var http = _httpClientProvider();
+
+        var response = await http.ExecuteAsync(
             url,
             new Dictionary<string, string>()
             {
@@ -44,7 +46,7 @@ public class Kwik : IVideoExtractor
 
         var kwikLink = _redirectRegex.Match(response).Groups[1].Value;
 
-        var kwikRes = await _http.GetAsync(kwikLink, cancellationToken);
+        var kwikRes = await http.GetAsync(kwikLink, cancellationToken);
         var text = await kwikRes.Content.ReadAsStringAsync(cancellationToken);
         var cookies = kwikRes.Headers.GetValues("set-cookie").ElementAt(0);
         var groups = _paramRegex.Match(text).Groups.OfType<Group>().ToArray();
@@ -56,11 +58,6 @@ public class Kwik : IVideoExtractor
         var decrypted = Decrypt(fullKey, key, int.Parse(v1), int.Parse(v2));
         var postUrl = _urlRegex.Match(decrypted).Groups.OfType<Group>().ToArray()[1].Value;
         var token = _tokenRegex.Match(decrypted).Groups.OfType<Group>().ToArray()[1].Value;
-
-        var http = new HttpClient(new HttpClientHandler()
-        {
-            AllowAutoRedirect = false,
-        });
 
         var headers = new Dictionary<string, string>()
         {
@@ -87,19 +84,24 @@ public class Kwik : IVideoExtractor
 
         request.Content = formContent;
 
+        http = _httpClientProvider();
+        var allowAutoRedirect = http.GetAllowAutoRedirect();
+
+        http.SetAllowAutoRedirect(false);
+
         using var response2 = await http.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken
         );
 
-        var mp4Url = response2.Headers.Location!;
+        var mp4Url = response2.Headers.Location!.ToString();
 
         return new()
         {
             new()
             {
-                VideoUrl = mp4Url.ToString(),
+                VideoUrl = mp4Url,
                 Format = VideoType.Container,
                 FileType = "mp4"
             }
