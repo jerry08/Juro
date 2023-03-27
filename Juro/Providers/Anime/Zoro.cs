@@ -79,12 +79,12 @@ public class Zoro : IAnimeProvider
         return ParseAnimeResponse(response);
     }
 
-    public async Task<List<AnimeInfo>> GetLastUpdatedAsync(
+    public async Task<List<AnimeInfo>> GetAiringAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
         var response = await _http.ExecuteAsync(
-            $"{BaseUrl}/?page={page}",
+            $"{BaseUrl}/top-airing?page={page}",
             cancellationToken
         );
 

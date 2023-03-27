@@ -132,36 +132,6 @@ public static class HttpExtensions
         return await http.ExecuteAsync(request, cancellationToken);
     }
 
-    public static async ValueTask<long> GetFileSizeAsync(
-        this HttpClient http,
-        string url,
-        Dictionary<string, string> headers,
-        CancellationToken cancellationToken = default)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Head, url);
-        for (var j = 0; j < headers.Count; j++)
-            request.Headers.TryAddWithoutValidation(headers.ElementAt(j).Key!, headers.ElementAt(j).Value);
-
-        using var response = await http.SendAsync(
-            request,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken
-        );
-
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
-                $"Response status code does not indicate success: {(int)response.StatusCode} ({response.StatusCode})." +
-                Environment.NewLine +
-                "Request:" +
-                Environment.NewLine +
-                request
-            );
-        }
-
-        return response.Content.Headers.ContentLength ?? 0;
-    }
-
     public static async ValueTask<string> ExecuteAsync(
         this HttpClient http,
         string url,
