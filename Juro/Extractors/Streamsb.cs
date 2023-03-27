@@ -31,7 +31,7 @@ public class StreamSB : IVideoExtractor
         var http = _httpClientProvider();
 
         var id = url.FindBetween("/e/", ".html");
-        if (string.IsNullOrEmpty(id))
+        if (string.IsNullOrWhiteSpace(id))
             id = url.Split(new[] { "/e/" }, StringSplitOptions.None)[1];
 
         var bytes = Encoding.ASCII.GetBytes($"||{id}||||streamsb");

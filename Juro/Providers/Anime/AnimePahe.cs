@@ -10,6 +10,7 @@ using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 using Newtonsoft.Json.Linq;
 using TaskExecutor;
@@ -49,7 +50,7 @@ public class AnimePahe : IAnimeProvider
             cancellationToken
         );
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return animes;
 
         var data = JObject.Parse(response)["data"];
@@ -82,7 +83,7 @@ public class AnimePahe : IAnimeProvider
             cancellationToken
         );
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return animes;
 
         var data = JObject.Parse(response)["data"];
@@ -104,8 +105,7 @@ public class AnimePahe : IAnimeProvider
     {
         var response = await _http.ExecuteAsync($"{BaseUrl}/anime/{id}", cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(HtmlEntity.DeEntitize(response));
+        var document = Html.Parse(response);
 
         var anime = new AnimeInfo()
         {
@@ -201,8 +201,7 @@ public class AnimePahe : IAnimeProvider
             cancellationToken
         );
 
-        var document = new HtmlDocument();
-        document.LoadHtml(HtmlEntity.DeEntitize(response));
+        var document = Html.Parse(response);
 
         return document.GetElementbyId("pickDownload").SelectNodes(".//a")
             .Select(el =>

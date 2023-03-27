@@ -9,6 +9,7 @@ using HtmlAgilityPack;
 using Juro.Extractors;
 using Juro.Models.Movies;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 using Newtonsoft.Json.Linq;
 
@@ -48,8 +49,7 @@ public class FlixHQ : MovieParser
 
         var response = await _http.ExecuteAsync($"{BaseUrl}/search/{query}?page={page}", cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var nodes = document.DocumentNode.SelectNodes(".//div[@class='film_list-wrap']/div[@class='flw-item']").ToList();
 
@@ -77,7 +77,7 @@ public class FlixHQ : MovieParser
         string mediaId,
         CancellationToken cancellationToken = default!)
     {
-        if (string.IsNullOrEmpty(mediaId))
+        if (string.IsNullOrWhiteSpace(mediaId))
             return new();
 
         if (!mediaId.StartsWith(BaseUrl))
@@ -91,8 +91,7 @@ public class FlixHQ : MovieParser
         var response = await _http.ExecuteAsync(mediaId, cancellationToken);
         response = WebUtility.HtmlDecode(response);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var uid = document.DocumentNode.SelectSingleNode(".//div[contains(@class, 'watch_block')]")!.Attributes["data-id"]!.Value;
         movieInfo.Title = document.DocumentNode.Descendants().Where(x => x?.HasClass("heading-name") == true).FirstOrDefault()?.InnerText;
@@ -185,8 +184,7 @@ public class FlixHQ : MovieParser
 
         var response = await _http.ExecuteAsync(episodeId, cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
 

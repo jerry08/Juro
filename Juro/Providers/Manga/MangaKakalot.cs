@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Juro.Models.Manga;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
@@ -33,8 +34,7 @@ public class MangaKakalot : MangaParser
 
         var response = await _http.ExecuteAsync($"{BaseUrl}/search/story/{query}", cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var nodes = document.DocumentNode.SelectNodes(".//div[@class='daily-update']/div/div")?.ToList();
         if (nodes is null)
@@ -68,8 +68,7 @@ public class MangaKakalot : MangaParser
         var url = mangaId.Contains("read") ? BaseUrl : "https://readmanganato.com";
         var response = await _http.ExecuteAsync($"{url}/{mangaId}", cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         if (url.Contains("mangakakalot"))
         {
@@ -150,8 +149,7 @@ public class MangaKakalot : MangaParser
 
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var i = 1;
 

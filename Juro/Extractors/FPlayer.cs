@@ -38,7 +38,7 @@ public class FPlayer : IVideoExtractor
             };
 
             var json = await http.PostAsync(apiLink, headers, cancellationToken);
-            if (!string.IsNullOrEmpty(json))
+            if (!string.IsNullOrWhiteSpace(json))
             {
                 var data = JArray.Parse(JObject.Parse(json)["data"]!.ToString());
                 for (var i = 0; i < data.Count; i++)

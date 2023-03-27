@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Juro.Models.Manga;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
@@ -32,8 +33,7 @@ public class MangaKatana : MangaParser
         var url = $"{BaseUrl}/?search={Uri.EscapeUriString(query)}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var gg = document.GetElementbyId("book_list");
 
@@ -53,8 +53,7 @@ public class MangaKatana : MangaParser
         var url = BaseUrl + mangaId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var mangaInfo = new MangaInfo
         {
@@ -90,8 +89,7 @@ public class MangaKatana : MangaParser
         var url = BaseUrl + chapterId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var i = 1;
 

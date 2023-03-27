@@ -9,6 +9,7 @@ using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 using Nager.PublicSuffix;
 using Newtonsoft.Json.Linq;
@@ -95,11 +96,10 @@ public class Zoro : IAnimeProvider
     {
         var animes = new List<AnimeInfo>();
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return animes;
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response!);
 
         var nodes = document.DocumentNode.Descendants()
             .Where(node => node.HasClass("flw-item")).ToList();
@@ -159,11 +159,10 @@ public class Zoro : IAnimeProvider
             Site = AnimeSites.Zoro
         };
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return anime;
 
-        var document = new HtmlDocument();
-        document.LoadHtml(HtmlEntity.DeEntitize(response));
+        var document = Html.Parse(response);
 
         anime.Title = document.DocumentNode
             .SelectSingleNode(".//h2[contains(@class, 'film-name')]")?
@@ -179,10 +178,10 @@ public class Zoro : IAnimeProvider
         //var overviewNode = document.DocumentNode.SelectNodes(".//div[@class='anisc-info-wrap']/div[@class='anisc-info']")[0];
         //anime.Summary = overviewNode.InnerText;
 
-        var overviewNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrEmpty(x.InnerHtml)
+        var overviewNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.InnerHtml)
             && x.InnerHtml.ToLower().Contains("overview"))?
             .ParentNode.SelectSingleNode(".//span[@class='name']")
-            ?? itemHeadNodes.FirstOrDefault(x => !string.IsNullOrEmpty(x.InnerHtml)
+            ?? itemHeadNodes.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.InnerHtml)
             && x.InnerHtml.ToLower().Contains("overview"))?
             .ParentNode.SelectSingleNode(".//div[@class='text']");
         if (overviewNode is not null)
@@ -193,25 +192,25 @@ public class Zoro : IAnimeProvider
         if (typeNode is not null)
             anime.Type = typeNode.InnerText;
 
-        var statusNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrEmpty(x.InnerHtml)
+        var statusNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.InnerHtml)
             && x.InnerHtml.ToLower().Contains("status"))?
             .ParentNode.SelectSingleNode(".//span[@class='name']");
         if (statusNode is not null)
             anime.Status = statusNode.InnerText;
 
-        var genresNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrEmpty(x.InnerHtml)
+        var genresNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.InnerHtml)
             && x.InnerHtml.ToLower().Contains("genres"))?
             .ParentNode.SelectNodes(".//a").ToList();
         if (genresNode is not null)
             anime.Genres.AddRange(genresNode.Select(x => new Genre(x.Attributes["title"].Value)));
 
-        var airedNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrEmpty(x.InnerHtml)
+        var airedNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.InnerHtml)
             && x.InnerHtml.ToLower().Contains("aired"))?
             .ParentNode.SelectSingleNode(".//span[@class='name']");
         if (airedNode is not null)
             anime.Released = airedNode.InnerText;
 
-        var synonymsNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrEmpty(x.InnerHtml)
+        var synonymsNode = itemHeadNodes.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.InnerHtml)
             && x.InnerHtml.ToLower().Contains("synonyms"))?
             .ParentNode.SelectSingleNode(".//span[@class='name']");
         if (synonymsNode is not null)
@@ -232,8 +231,7 @@ public class Zoro : IAnimeProvider
         var jObj = JObject.Parse(json);
         var response = jObj["html"]!.ToString();
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var nodes = document.DocumentNode.SelectNodes(".//a")
             .Where(x => x.Attributes["data-page"] == null).ToList();
@@ -273,14 +271,13 @@ public class Zoro : IAnimeProvider
         var url = $"{BaseUrl}/ajax/v2/episode/servers?episodeId={dataId}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return new();
 
         var data = JObject.Parse(response);
         var html = data["html"]!.ToString();
 
-        var doc = new HtmlDocument();
-        doc.LoadHtml(html);
+        var doc = Html.Parse(response);
 
         var nodes = doc.DocumentNode.Descendants()
             .Where(node => node.HasClass("server-item")).ToList();

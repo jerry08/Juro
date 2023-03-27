@@ -43,7 +43,7 @@ public class RapidCloud : IVideoExtractor
             cancellationToken
         );
 
-        if (string.IsNullOrEmpty(sId))
+        if (string.IsNullOrWhiteSpace(sId))
         {
             sId = await http.ExecuteAsync(
                 $"{_enimeApi}/tool/rapid-cloud/server-id",
@@ -67,7 +67,7 @@ public class RapidCloud : IVideoExtractor
             cancellationToken
         );
 
-        if (string.IsNullOrEmpty(decryptKey))
+        if (string.IsNullOrWhiteSpace(decryptKey))
             decryptKey = _fallbackKey;
 
         var jObj = JObject.Parse(res);

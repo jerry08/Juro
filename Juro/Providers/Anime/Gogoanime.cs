@@ -10,6 +10,7 @@ using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 using Nager.PublicSuffix;
 using Newtonsoft.Json.Linq;
@@ -48,7 +49,7 @@ public class Gogoanime : IAnimeProvider
             cancellationToken
         );
 
-        if (!string.IsNullOrEmpty(response))
+        if (!string.IsNullOrWhiteSpace(response))
         {
             var data = JObject.Parse(response);
 
@@ -131,11 +132,10 @@ public class Gogoanime : IAnimeProvider
     {
         var animes = new List<AnimeInfo>();
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return animes;
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var itemsNode = document.DocumentNode.Descendants()
             .FirstOrDefault(node => node.HasClass("items"));
@@ -206,8 +206,7 @@ public class Gogoanime : IAnimeProvider
         {
             var epsResponse = await _http.ExecuteAsync(url, cancellationToken);
 
-            var epsDocument = new HtmlDocument();
-            epsDocument.LoadHtml(epsResponse);
+            var epsDocument = Html.Parse(epsResponse);
 
             url = epsDocument.DocumentNode
                 .SelectSingleNode(".//div[@class='anime-info']/a")?.Attributes["href"]?.Value;
@@ -220,13 +219,12 @@ public class Gogoanime : IAnimeProvider
 
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return anime;
 
         anime.Category = url;
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var animeInfoNodes = document.DocumentNode
             .SelectNodes(".//div[@class='anime_info_body_bg']/p").ToList();
@@ -289,11 +287,10 @@ public class Gogoanime : IAnimeProvider
 
         var response = await _http.ExecuteAsync(BaseUrl + id, cancellationToken);
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return episodes;
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var lastEpisodes = document.DocumentNode.Descendants().Where(x => x.Attributes["ep_end"] is not null)
             .ToList();
@@ -305,8 +302,7 @@ public class Gogoanime : IAnimeProvider
         //response = await _http.ExecuteAsync(CdnUrl + animeId, cancellationToken);
         response = await _http.ExecuteAsync(url, cancellationToken);
 
-        document = new HtmlDocument();
-        document.LoadHtml(response);
+        document = Html.Parse(response);
 
         var liNodes = document.DocumentNode.Descendants()
             .Where(node => node.Name == "li").ToList();
@@ -360,11 +356,10 @@ public class Gogoanime : IAnimeProvider
 
         var response = await _http.ExecuteAsync(episodeUrl, cancellationToken);
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return new();
 
-        var doc = new HtmlDocument();
-        doc.LoadHtml(response);
+        var doc = Html.Parse(response);
 
         //Exception for fire force season 2 episode 1
         if (response.Contains(">404</h1>"))
@@ -434,11 +429,10 @@ public class Gogoanime : IAnimeProvider
 
         var response = await _http.ExecuteAsync(BaseUrl, cancellationToken);
 
-        if (string.IsNullOrEmpty(response))
+        if (string.IsNullOrWhiteSpace(response))
             return genres;
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var genresNode = document.DocumentNode.Descendants()
             .FirstOrDefault(node => node.GetClasses().Contains("genre"));

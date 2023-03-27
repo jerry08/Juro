@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 using Newtonsoft.Json.Linq;
 
@@ -42,8 +43,7 @@ public class GogoCDN : IVideoExtractor
 
         if (url.Contains("streaming.php"))
         {
-            var doc = new HtmlDocument();
-            doc.LoadHtml(response);
+            var document = Html.Parse(response);
 
             //var script = doc.DocumentNode
             //    .SelectSingleNode("script[data-name='crypto'");
@@ -51,7 +51,7 @@ public class GogoCDN : IVideoExtractor
             //var tt = doc.DocumentNode.Descendants("script")
             //    .Where(x => x.Name == "script").ToList();
 
-            var scripts = doc.DocumentNode.Descendants()
+            var scripts = document.DocumentNode.Descendants()
                 .Where(x => x.Name == "script").ToList();
 
             var cryptoScript = scripts.FirstOrDefault(x => x.Attributes["data-name"]?.Value == "episode")!;
@@ -76,7 +76,7 @@ public class GogoCDN : IVideoExtractor
                     //{ "Referer", host },
                 }, cancellationToken);
 
-            if (string.IsNullOrEmpty(encHtmlData))
+            if (string.IsNullOrWhiteSpace(encHtmlData))
                 return list;
 
             var jsonObj = JObject.Parse(encHtmlData);
@@ -145,7 +145,7 @@ public class GogoCDN : IVideoExtractor
                         var videoUrlSplit = fileURL.Split('/').ToList();
                         videoUrlSplit.RemoveAt(videoUrlSplit.Count - 1);
                         var itSplit = masterSplit[j].Split(new string[] { "\n" }, StringSplitOptions.None).ToList();
-                        itSplit.RemoveAll(x => string.IsNullOrEmpty(x));
+                        itSplit.RemoveAll(x => string.IsNullOrWhiteSpace(x));
 
                         var video = itSplit[0].SubstringAfter("RESOLUTION=").SubstringBefore("x") + " p";
                         var videoUrl = string.Join("/", videoUrlSplit) + "/" + itSplit.LastOrDefault();
@@ -183,7 +183,7 @@ public class GogoCDN : IVideoExtractor
         else if (url.Contains("embedplus"))
         {
             var file = response.FindBetween("sources:[{file: '", "',");
-            if (!string.IsNullOrEmpty(file))
+            if (!string.IsNullOrWhiteSpace(file))
             {
                 list.Add(new()
                 {

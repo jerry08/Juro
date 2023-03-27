@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 using Juro.Models.Manga;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
@@ -31,8 +32,7 @@ public class MangaPill : MangaParser
     {
         var response = await _http.ExecuteAsync($"{BaseUrl}/quick-search?q={Uri.EscapeUriString(query)}", cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         return document.DocumentNode
             .SelectNodes(".//a[contains(@class, 'bg-card')]")?.Select(el => new MangaResult()
@@ -50,8 +50,7 @@ public class MangaPill : MangaParser
         var url = BaseUrl + mangaId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var mangaInfo = new MangaInfo
         {
@@ -87,8 +86,7 @@ public class MangaPill : MangaParser
         var url = BaseUrl + chapterId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        var document = new HtmlDocument();
-        document.LoadHtml(response);
+        var document = Html.Parse(response);
 
         var i = 1;
 

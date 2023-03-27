@@ -195,7 +195,7 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
             list.AddRange(data["data"]!.Select(chapter => new MangadexChapter()
             {
                 Id = chapter["id"]!.ToString(),
-                Title = !string.IsNullOrEmpty(chapter["attributes"]!["title"]!.ToString())
+                Title = !string.IsNullOrWhiteSpace(chapter["attributes"]!["title"]!.ToString())
                     ? chapter["attributes"]!["title"]!.ToString() : chapter["attributes"]!["chapter"]!.ToString(),
                 Pages = Convert.ToInt32(chapter["attributes"]!["pages"]!),
             }));
