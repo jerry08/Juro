@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
-using static Juro.Providers.Anilist.Api.Query;
 
 namespace Juro.Providers.Anilist.Api;
 

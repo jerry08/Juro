@@ -18,6 +18,8 @@ internal class Program
 
     private static async Task AnimeDemo()
     {
+        var ss = Juro.Utils.Http.ChromeUserAgent();
+
         var client = new AnimeClient();
         var animes = await client.AnimePahe.SearchAsync("anohana");
         var animeInfo = await client.AnimePahe.GetAnimeInfoAsync(animes[0].Id);

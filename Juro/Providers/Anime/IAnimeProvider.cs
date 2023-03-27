@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models;
 using Juro.Models.Anime;
+using Juro.Models.Videos;
 
 namespace Juro.Providers.Anime;
 
@@ -26,5 +27,9 @@ public interface IAnimeProvider
 
     Task<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
+        CancellationToken cancellationToken = default);
+
+    Task<List<VideoSource>> GetVideosAsync(
+        VideoServer server,
         CancellationToken cancellationToken = default);
 }

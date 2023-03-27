@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 using Juro.Models.Manga;
 using Juro.Utils;
 using Juro.Utils.Extensions;

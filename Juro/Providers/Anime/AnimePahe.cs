@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;

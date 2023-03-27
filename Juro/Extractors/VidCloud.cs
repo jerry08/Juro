@@ -40,7 +40,7 @@ public class VidCloud : IVideoExtractor
         {
             { "X-Requested-With", "XMLHttpRequest" },
             { "Referer", url },
-            { "User-Agent", Http.RandomUserAgent() }
+            { "User-Agent", Http.ChromeUserAgent() }
         };
 
         var response = await http.ExecuteAsync(

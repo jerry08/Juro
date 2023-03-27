@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 using Juro.Extractors;
 using Juro.Models.Movies;
 using Juro.Models.Videos;
