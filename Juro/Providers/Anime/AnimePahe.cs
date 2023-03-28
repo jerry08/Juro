@@ -61,11 +61,11 @@ public class AnimePahe : IAnimeProvider
             Id = x["session"]!.ToString(),
             Title = x["title"]!.ToString(),
             Type = x["type"]!.ToString(),
-            Episodes = Convert.ToInt32(x["episodes"]),
+            Episodes = int.TryParse(x["episodes"]?.ToString(), out var episodes) ? episodes : 0,
             Status = x["status"]!.ToString(),
             Season = x["season"]!.ToString(),
-            Year = Convert.ToInt32(x["year"]),
-            Score = Convert.ToInt32(x["score"]),
+            Year = int.TryParse(x["year"]?.ToString(), out var year) ? year : 0,
+            Score = int.TryParse(x["score"]?.ToString(), out var score) ? score : 0,
             Image = x["poster"]!.ToString(),
             Site = AnimeSites.AnimePahe
         }).ToList();
@@ -127,9 +127,38 @@ public class AnimePahe : IAnimeProvider
             .SelectNodes(".//div[contains(@class, 'anime-info')]/div/ul/li/a")
             .Select(el => new Genre(el.Attributes["title"].Value)).ToList();
 
-        anime.Status = document.DocumentNode
-            .SelectSingleNode(".//div[contains(@class, 'anime-info')]/div")?
-            .InnerText?.Trim() ?? "";
+        var list = document.DocumentNode
+            .SelectNodes(".//div[contains(@class, 'anime-info')]/p").ToList();
+
+        var typeNode = list.Find(x => x.ChildNodes
+            .ElementAtOrDefault(0)?.InnerText?.ToLower().Contains("type") == true);
+
+        var otherNamesCount = list.IndexOf(typeNode);
+
+        anime.Type = typeNode?.SelectSingleNode(".//a")?.InnerText?.Trim() ?? "";
+
+        var otherNameNodes = list.Take(otherNamesCount).ToList();
+
+        anime.OtherNames = otherNameNodes.FirstOrDefault()?
+            .ChildNodes.ElementAtOrDefault(1)?.InnerText?.Trim() ?? "";
+
+        var releasedNode = list.Find(x => x.ChildNodes
+            .ElementAtOrDefault(1)?.InnerText?.ToLower().Contains("aired") == true);
+
+        anime.Released = releasedNode?
+            .InnerText?.Split(new[] { "to" }, StringSplitOptions.None)[0]
+            .Trim().Replace("Aired:", "").Replace("\n", "")
+            .Replace("\r", "").Replace("\t", "") ?? "";
+
+        var statusNode = list.Find(x => x.ChildNodes
+            .ElementAtOrDefault(1)?.InnerText?.ToLower().Contains("status") == true);
+
+        anime.Status = statusNode?.SelectSingleNode(".//a")?.InnerText?.Trim() ?? "";
+
+        var seasonNode = list.Find(x => x.ChildNodes
+            .ElementAtOrDefault(0)?.InnerText?.ToLower().Contains("season") == true);
+
+        anime.Season = seasonNode?.SelectSingleNode(".//a")?.InnerText?.Trim() ?? "";
 
         return anime;
     }
