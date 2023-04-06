@@ -30,8 +30,12 @@ public class StreamTape : IVideoExtractor
     {
         var http = _httpClientProvider();
 
-        var text = await http.ExecuteAsync(url, cancellationToken);
-        var reg = _linkRegex.Match(text);
+        var response = await http.ExecuteAsync(
+            url.Replace("tape.com", "adblocker.xyz"),
+            cancellationToken
+        );
+
+        var reg = _linkRegex.Match(response);
 
         var vidUrl = $"https:{reg.Groups[1]!.Value + reg.Groups[2]!.Value.Substring(3)}";
 
