@@ -159,16 +159,23 @@ public class Gogoanime : IAnimeProvider
                 if (nameNode is not null)
                 {
                     category = nameNode.Attributes["href"].Value;
-                    title = nameNode.Attributes["title"].Value; //OR name = nameNode.InnerText;
+                    title = nameNode.Attributes["title"].Value;
+
+                    if (string.IsNullOrWhiteSpace(title))
+                    {
+                        title = nameNode.InnerText;
+
+                        if (title.StartsWith(@""""))
+                            title = title.Substring(1);
+
+                        if (title.EndsWith(@""""))
+                            title = title.Substring(0, title.Length - 1);
+                    }
                 }
 
                 var releasedNode = nodes[i].SelectSingleNode(".//p[@class='released']");
                 if (releasedNode is not null)
                     released = new string(releasedNode.InnerText.Where(char.IsDigit).ToArray());
-
-                if (category.Contains("kyokou-suiri"))
-                {
-                }
 
                 var id = category.Contains("-episode") ?
                     "/category" + category.Remove(category.LastIndexOf("-episode")) : category;
@@ -235,6 +242,12 @@ public class Gogoanime : IAnimeProvider
         var titleNode = document.DocumentNode.SelectSingleNode(".//div[@class='anime_info_body_bg']/h1");
         if (titleNode is not null)
             anime.Title = titleNode.InnerText;
+
+        if (anime.Title.StartsWith(@""""))
+            anime.Title = anime.Title.Substring(1);
+
+        if (anime.Title.EndsWith(@""""))
+            anime.Title = anime.Title.Substring(0, anime.Title.Length - 1);
 
         for (var i = 0; i < animeInfoNodes.Count; i++)
         {
