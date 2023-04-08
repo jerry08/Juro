@@ -174,7 +174,8 @@ public static class HttpExtensions
         // Set required cookies
         //request.Headers.Add("Cookie", "CONSENT=YES+cb; YSC=DwKYllHNwuw");
 
-        using var response = await http.SendAsync(
+        //Removed "using" to fix android.os.NetworkOnMainThreadException
+        var response = await http.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken
