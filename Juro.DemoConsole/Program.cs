@@ -19,11 +19,14 @@ internal class Program
     private static async Task AnimeDemo()
     {
         var client = new AnimeClient();
-        var animes = await client.AnimePahe.SearchAsync("anohana");
-        var animeInfo = await client.AnimePahe.GetAnimeInfoAsync(animes[0].Id);
-        var episodes = await client.AnimePahe.GetEpisodesAsync(animes[0].Id);
-        var videoServers = await client.AnimePahe.GetVideoServersAsync(episodes[0].Id);
-        var videos = await client.AnimePahe.GetVideosAsync(videoServers[4]);
+        var animes = await client.Gogoanime.SearchAsync("anohana");
+        var animeInfo = await client.Gogoanime.GetAnimeInfoAsync(animes[0].Id);
+        var episodes = await client.Gogoanime.GetEpisodesAsync(animes[0].Id);
+        var videoServers = await client.Gogoanime.GetVideoServersAsync(episodes[0].Id);
+        var videos = await client.Gogoanime.GetVideosAsync(videoServers[4]);
+
+        var downloader = new HlsDownloader();
+        var test = await downloader.GetHlsStreamMetadatasAsync(videos[0].VideoUrl, videos[0].Headers);
     }
 
     private static async Task MovieDemo()
