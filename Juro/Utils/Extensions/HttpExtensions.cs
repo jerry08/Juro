@@ -40,7 +40,7 @@ public static class HttpExtensions
         string requestUri,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Head, requestUri);
+        var request = new HttpRequestMessage(HttpMethod.Head, requestUri);
         return await http.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
@@ -56,7 +56,7 @@ public static class HttpExtensions
         bool ensureSuccess = true,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         request.Headers.Range = new RangeHeaderValue(from, to);
 
         var response = await http.SendAsync(
@@ -77,7 +77,7 @@ public static class HttpExtensions
         bool ensureSuccess = true,
         CancellationToken cancellationToken = default)
     {
-        using var response = await http.HeadAsync(requestUri, cancellationToken);
+        var response = await http.HeadAsync(requestUri, cancellationToken);
 
         if (ensureSuccess)
             response.EnsureSuccessStatusCode();
@@ -90,7 +90,7 @@ public static class HttpExtensions
         string url,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         return await http.ExecuteAsync(request, cancellationToken);
     }
 
@@ -99,7 +99,7 @@ public static class HttpExtensions
         string url,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
         return await http.ExecuteAsync(request, cancellationToken);
     }
 
@@ -109,7 +109,7 @@ public static class HttpExtensions
         Dictionary<string, string> headers,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
         for (var j = 0; j < headers.Count; j++)
             request.Headers.TryAddWithoutValidation(headers.ElementAt(j).Key!, headers.ElementAt(j).Value);
 
@@ -123,7 +123,7 @@ public static class HttpExtensions
         HttpContent content,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
         for (var j = 0; j < headers.Count; j++)
             request.Headers.TryAddWithoutValidation(headers.ElementAt(j).Key!, headers.ElementAt(j).Value);
 
@@ -137,7 +137,7 @@ public static class HttpExtensions
         string url,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         return await http.ExecuteAsync(request, cancellationToken);
     }
 
@@ -147,7 +147,7 @@ public static class HttpExtensions
         Dictionary<string, string> headers,
         CancellationToken cancellationToken = default)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         for (var j = 0; j < headers.Count; j++)
         {
             var header = headers.ElementAt(j);

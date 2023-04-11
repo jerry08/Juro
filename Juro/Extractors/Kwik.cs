@@ -70,7 +70,7 @@ public class Kwik : IVideoExtractor
             new("_token", token)
         });
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, postUrl);
+        var request = new HttpRequestMessage(HttpMethod.Post, postUrl);
         for (var j = 0; j < headers.Count; j++)
             request.Headers.TryAddWithoutValidation(headers.ElementAt(j).Key, headers.ElementAt(j).Value);
 
@@ -89,7 +89,7 @@ public class Kwik : IVideoExtractor
 
         http.SetAllowAutoRedirect(false);
 
-        using var response2 = await http.SendAsync(
+        var response2 = await http.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken
