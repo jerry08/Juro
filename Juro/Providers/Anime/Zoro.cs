@@ -265,7 +265,7 @@ public class Zoro : IAnimeProvider
         SubDub subDub,
         CancellationToken cancellationToken = default)
     {
-        var dataId = episodeId.Split(new string[] { "ep=" }, StringSplitOptions.None).Last();
+        var dataId = episodeId.Split(new[] { "ep=" }, StringSplitOptions.None).Last();
 
         var url = $"{BaseUrl}/ajax/v2/episode/servers?episodeId={dataId}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
@@ -274,12 +274,11 @@ public class Zoro : IAnimeProvider
             return new();
 
         var data = JObject.Parse(response);
-        var html = data["html"]!.ToString();
 
-        var doc = Html.Parse(response);
+        var doc = Html.Parse(data["html"]!.ToString());
 
-        var nodes = doc.DocumentNode.Descendants()
-            .Where(node => node.HasClass("server-item")).ToList();
+        var nodes = doc.DocumentNode.SelectNodes(".//div[contains(@class, 'server-item')]")
+            .ToList();
 
         var videoServers = new List<VideoServer>();
 
