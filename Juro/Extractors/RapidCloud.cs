@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Juro.Models;
 using Juro.Models.Videos;
 using Juro.Utils.Extensions;
 using Newtonsoft.Json.Linq;
@@ -49,13 +51,13 @@ public class RapidCloud : IVideoExtractor
         if (string.IsNullOrWhiteSpace(decryptKey))
             decryptKey = _fallbackKey;
 
-        var jObj = JObject.Parse(response);
+        var data = JObject.Parse(response);
 
-        var sources = jObj["sources"]?.ToString();
+        var sources = data["sources"]?.ToString();
         if (string.IsNullOrWhiteSpace(sources))
             return new();
 
-        var isEncrypted = (bool)jObj["encrypted"]!;
+        var isEncrypted = (bool)data["encrypted"]!;
         if (isEncrypted)
         {
             try
@@ -68,7 +70,27 @@ public class RapidCloud : IVideoExtractor
             }
         }
 
-        var m3u8File = JArray.Parse(sources!)[0]["file"]?.ToString()!;
+        var subtitles = new List<Subtitle>();
+
+        var tracksStr = data["tracks"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(tracksStr))
+        {
+            foreach (var subtitle in JArray.Parse(tracksStr!))
+            {
+                var kind = subtitle["kind"]?.ToString();
+                var label = subtitle["label"]?.ToString();
+                var file = subtitle["file"]?.ToString();
+
+                if (kind == "captions"
+                    && !string.IsNullOrEmpty(label)
+                    && !string.IsNullOrEmpty(file))
+                {
+                    subtitles.Add(new(file!, label!));
+                }
+            }
+        }
+
+        var m3u8File = JArray.Parse(sources!)[0]["file"]!.ToString();
 
         return new List<VideoSource>
         {
@@ -77,7 +99,8 @@ public class RapidCloud : IVideoExtractor
                 VideoUrl = m3u8File,
                 Headers = headers,
                 Format = VideoType.M3u8,
-                Resolution = "Multi Quality"
+                Resolution = "Multi Quality",
+                Subtitles = subtitles
             }
         };
     }

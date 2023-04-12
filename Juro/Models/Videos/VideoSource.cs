@@ -46,7 +46,13 @@ public class VideoSource
     /// </summary>
     public string ExtraNote { get; set; } = default!;
 
+    /// <summary>
+    /// Http headers for making requests.
+    /// </summary>
     public Dictionary<string, string> Headers { get; set; } = new();
 
+    /// <summary>
+    /// Subtitles for videos if available.
+    /// </summary>
     public List<Subtitle> Subtitles { get; set; } = new();
 }
