@@ -11,8 +11,8 @@ using Juro.Models.Anime;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
+using Juro.Utils.Tasks;
 using Newtonsoft.Json.Linq;
-using TaskExecutor;
 
 namespace Juro.Providers.Anime;
 

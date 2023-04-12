@@ -25,7 +25,6 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
     <PackageReference Include="Nager.PublicSuffix" Version="2.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="TaskExecutor" Version="1.0.1" />
   </ItemGroup>
 
 </Project>
