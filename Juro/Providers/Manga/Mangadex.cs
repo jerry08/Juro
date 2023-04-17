@@ -11,24 +11,23 @@ using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Manga;
 
-public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
+public class Mangadex : IMangaProvider
 {
     private readonly HttpClient _http;
-
     private readonly string _apiUrl = "https://api.mangadex.org";
 
-    public override string Name { get; set; } = "Mangadex";
+    public string Name { get; set; } = "Mangadex";
 
-    public override string BaseUrl => "https://mangadex.org";
+    public string BaseUrl => "https://mangadex.org";
 
-    public override string Logo => "https://pbs.twimg.com/profile_images/1391016345714757632/xbt_jW78_400x400.jpg";
+    public string Logo => "https://pbs.twimg.com/profile_images/1391016345714757632/xbt_jW78_400x400.jpg";
 
     public Mangadex(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
     }
 
-    public override async Task<List<MangadexResult>> SearchAsync(
+    public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
     {
@@ -36,7 +35,7 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
     }
 
     /// <summary>
-    /// 
+    /// Search for manga.
     /// </summary>
     /// <param name="query">Search query.</param>
     /// <param name="page">Page number. Default value is 1.</param>
@@ -44,15 +43,20 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
-    public async Task<List<MangadexResult>> SearchAsync(
+    public async Task<List<IMangaResult>> SearchAsync(
         string query,
         int page = 1,
         int limit = 20,
         CancellationToken cancellationToken = default!)
     {
-        if (page <= 0) throw new Exception("Page number must be greater than 0");
-        if (limit > 100) throw new Exception("Limit must be less than or equal to 100");
-        if (limit * (page - 1) >= 10000) throw new Exception("not enough results");
+        if (page <= 0)
+            throw new Exception("Page number must be greater than 0");
+
+        if (limit > 100)
+            throw new Exception("Limit must be less than or equal to 100");
+
+        if (limit * (page - 1) >= 10000)
+            throw new Exception("not enough results");
 
         var url = $"{_apiUrl}/manga?limit={limit}&title={Uri.EscapeDataString(query)}&limit={limit}&offset={limit * (page - 1)}&order[relevance]=desc";
         var response = await _http.ExecuteAsync(url, cancellationToken);
@@ -61,7 +65,9 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
         if (data["result"]?.ToString() != "ok")
             return new();
 
-        var list = data["data"]!.Select(manga => new MangadexResult()
+        var list = new List<IMangaResult>();
+
+        var results = data["data"]!.Select(manga => new MangadexResult()
         {
             Id = manga["id"]!.ToString(),
             Title = manga["attributes"]!["title"]!.ToList()[0].Value<JProperty>()!.Value.ToString(),
@@ -89,10 +95,12 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
             LastChapter = manga["attributes"]!["lastChapter"]!.ToString(),
         }).ToList();
 
+        list.AddRange(results);
+
         return list;
     }
 
-    public override async Task<MangadexInfo> GetMangaInfoAsync(
+    public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
@@ -101,7 +109,7 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
 
         var data = JObject.Parse(response);
         if (data["result"]?.ToString() != "ok")
-            return new();
+            return new MangadexInfo();
 
         var mangaInfo = new MangadexInfo
         {
@@ -150,7 +158,7 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
     /// <summary>
     /// Currently only supports english.
     /// </summary>
-    public override async Task<List<MangaChapterPage>> GetChapterPagesAsync(
+    public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
@@ -161,13 +169,17 @@ public class Mangadex : MangaParser<MangadexResult, MangadexInfo>
         if (data["result"]?.ToString() != "ok")
             return new();
 
+        var list = new List<IMangaChapterPage>();
+
         var pages = data!["chapter"]!["data"]!.Select(id => new MangaChapterPage()
         {
             Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
             Page = Convert.ToInt32(id.ToString().Split('-')[0])
         }).ToList();
 
-        return pages;
+        list.AddRange(pages);
+
+        return list;
     }
 
     public async Task<List<MangadexChapter>> GetAllChaptersAsync(

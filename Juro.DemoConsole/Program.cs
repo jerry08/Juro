@@ -11,19 +11,19 @@ internal class Program
     {
         Console.WriteLine("Hello, World!");
 
-        await AnimeDemo();
-        //await MangaDemo();
+        //await AnimeDemo();
+        await MangaDemo();
         //await MovieDemo();
     }
 
     private static async Task AnimeDemo()
     {
         var client = new AnimeClient();
-        var animes = await client.Gogoanime.SearchAsync("anohana");
-        var animeInfo = await client.Gogoanime.GetAnimeInfoAsync(animes[0].Id);
-        var episodes = await client.Gogoanime.GetEpisodesAsync(animes[0].Id);
-        var videoServers = await client.Gogoanime.GetVideoServersAsync(episodes[0].Id);
-        var videos = await client.Gogoanime.GetVideosAsync(videoServers[4]);
+        var animes = await client.Zoro.SearchAsync("jujutsu kaisen");
+        var animeInfo = await client.Zoro.GetAnimeInfoAsync(animes[0].Id);
+        var episodes = await client.Zoro.GetEpisodesAsync(animes[0].Id);
+        var videoServers = await client.Zoro.GetVideoServersAsync(episodes[0].Id);
+        var videos = await client.Zoro.GetVideosAsync(videoServers[0]);
 
         var downloader = new HlsDownloader();
         var test = await downloader.GetHlsStreamMetadatasAsync(videos[0].VideoUrl, videos[0].Headers);
@@ -58,7 +58,7 @@ internal class Program
     {
         var client = new MangaClient();
         //var results = await client.MangaKakalot.SearchAsync("Tomodachi Game");
-        var results = await client.MangaKatana.SearchAsync("solo leveling");
+        var results = await client.MangaPill.SearchAsync("solo leveling");
         var mangaInfo = await client.MangaPill.GetMangaInfoAsync(results[0].Id);
         var pages = await client.MangaPill.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
 

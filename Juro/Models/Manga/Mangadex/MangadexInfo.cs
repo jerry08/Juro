@@ -2,7 +2,7 @@
 
 namespace Juro.Models.Manga.Mangadex;
 
-public class MangadexInfo : MangaInfo<MangadexChapter>
+public class MangadexInfo : MangaInfo
 {
     /// <summary>
     /// Year released

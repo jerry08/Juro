@@ -10,22 +10,22 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
 
-public class MangaKatana : MangaParser
+public class MangaKatana : IMangaProvider
 {
     private readonly HttpClient _http;
 
-    public override string Name { get; set; } = "MangaKatana";
+    public string Name { get; set; } = "MangaKatana";
 
-    public override string BaseUrl => "https://mangakatana.com";
+    public string BaseUrl => "https://mangakatana.com";
 
-    public override string Logo => "";
+    public string Logo => "";
 
     public MangaKatana(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
     }
 
-    public override async Task<List<MangaResult>> SearchAsync(
+    public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
     {
@@ -37,7 +37,8 @@ public class MangaKatana : MangaParser
         var gg = document.GetElementbyId("book_list");
 
         return document.GetElementbyId("book_list")?
-            .SelectNodes(".//div[contains(@class, 'media-left')]")?.Select(el => new MangaResult()
+            .SelectNodes(".//div[contains(@class, 'media-left')]")?
+            .Select(el => (IMangaResult)new MangaResult()
             {
                 Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
                 Title = el.SelectSingleNode(".//img")?.Attributes["alt"]?.Value,
@@ -45,7 +46,7 @@ public class MangaKatana : MangaParser
             }).ToList() ?? new();
     }
 
-    public override async Task<MangaInfo> GetMangaInfoAsync(
+    public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
@@ -72,7 +73,7 @@ public class MangaKatana : MangaParser
         };
 
         mangaInfo.Chapters = document.DocumentNode.SelectNodes(".//div[@id='chapters']/div/a")?
-            .Reverse()?.Select(el => new MangaChapter()
+            .Reverse()?.Select(el => (IMangaChapter)new MangaChapter()
             {
                 Id = el.Attributes["href"].Value,
                 Title = el.InnerText
@@ -81,7 +82,7 @@ public class MangaKatana : MangaParser
         return mangaInfo;
     }
 
-    public override async Task<List<MangaChapterPage>> GetChapterPagesAsync(
+    public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
@@ -93,7 +94,7 @@ public class MangaKatana : MangaParser
         var i = 1;
 
         return document.DocumentNode.SelectNodes(".//img[@class='js-page']")
-            .Select(el => new MangaChapterPage()
+            .Select(el => (IMangaChapterPage)new MangaChapterPage()
             {
                 Image = el.Attributes["data-src"]!.Value,
                 Page = i++

@@ -10,22 +10,22 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
 
-public class MangaKakalot : MangaParser
+public class MangaKakalot : IMangaProvider
 {
     private readonly HttpClient _http;
 
-    public override string Name { get; set; } = "MangaKakalot";
+    public string Name { get; set; } = "MangaKakalot";
 
-    public override string BaseUrl => "https://mangakakalot.com";
+    public string BaseUrl => "https://mangakakalot.com";
 
-    public override string Logo => "https://scontent-lga3-1.xx.fbcdn.net/v/t31.18172-8/23592342_1993674674222540_3098972633173711780_o.png?stp=cp0_dst-png_p64x64&_nc_cat=105&ccb=1-7&_nc_sid=85a577&_nc_ohc=j_WvAOX4tOwAX9dNL_4&_nc_ht=scontent-lga3-1.xx&oh=00_AT-ZFkuaHiS33j-oUCtn-jzwkLfVuCONx0aqF3QXrcFKvg&oe=62FC016C";
+    public string Logo => "https://scontent-lga3-1.xx.fbcdn.net/v/t31.18172-8/23592342_1993674674222540_3098972633173711780_o.png?stp=cp0_dst-png_p64x64&_nc_cat=105&ccb=1-7&_nc_sid=85a577&_nc_ohc=j_WvAOX4tOwAX9dNL_4&_nc_ht=scontent-lga3-1.xx&oh=00_AT-ZFkuaHiS33j-oUCtn-jzwkLfVuCONx0aqF3QXrcFKvg&oe=62FC016C";
 
     public MangaKakalot(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
     }
 
-    public override async Task<List<MangaResult>> SearchAsync(
+    public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
     {
@@ -39,10 +39,11 @@ public class MangaKakalot : MangaParser
         if (nodes is null)
             return new();
 
-        var mangas = new List<MangaResult>();
+        var list = new List<IMangaResult>();
+
         foreach (var node in nodes)
         {
-            mangas.Add(new()
+            list.Add(new MangaResult()
             {
                 Id = node.SelectSingleNode(".//div/h3/a")?.Attributes["href"]!.Value.Split('/')[3]!,
                 Title = node.SelectSingleNode(".//div/h3/a")?.InnerText,
@@ -51,10 +52,10 @@ public class MangaKakalot : MangaParser
             });
         }
 
-        return mangas;
+        return list;
     }
 
-    public override async Task<MangaInfo> GetMangaInfoAsync(
+    public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
@@ -94,7 +95,7 @@ public class MangaKakalot : MangaParser
             mangaInfo.Authors = document.DocumentNode.SelectNodes(".//div[@class='manga-info-top']/ul/li[2]/a")
                 ?.Select(x => x.InnerText).ToList() ?? new();
             mangaInfo.Chapters = document.DocumentNode.SelectNodes(".//div[@class='chapter-list']/div[@class='row']")
-                ?.Select(el => new MangaChapter()
+                ?.Select(el => (IMangaChapter)new MangaChapter()
                 {
                     Id = el.SelectSingleNode(".//span/a").Attributes["href"].Value.Split(new[] { "chapter/" }, StringSplitOptions.None)[1],
                     Title = el.SelectSingleNode(".//span/a").InnerText,
@@ -126,7 +127,7 @@ public class MangaKakalot : MangaParser
             mangaInfo.Authors = document.DocumentNode.SelectNodes(".//div[@class='story-info-right']/table/tbody/tr[2]/td[@class='table-value']/a")
                 ?.Select(x => x.InnerText).ToList() ?? new();
             mangaInfo.Chapters = document.DocumentNode.SelectNodes(".//div[@class='container-main-left']/div[@class='panel-story-chapter-list']/ul/li")
-                ?.Select(el => new MangaChapter()
+                ?.Select(el => (IMangaChapter)new MangaChapter()
                 {
                     Id = el.SelectSingleNode(".//a").Attributes["href"].Value.Split(new[] { ".com/" }, StringSplitOptions.None)[1] + "$$READMANGANATO",
                     Title = el.SelectSingleNode(".//a").InnerText,
@@ -138,7 +139,7 @@ public class MangaKakalot : MangaParser
         return mangaInfo;
     }
 
-    public override async Task<List<MangaChapterPage>> GetChapterPagesAsync(
+    public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
@@ -153,7 +154,7 @@ public class MangaKakalot : MangaParser
         var i = 1;
 
         var pages = document.DocumentNode.SelectNodes(".//div[@class='container-chapter-reader']/img")
-            .Select(el => new MangaChapterPage()
+            .Select(el => (IMangaChapterPage)new MangaChapterPage()
             {
                 Image = el.Attributes["src"]!.Value,
                 Page = i++,

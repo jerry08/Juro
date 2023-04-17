@@ -2,7 +2,7 @@
 
 namespace Juro.Models.Manga;
 
-public class MangaInfo<TMangaChapter>
+public class MangaInfo : IMangaInfo
 {
     public string Id { get; set; } = default!;
 
@@ -24,9 +24,5 @@ public class MangaInfo<TMangaChapter>
 
     public List<string> Authors { get; set; } = new();
 
-    public List<TMangaChapter> Chapters { get; set; } = new();
-}
-
-public class MangaInfo : MangaInfo<MangaChapter>
-{
+    public List<IMangaChapter> Chapters { get; set; } = new();
 }

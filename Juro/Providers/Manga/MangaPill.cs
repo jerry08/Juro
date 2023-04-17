@@ -10,22 +10,22 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
 
-public class MangaPill : MangaParser
+public class MangaPill : IMangaProvider
 {
     private readonly HttpClient _http;
 
-    public override string Name { get; set; } = "MangaPill";
+    public string Name { get; set; } = "MangaPill";
 
-    public override string BaseUrl => "https://mangapill.com";
+    public string BaseUrl => "https://mangapill.com";
 
-    public override string Logo => "";
+    public string Logo => "";
 
     public MangaPill(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
     }
 
-    public override async Task<List<MangaResult>> SearchAsync(
+    public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
     {
@@ -34,7 +34,8 @@ public class MangaPill : MangaParser
         var document = Html.Parse(response);
 
         return document.DocumentNode
-            .SelectNodes(".//a[contains(@class, 'bg-card')]")?.Select(el => new MangaResult()
+            .SelectNodes(".//a[contains(@class, 'bg-card')]")?
+            .Select(el => (IMangaResult)new MangaResult()
             {
                 Id = el.Attributes["href"].Value,
                 Title = el.SelectSingleNode(".//div[@class='font-black']")?.InnerText,
@@ -42,7 +43,7 @@ public class MangaPill : MangaParser
             }).ToList() ?? new();
     }
 
-    public override async Task<MangaInfo> GetMangaInfoAsync(
+    public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
@@ -69,7 +70,7 @@ public class MangaPill : MangaParser
         };
 
         mangaInfo.Chapters = document.DocumentNode.SelectNodes(".//div[@id='chapters']/div/a")?
-            .Reverse()?.Select(el => new MangaChapter()
+            .Reverse()?.Select(el => (IMangaChapter)new MangaChapter()
             {
                 Id = el.Attributes["href"].Value,
                 Title = el.InnerText
@@ -78,7 +79,7 @@ public class MangaPill : MangaParser
         return mangaInfo;
     }
 
-    public override async Task<List<MangaChapterPage>> GetChapterPagesAsync(
+    public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
@@ -90,7 +91,7 @@ public class MangaPill : MangaParser
         var i = 1;
 
         return document.DocumentNode.SelectNodes(".//img[@class='js-page']")
-            .Select(el => new MangaChapterPage()
+            .Select(el => (IMangaChapterPage)new MangaChapterPage()
             {
                 Image = el.Attributes["data-src"]!.Value,
                 Page = i++

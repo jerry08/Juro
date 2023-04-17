@@ -2,7 +2,7 @@
 
 namespace Juro.Models.Manga;
 
-public class MangaResult
+public class MangaResult : IMangaResult
 {
     public string Id { get; set; } = default!;
 

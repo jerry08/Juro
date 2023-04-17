@@ -1,6 +1,6 @@
 ﻿namespace Juro.Models.Manga;
 
-public class MangaChapter
+public class MangaChapter : IMangaChapter
 {
     public string Id { get; set; } = default!;
 
