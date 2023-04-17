@@ -186,8 +186,8 @@ public class Zoro : IAnimeProvider
         if (overviewNode is not null)
             anime.Summary = overviewNode.InnerText.Trim();
 
-        var typeNode = document.DocumentNode.SelectNodes(".//div[@class='film-stats']/span[@class='dot']")
-            .FirstOrDefault()!.NextSibling.NextSibling;
+        var typeNode = document.DocumentNode.SelectNodes(".//div[@class='film-stats']//span[@class='dot']")?
+            .FirstOrDefault()?.NextSibling.NextSibling;
         if (typeNode is not null)
             anime.Type = typeNode.InnerText;
 
