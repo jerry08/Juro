@@ -6,11 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models.Manga;
 using Juro.Models.Manga.Mangadex;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Manga;
 
+/// <summary>
+/// Client for interacting with Mangadex.
+/// </summary>
 public class Mangadex : IMangaProvider
 {
     private readonly HttpClient _http;
@@ -22,11 +26,27 @@ public class Mangadex : IMangaProvider
 
     public string Logo => "https://pbs.twimg.com/profile_images/1391016345714757632/xbt_jW78_400x400.jpg";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="Mangadex"/>.
+    /// </summary>
     public Mangadex(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
     }
 
+    /// <summary>
+    /// Initializes an instance of <see cref="Mangadex"/>.
+    /// </summary>
+    public Mangadex() : this(Http.ClientProvider)
+    {
+    }
+
+    /// <summary>
+    /// Search for manga.
+    /// </summary>
+    /// <param name="query">Search query.</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>A <see cref="List{IMangaResult}"/> of <see cref="IMangaResult"/>s from <see cref="MangadexResult"/>s.</returns>
     public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
@@ -40,8 +60,7 @@ public class Mangadex : IMangaProvider
     /// <param name="query">Search query.</param>
     /// <param name="page">Page number. Default value is 1.</param>
     /// <param name="limit">Limit of results to return. (default: 20) (max: 100) (min: 1)</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <returns>A <see cref="List{IMangaResult}"/> of <see cref="IMangaResult"/>s from <see cref="MangadexResult"/>s.</returns>
     /// <exception cref="Exception"></exception>
     public async Task<List<IMangaResult>> SearchAsync(
         string query,
@@ -100,6 +119,11 @@ public class Mangadex : IMangaProvider
         return list;
     }
 
+    /// <summary>
+    /// Gets the manga info by Id.
+    /// </summary>
+    /// <param name="mangaId">The Id of the manga</param>
+    /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangadexInfo"/>.</returns>
     public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
@@ -143,8 +167,7 @@ public class Mangadex : IMangaProvider
         mangaInfo.Chapters.AddRange(chapters);
 
         var coverArtId = data["data"]!["relationships"]!
-            .Where(x => x["type"]!.ToString() == "cover_art")
-            .FirstOrDefault()?["id"]!.ToString();
+            .FirstOrDefault(x => x["type"]!.ToString() == "cover_art")?["id"]!.ToString();
 
         if (coverArtId is not null)
         {
@@ -182,6 +205,9 @@ public class Mangadex : IMangaProvider
         return list;
     }
 
+    /// <summary>
+    /// Gets all chapters from Mangadex Id.
+    /// </summary>
     public async Task<List<MangadexChapter>> GetAllChaptersAsync(
         string mangaId,
         int offset,
@@ -216,6 +242,9 @@ public class Mangadex : IMangaProvider
         return list;
     }
 
+    /// <summary>
+    /// Gets cover image by cover Id.
+    /// </summary>
     public async Task<string> GetCoverImageAsync(
         string coverId,
         CancellationToken cancellationToken = default!)

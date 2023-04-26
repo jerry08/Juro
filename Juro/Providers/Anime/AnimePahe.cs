@@ -32,10 +32,20 @@ public class AnimePahe : IAnimeProvider
 
     private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
 
+    /// <summary>
+    /// Initializes an instance of <see cref="AnimePahe"/>.
+    /// </summary>
     public AnimePahe(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
         _httpClientProvider = httpClientProvider;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="AnimePahe"/>.
+    /// </summary>
+    public AnimePahe() : this(Http.ClientProvider)
+    {
     }
 
     public async Task<List<AnimeInfo>> SearchAsync(
@@ -45,7 +55,7 @@ public class AnimePahe : IAnimeProvider
         var animes = new List<AnimeInfo>();
 
         var response = await _http.ExecuteAsync(
-            $"{BaseUrl}/api?m=search&q={Uri.EscapeUriString(query)}",
+            $"{BaseUrl}/api?m=search&q={Uri.EscapeDataString(query)}",
             cancellationToken
         );
 

@@ -10,6 +10,9 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
 
+/// <summary>
+/// Client for interacting with MangaKakalot.
+/// </summary>
 public class MangaKakalot : IMangaProvider
 {
     private readonly HttpClient _http;
@@ -20,11 +23,26 @@ public class MangaKakalot : IMangaProvider
 
     public string Logo => "https://scontent-lga3-1.xx.fbcdn.net/v/t31.18172-8/23592342_1993674674222540_3098972633173711780_o.png?stp=cp0_dst-png_p64x64&_nc_cat=105&ccb=1-7&_nc_sid=85a577&_nc_ohc=j_WvAOX4tOwAX9dNL_4&_nc_ht=scontent-lga3-1.xx&oh=00_AT-ZFkuaHiS33j-oUCtn-jzwkLfVuCONx0aqF3QXrcFKvg&oe=62FC016C";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="MangaKakalot"/>.
+    /// </summary>
     public MangaKakalot(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
     }
 
+    /// <summary>
+    /// Initializes an instance of <see cref="MangaKakalot"/>.
+    /// </summary>
+    public MangaKakalot() : this(Http.ClientProvider)
+    {
+    }
+
+    /// <summary>
+    /// Search for manga.
+    /// </summary>
+    /// <param name="query"></param>
+    /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangaResult"/>.</returns>
     public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
@@ -55,6 +73,11 @@ public class MangaKakalot : IMangaProvider
         return list;
     }
 
+    /// <summary>
+    /// Gets the manga info by Id.
+    /// </summary>
+    /// <param name="mangaId">The Id of the manga</param>
+    /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangaInfo"/>.</returns>
     public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
@@ -139,6 +162,9 @@ public class MangaKakalot : IMangaProvider
         return mangaInfo;
     }
 
+    /// <summary>
+    /// Gets chapter pages for manga.
+    /// </summary>
     public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)

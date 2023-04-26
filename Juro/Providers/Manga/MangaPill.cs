@@ -10,6 +10,9 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Providers.Manga;
 
+/// <summary>
+/// Client for interacting with MangaPill.
+/// </summary>
 public class MangaPill : IMangaProvider
 {
     private readonly HttpClient _http;
@@ -20,16 +23,34 @@ public class MangaPill : IMangaProvider
 
     public string Logo => "";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="MangaPill"/>.
+    /// </summary>
     public MangaPill(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
     }
 
+    /// <summary>
+    /// Initializes an instance of <see cref="MangaPill"/>.
+    /// </summary>
+    public MangaPill() : this(Http.ClientProvider)
+    {
+    }
+
+    /// <summary>
+    /// Search for manga.
+    /// </summary>
+    /// <param name="query"></param>
+    /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangaResult"/>.</returns>
     public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
     {
-        var response = await _http.ExecuteAsync($"{BaseUrl}/quick-search?q={Uri.EscapeUriString(query)}", cancellationToken);
+        var response = await _http.ExecuteAsync(
+            $"{BaseUrl}/quick-search?q={Uri.EscapeDataString(query)}",
+            cancellationToken
+        );
 
         var document = Html.Parse(response);
 
@@ -43,6 +64,11 @@ public class MangaPill : IMangaProvider
             }).ToList() ?? new();
     }
 
+    /// <summary>
+    /// Gets the manga info by Id.
+    /// </summary>
+    /// <param name="mangaId">The Id of the manga</param>
+    /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangaInfo"/>.</returns>
     public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
@@ -79,6 +105,9 @@ public class MangaPill : IMangaProvider
         return mangaInfo;
     }
 
+    /// <summary>
+    /// Gets chapter pages for manga.
+    /// </summary>
     public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)

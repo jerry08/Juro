@@ -29,10 +29,20 @@ public class Zoro : IAnimeProvider
 
     public string BaseUrl => "https://zoro.to";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="Zoro"/>.
+    /// </summary>
     public Zoro(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
         _httpClientProvider = httpClientProvider;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="Zoro"/>.
+    /// </summary>
+    public Zoro() : this(Http.ClientProvider)
+    {
     }
 
     public async Task<List<AnimeInfo>> SearchAsync(

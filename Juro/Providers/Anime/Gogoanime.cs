@@ -17,7 +17,7 @@ using Newtonsoft.Json.Linq;
 namespace Juro.Providers.Anime;
 
 /// <summary>
-/// Scraper for interacting with gogoanime.
+/// Client for interacting with gogoanime.
 /// </summary>
 public class Gogoanime : IAnimeProvider
 {
@@ -32,10 +32,20 @@ public class Gogoanime : IAnimeProvider
 
     public string CdnUrl { get; private set; } = default!;
 
+    /// <summary>
+    /// Initializes an instance of <see cref="Gogoanime"/>.
+    /// </summary>
     public Gogoanime(Func<HttpClient> httpClientProvider)
     {
         _http = httpClientProvider();
         _httpClientProvider = httpClientProvider;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="Gogoanime"/>.
+    /// </summary>
+    public Gogoanime() : this(Http.ClientProvider)
+    {
     }
 
     private async Task EnsureUrlsSet(CancellationToken cancellationToken = default)
@@ -75,7 +85,7 @@ public class Gogoanime : IAnimeProvider
         //query = query.Replace(" ", "+");
 
         query = selectDub ? query + " (Dub)" : query;
-        query = Uri.EscapeUriString(query);
+        query = Uri.EscapeDataString(query);
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}search.html?keyword={query}",
@@ -401,7 +411,8 @@ public class Gogoanime : IAnimeProvider
         if (domainInfo.Domain.Contains("gogo")
             || domainInfo.Domain.Contains("goload")
             || domainInfo.Domain.Contains("playgo")
-            || domainInfo.Domain.Contains("anihdplay"))
+            || domainInfo.Domain.Contains("anihdplay")
+            || domainInfo.Domain.Contains("playtaku"))
         {
             return new GogoCDN(_httpClientProvider);
         }

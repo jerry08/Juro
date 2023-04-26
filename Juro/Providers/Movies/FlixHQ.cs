@@ -93,7 +93,7 @@ public class FlixHQ : MovieParser
         var document = Html.Parse(response);
 
         var uid = document.DocumentNode.SelectSingleNode(".//div[contains(@class, 'watch_block')]")!.Attributes["data-id"]!.Value;
-        movieInfo.Title = document.DocumentNode.Descendants().Where(x => x?.HasClass("heading-name") == true).FirstOrDefault()?.InnerText;
+        movieInfo.Title = document.DocumentNode.Descendants().FirstOrDefault(x => x?.HasClass("heading-name") == true)?.InnerText;
         movieInfo.Image = document.DocumentNode.SelectSingleNode(".//div[contains(@class, 'm_i-d-poster')]/div/img")?.Attributes["src"]?.Value;
         movieInfo.Description = document.DocumentNode.SelectSingleNode(".//div[@class='description']")?.InnerText?.Trim();
         movieInfo.Type = movieInfo.Id.ToLower().Split('/')[0] == "tv" ? TvType.TvSeries : TvType.Movie;
