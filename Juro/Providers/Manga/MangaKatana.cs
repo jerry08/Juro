@@ -17,10 +17,13 @@ public class MangaKatana : IMangaProvider
 {
     private readonly HttpClient _http;
 
+    /// <inheritdoc />
     public string Name { get; set; } = "MangaKatana";
 
+    /// <inheritdoc />
     public string BaseUrl => "https://mangakatana.com";
 
+    /// <inheritdoc />
     public string Logo => "";
 
     /// <summary>
@@ -38,11 +41,7 @@ public class MangaKatana : IMangaProvider
     {
     }
 
-    /// <summary>
-    /// Search for manga.
-    /// </summary>
-    /// <param name="query"></param>
-    /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangaResult"/>.</returns>
+    /// <inheritdoc />
     public async Task<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
@@ -64,11 +63,7 @@ public class MangaKatana : IMangaProvider
             }).ToList() ?? new();
     }
 
-    /// <summary>
-    /// Gets the manga info by Id.
-    /// </summary>
-    /// <param name="mangaId">The Id of the manga</param>
-    /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangaInfo"/>.</returns>
+    /// <inheritdoc />
     public async Task<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
@@ -105,9 +100,7 @@ public class MangaKatana : IMangaProvider
         return mangaInfo;
     }
 
-    /// <summary>
-    /// Gets chapter pages for manga.
-    /// </summary>
+    /// <inheritdoc />
     public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)

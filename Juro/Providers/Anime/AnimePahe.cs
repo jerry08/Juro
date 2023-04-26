@@ -48,6 +48,7 @@ public class AnimePahe : IAnimeProvider
     {
     }
 
+    /// <inheritdoc />
     public async Task<List<AnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default)
@@ -81,6 +82,7 @@ public class AnimePahe : IAnimeProvider
         }).ToList();
     }
 
+    /// <inheritdoc cref="SearchAsync"/>
     public async Task<List<AnimeInfo>> GetAiringAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
@@ -108,6 +110,7 @@ public class AnimePahe : IAnimeProvider
         }).ToList();
     }
 
+    /// <inheritdoc />
     public async Task<AnimeInfo> GetAnimeInfoAsync(
         string id,
         CancellationToken cancellationToken = default)
@@ -173,6 +176,7 @@ public class AnimePahe : IAnimeProvider
         return anime;
     }
 
+    /// <inheritdoc />
     public async Task<List<Episode>> GetEpisodesAsync(
         string id,
         CancellationToken cancellationToken = default)
@@ -224,6 +228,7 @@ public class AnimePahe : IAnimeProvider
         return list;
     }
 
+    /// <inheritdoc />
     public async Task<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         CancellationToken cancellationToken = default)
@@ -271,6 +276,7 @@ public class AnimePahe : IAnimeProvider
             }).ToList();
     }
 
+    /// <inheritdoc />
     public async Task<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default)

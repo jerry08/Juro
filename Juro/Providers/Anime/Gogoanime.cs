@@ -67,6 +67,7 @@ public class Gogoanime : IAnimeProvider
         }
     }
 
+    /// <inheritdoc />
     public async Task<List<AnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default)
@@ -74,6 +75,7 @@ public class Gogoanime : IAnimeProvider
         return await SearchAsync(query, false, cancellationToken);
     }
 
+    /// <inheritdoc cref="SearchAsync"/>
     public async Task<List<AnimeInfo>> SearchAsync(
         string query,
         bool selectDub,
@@ -95,6 +97,7 @@ public class Gogoanime : IAnimeProvider
         return ParseAnimeResponse(response);
     }
 
+    /// <inheritdoc cref="SearchAsync"/>
     public async Task<List<AnimeInfo>> GetPopularAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
@@ -109,6 +112,7 @@ public class Gogoanime : IAnimeProvider
         return ParseAnimeResponse(response);
     }
 
+    /// <inheritdoc cref="SearchAsync"/>
     public async Task<List<AnimeInfo>> GetNewSeasonAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
@@ -123,6 +127,7 @@ public class Gogoanime : IAnimeProvider
         return ParseAnimeResponse(response);
     }
 
+    /// <inheritdoc cref="SearchAsync"/>
     public async Task<List<AnimeInfo>> GetLastUpdatedAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
@@ -208,6 +213,7 @@ public class Gogoanime : IAnimeProvider
         return animes;
     }
 
+    /// <inheritdoc />
     public async Task<AnimeInfo> GetAnimeInfoAsync(
         string id,
         CancellationToken cancellationToken = default)
@@ -299,6 +305,7 @@ public class Gogoanime : IAnimeProvider
         return anime;
     }
 
+    /// <inheritdoc />
     public async Task<List<Episode>> GetEpisodesAsync(
         string id,
         CancellationToken cancellationToken = default)
@@ -368,6 +375,7 @@ public class Gogoanime : IAnimeProvider
     private string HttpsIfy(string text)
         => string.Join("", text.Take(2)) == "//" ? $"https:{text}" : text;
 
+    /// <inheritdoc />
     public async Task<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         CancellationToken cancellationToken = default)
@@ -430,6 +438,7 @@ public class Gogoanime : IAnimeProvider
         return null;
     }
 
+    /// <inheritdoc />
     public async Task<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default)
