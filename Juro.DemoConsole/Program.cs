@@ -11,8 +11,8 @@ internal class Program
     {
         Console.WriteLine("Hello, World!");
 
-        //await AnimeDemo();
-        await MangaDemo();
+        await AnimeDemo();
+        //await MangaDemo();
         //await MovieDemo();
     }
 
