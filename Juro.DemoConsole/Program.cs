@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using Httpz;
 using Juro.Clients;
+using Juro.Utils;
+using Juro.Utils.Extensions;
 
 namespace Juro.DemoConsole;
 
@@ -18,12 +20,14 @@ internal class Program
 
     private static async Task AnimeDemo()
     {
+        //var test = "k".ToIntOrNull(36);
+
         var client = new AnimeClient();
-        var animes = await client.Zoro.SearchAsync("jujutsu kaisen");
-        var animeInfo = await client.Zoro.GetAnimeInfoAsync(animes[0].Id);
-        var episodes = await client.Zoro.GetEpisodesAsync(animes[0].Id);
-        var videoServers = await client.Zoro.GetVideoServersAsync(episodes[0].Id);
-        var videos = await client.Zoro.GetVideosAsync(videoServers[0]);
+        var animes = await client.NineAnime.SearchAsync("jujutsu kaisen");
+        var animeInfo = await client.NineAnime.GetAnimeInfoAsync(animes[0].Id);
+        var episodes = await client.NineAnime.GetEpisodesAsync(animes[0].Id);
+        var videoServers = await client.NineAnime.GetVideoServersAsync(episodes[0].Id);
+        var videos = await client.NineAnime.GetVideosAsync(videoServers[3]);
 
         var downloader = new HlsDownloader();
         var test = await downloader.GetHlsStreamMetadatasAsync(videos[0].VideoUrl, videos[0].Headers);

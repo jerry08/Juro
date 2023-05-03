@@ -63,8 +63,6 @@ public class NineAnime : IAnimeProvider
         //url = $"{url}&sort=${filters.sort}&{vrf}&page={page}";
         url = $"{url}&{vrf}";
 
-        var animes = new List<AnimeInfo>();
-
         var response = await _http.ExecuteAsync(
             url,
             new()
@@ -74,92 +72,20 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-        if (string.IsNullOrWhiteSpace(response))
-            return animes;
-
-        var document = Html.Parse(response);
-        var nodes = document.DocumentNode
-            .SelectNodes(".//div[@id='list-items']/div[contains(@class, 'item')]");
-
-        var list = new List<AnimeInfo>();
-
-        foreach (var node in nodes)
-        {
-            var animeInfo = new AnimeInfo()
-            {
-                Site = AnimeSites.NineAnime
-            };
-
-            //animeInfo.Id = node.SelectSingleNode(
-            //    ".//div/div[contains(@class, 'ani')]/a"
-            //).Attributes["href"].Value?.Split('/')[2]!;
-
-            animeInfo.Id = node.SelectSingleNode(
-                ".//div/div[contains(@class, 'ani')]/a"
-            ).Attributes["href"].Value;
-
-            animeInfo.Title = node.SelectSingleNode(
-                ".//div/div[contains(@class, 'info')]/div[contains(@class, 'b1')]/a"
-            ).InnerText;
-
-            animeInfo.Image = node.SelectSingleNode(
-                ".//div/div[contains(@class, 'ani')]/a/img"
-            ).Attributes["src"].Value;
-
-            list.Add(animeInfo);
-        }
-
-        return list;
+        return ParseAnimeResponse(response);
     }
 
     /// <inheritdoc cref="SearchAsync"/>
     public async Task<List<AnimeInfo>> GetPopularAsync(
-        int page,
+        int page = 1,
         CancellationToken cancellationToken = default)
     {
-        var animes = new List<AnimeInfo>();
-
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}/filter?sort=trending&page={page}",
             cancellationToken
         );
 
-        if (string.IsNullOrWhiteSpace(response))
-            return animes;
-
-        var document = Html.Parse(response);
-        var nodes = document.DocumentNode
-            .SelectNodes(".//div[@id='list-items']/div[contains(@class, 'item')]");
-
-        var list = new List<AnimeInfo>();
-
-        foreach (var node in nodes)
-        {
-            var animeInfo = new AnimeInfo()
-            {
-                Site = AnimeSites.NineAnime
-            };
-
-            //animeInfo.Id = node.SelectSingleNode(
-            //    ".//div/div[contains(@class, 'ani')]/a"
-            //).Attributes["href"].Value?.Split('/')[2]!;
-
-            animeInfo.Id = node.SelectSingleNode(
-                ".//div/div[contains(@class, 'ani')]/a"
-            ).Attributes["href"].Value;
-
-            animeInfo.Title = node.SelectSingleNode(
-                ".//div/div[contains(@class, 'info')]/div[contains(@class, 'b1')]/a"
-            ).InnerText;
-
-            animeInfo.Image = node.SelectSingleNode(
-                ".//div/div[contains(@class, 'ani')]/a/img"
-            ).Attributes["src"].Value;
-
-            list.Add(animeInfo);
-        }
-
-        return list;
+        return ParseAnimeResponse(response);
     }
 
     /// <summary>
@@ -176,7 +102,47 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-        return new();
+        return ParseAnimeResponse(response);
+    }
+
+    private List<AnimeInfo> ParseAnimeResponse(string? response)
+    {
+        var list = new List<AnimeInfo>();
+
+        if (string.IsNullOrWhiteSpace(response))
+            return list;
+
+        var document = Html.Parse(response!);
+        var nodes = document.DocumentNode
+            .SelectNodes(".//div[@id='list-items']/div[contains(@class, 'item')]");
+
+        foreach (var node in nodes)
+        {
+            var animeInfo = new AnimeInfo()
+            {
+                Site = AnimeSites.NineAnime
+            };
+
+            //animeInfo.Id = node.SelectSingleNode(
+            //    ".//div/div[contains(@class, 'ani')]/a"
+            //).Attributes["href"].Value?.Split('/')[2]!;
+
+            animeInfo.Id = node.SelectSingleNode(
+                ".//div/div[contains(@class, 'ani')]/a"
+            ).Attributes["href"].Value;
+
+            animeInfo.Title = node.SelectSingleNode(
+                ".//div/div[contains(@class, 'info')]/div[contains(@class, 'b1')]/a"
+            ).InnerText;
+
+            animeInfo.Image = node.SelectSingleNode(
+                ".//div/div[contains(@class, 'ani')]/a/img"
+            ).Attributes["src"].Value;
+
+            list.Add(animeInfo);
+        }
+
+        return list;
     }
 
     /// <inheritdoc />
@@ -184,15 +150,57 @@ public class NineAnime : IAnimeProvider
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.ExecuteAsync($"{BaseUrl}/anime/{id}", cancellationToken);
+        var response = await _http.ExecuteAsync($"{BaseUrl}{id}", cancellationToken);
 
         var document = Html.Parse(response);
 
         var anime = new AnimeInfo()
         {
             Id = id,
-            Site = AnimeSites.AnimePahe
+            Site = AnimeSites.NineAnime,
+            Title = document.DocumentNode
+                .SelectSingleNode(".//h1[contains(@class, 'title')]").InnerText,
+            Image = document.DocumentNode
+                .SelectSingleNode(".//div[contains(@class, 'binfo')]/div[contains(@class, 'poster')]/span/img")
+                .Attributes["src"].Value,
         };
+
+        var jpAttr = document.DocumentNode
+            .SelectSingleNode(".//h1[contains(@class, 'title')]").Attributes["data-jp"];
+        if (jpAttr is not null)
+            anime.OtherNames = jpAttr.Value;
+
+        anime.Summary = document.DocumentNode
+            .SelectSingleNode(".//div[@class='content']").InnerText?.Trim()
+            ?? "";
+
+        var genresNode = document.DocumentNode
+            .SelectNodes(".//div[contains(@class, 'meta')][1]/div")
+            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("genres") == true)?
+            .SelectNodes(".//span/a");
+        if (genresNode is not null)
+            anime.Genres.AddRange(genresNode.Select(x => new Genre(x.InnerText)));
+
+        var airedNode = document.DocumentNode
+            .SelectNodes(".//div[contains(@class, 'meta')][1]/div")
+            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("aired") == true)?
+            .SelectSingleNode(".//span");
+        if (airedNode is not null)
+            anime.Released = airedNode.InnerText.Trim();
+
+        var typeNode = document.DocumentNode
+            .SelectNodes(".//div[contains(@class, 'meta')][1]/div")
+            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("type") == true)?
+            .SelectSingleNode(".//span");
+        if (typeNode is not null)
+            anime.Type = typeNode.InnerText.Trim();
+
+        var statusNode = document.DocumentNode
+            .SelectNodes(".//div[contains(@class, 'meta')][1]/div")
+            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("status") == true)?
+            .SelectSingleNode(".//span");
+        if (statusNode is not null)
+            anime.Status = statusNode.InnerText.Trim();
 
         return anime;
     }
