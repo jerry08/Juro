@@ -37,7 +37,7 @@ public interface IAnimeProvider
     /// <param name="id">The anime Id.</param>
     /// <returns>An instance of <see cref="AnimeInfo"/> for the provider.</returns>
     Task<AnimeInfo> GetAnimeInfoAsync(
-        string id,
+        string animeId,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -46,7 +46,7 @@ public interface IAnimeProvider
     /// <param name="id">The anime Id.</param>
     /// <returns>A <see cref="List{T}"/> of <see cref="Episode"/>s.</returns>
     Task<List<Episode>> GetEpisodesAsync(
-        string id,
+        string animeId,
         CancellationToken cancellationToken = default);
 
     /// <summary>

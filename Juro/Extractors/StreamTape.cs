@@ -15,8 +15,6 @@ public class StreamTape : IVideoExtractor
 
     private readonly Regex _linkRegex = new(@"'robotlink'\)\.innerHTML = '(.+?)'\+ \('(.+?)'\)");
 
-    public virtual string MainUrl => "https://streamtape.com";
-
     public string ServerName => "StreamTape";
 
     public StreamTape(Func<HttpClient> httpClientProvider)

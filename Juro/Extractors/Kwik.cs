@@ -85,7 +85,8 @@ public class Kwik : IVideoExtractor
         request.Content = formContent;
 
         http = _httpClientProvider();
-        var allowAutoRedirect = http.GetAllowAutoRedirect();
+
+        //var allowAutoRedirect = http.GetAllowAutoRedirect();
 
         http.SetAllowAutoRedirect(false);
 

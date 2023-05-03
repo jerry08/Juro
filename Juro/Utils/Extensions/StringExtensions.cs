@@ -1,13 +1,122 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace Juro.Utils.Extensions;
 
-internal static class StringExtensions
+public static class StringExtensions
 {
+    public static int? ToIntOrNull(this string? value)
+        => int.TryParse(value, out var i) ? i : null;
+
+    private static readonly int[] _digits = new[]
+    {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        -1, -1, -1, -1, -1, -1, -1,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        30, 31, 32, 33, 34, 35,
+        -1, -1, -1, -1, -1, -1,
+        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
+        30, 31, 32, 33, 34, 35
+    };
+
+    internal static int digitOf(char c, int radix)
+    {
+        if (c >= '0' && c <= 'z')
+            return _digits[c - '0'];
+        else if (c < '\u0080')
+            return -1;
+        else if (c >= '\uFF21' && c <= '\uFF3A')
+            return c - '\uFF21' + 10;
+        else if (c >= '\uFF41' && c <= '\uFF5A')
+            return c - '\uFF41' + 10;
+        else
+            return (int)c;
+    }
+
+    public static int? ToIntOrNull(this string? value, int radix)
+    {
+        if (string.IsNullOrEmpty(value))
+            return null;
+
+        var length = value?.Length;
+        if (length == 0)
+            return null;
+
+        int start;
+        bool isNegative;
+        int limit;
+
+        var firstChar = value![0];
+        if (firstChar < '0')
+        {
+            // Possible leading sign
+            if (length == 1)
+                return null;  // non-digit (possible sign) only, no digits after
+
+            start = 1;
+
+            if (firstChar == '-')
+            {
+                isNegative = true;
+                limit = int.MinValue;
+            }
+            else if (firstChar == '+')
+            {
+                isNegative = false;
+                limit = -int.MaxValue;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        else
+        {
+            start = 0;
+            isNegative = false;
+            limit = -int.MaxValue;
+        }
+
+        var limitForMaxRadix = (-int.MaxValue) / 36;
+
+        var limitBeforeMul = limitForMaxRadix;
+        var result = 0;
+
+        for (var i = start; i < length; i++)
+        {
+            var digit = digitOf(value[i], radix);
+
+            if (digit < 0)
+                return null;
+            if (result < limitBeforeMul)
+            {
+                if (limitBeforeMul == limitForMaxRadix)
+                {
+                    limitBeforeMul = limit / radix;
+
+                    if (result < limitBeforeMul)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            result *= radix;
+
+            if (result < limit + digit)
+                return null;
+
+            result -= digit;
+        }
+
+        return isNegative ? result : -result;
+    }
+
     public static string Reverse(this string value)
     {
         var charArray = value.ToCharArray();
@@ -42,75 +151,5 @@ internal static class StringExtensions
         }
 
         return string.Empty;
-    }
-
-    public static string SubstringBefore(this string text, string stopAt)
-    {
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            var charLocation = text.IndexOf(stopAt, StringComparison.Ordinal);
-
-            if (charLocation > 0)
-            {
-                return text.Substring(0, charLocation);
-            }
-        }
-
-        return string.Empty;
-    }
-
-    public static string ReplaceInvalidChars(this string fileName)
-    {
-        return string.Join("_", fileName.Split(Path.GetInvalidFileNameChars()));
-    }
-
-    //? - any character (one and only one)
-    //* - any characters (zero or more)
-    public static string WildCardToRegular(string value)
-    {
-        // If you want to implement both "*" and "?"
-        return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
-
-        // If you want to implement "*" only
-        //return "^" + Regex.Escape(value).Replace("\\*", ".*") + "$";
-    }
-
-    public static string RemoveBadChars1(this string name)
-    {
-        //string result = new string(name.Where(c => char.IsLetter(c) || c == '\'').ToArray());
-        var result = new string(name.Where(c => char.IsLetter(c) || c == ' ').ToArray());
-        return result.Replace(' ', '-');
-    }
-
-    public static string RemoveBadChars(string word)
-    {
-        //Regex reg = new Regex("[^a-zA-Z']");
-        var reg = new Regex("[^a-zA-Z' ]"); //Don't replace spaces
-        var regString = reg.Replace(word, string.Empty);
-
-        return regString.Replace(' ', '-');
-    }
-
-    static void Test()
-    {
-        var test = "Some Data X";
-
-        var endsWithEx = Regex.IsMatch(test, WildCardToRegular("*X"));
-        var startsWithS = Regex.IsMatch(test, WildCardToRegular("S*"));
-        var containsD = Regex.IsMatch(test, WildCardToRegular("*D*"));
-
-        // Starts with S, ends with X, contains "me" and "a" (in that order) 
-        var complex = Regex.IsMatch(test, WildCardToRegular("S*me*a*X"));
-    }
-
-    public static IEnumerable<string> SplitInParts(this string s, int partLength)
-    {
-        if (s == null)
-            throw new ArgumentNullException(nameof(s));
-        if (partLength <= 0)
-            throw new ArgumentException("Part length has to be positive.", nameof(partLength));
-
-        for (var i = 0; i < s.Length; i += partLength)
-            yield return s.Substring(i, Math.Min(partLength, s.Length - i));
     }
 }
