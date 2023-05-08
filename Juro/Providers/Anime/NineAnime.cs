@@ -249,7 +249,7 @@ public class NineAnime : IAnimeProvider
             list.Add(new Episode()
             {
                 Id = possibleIds[0], // Sub
-                Name = node.SelectSingleNode(".//span").InnerText,
+                Name = node.SelectSingleNode(".//span")?.InnerText,
                 //Link = link,
                 Number = int.Parse(node.Attributes["data-num"]?.Value ?? "0")
             });
