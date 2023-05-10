@@ -75,7 +75,7 @@ public class AnilistClient
         return JsonConvert.DeserializeObject<T>(json);
     }
 
-    public async Task<Media?> GetMediaDetailsAsync(Media media)
+    public async ValueTask<Media?> GetMediaDetailsAsync(Media media)
     {
         media.CameFromContinue = false;
 
@@ -214,7 +214,7 @@ public class AnilistClient
         return null;
     }
 
-    public async Task<SearchResults?> SearchAsync(
+    public async ValueTask<SearchResults?> SearchAsync(
         string type,
         int? page = null,
         int? perPage = null,
@@ -344,9 +344,9 @@ public class AnilistClient
         long greater = 0,
         long? lesser = null)
     {
-        lesser ??= DateTime.UtcNow.ToUnixTimeMilliseconds() / 1000 - 10000;
+        lesser ??= (DateTime.UtcNow.ToUnixTimeMilliseconds() / 1000) - 10000;
 
-        async Task<Page?> Execute(int page = 1)
+        async ValueTask<Page?> Execute(int page = 1)
         {
             var query = @"{
                 Page(page:${page},perPage:50) {
@@ -427,7 +427,7 @@ public class AnilistClient
             var list = new List<Media>();
             Page? res = null;
 
-            async Task Next()
+            async ValueTask Next()
             {
                 res = await Execute(i);
 
@@ -461,7 +461,7 @@ public class AnilistClient
         }
     }
 
-    public async Task<List<Media>?> GetTrendingAnimeAsync(
+    public async ValueTask<List<Media>?> GetTrendingAnimeAsync(
         int page = 1,
         int perPage = 50,
         string type = "ANIME")
@@ -487,7 +487,7 @@ public class AnilistClient
         //return response.Media;
     }
 
-    public async Task<Character> GetCharacterDetailsAsync(Character character)
+    public async ValueTask<Character> GetCharacterDetailsAsync(Character character)
     {
         var query = @"{
           Character(id: ${character.id}) {
@@ -557,7 +557,7 @@ public class AnilistClient
         return character;
     }
 
-    public async Task<Studio> GetStudioDetailsAsync(Studio studio)
+    public async ValueTask<Studio> GetStudioDetailsAsync(Studio studio)
     {
         string Query(int page) => @"{
           Studio(id: ${studio.id}) {

@@ -30,7 +30,7 @@ public interface IMangaProvider
     /// </summary>
     /// <param name="query">The search query.</param>
     /// <returns>An <see cref="IMangaResult"/> for the provider.</returns>
-    Task<List<IMangaResult>> SearchAsync(
+    ValueTask<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default);
 
@@ -39,7 +39,7 @@ public interface IMangaProvider
     /// </summary>
     /// <param name="mangaId">The Id of the manga.</param>
     /// <returns>An interface of type <see cref="IMangaInfo"/> for the provider.</returns>
-    Task<IMangaInfo> GetMangaInfoAsync(
+    ValueTask<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!);
 
@@ -48,7 +48,7 @@ public interface IMangaProvider
     /// </summary>
     /// <param name="chapterId">The Id of the chapter.</param>
     /// <returns>An interface of type <see cref="IMangaChapterPage"/> for the provider.</returns>
-    Task<List<IMangaChapterPage>> GetChapterPagesAsync(
+    ValueTask<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!);
 }

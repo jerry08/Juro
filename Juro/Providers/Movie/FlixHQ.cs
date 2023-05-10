@@ -6,13 +6,13 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Extractors;
-using Juro.Models.Movies;
+using Juro.Models.Movie;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 using Newtonsoft.Json.Linq;
 
-namespace Juro.Providers.Movies;
+namespace Juro.Providers.Movie;
 
 public class FlixHQ : MovieParser
 {

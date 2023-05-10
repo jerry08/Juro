@@ -26,26 +26,26 @@ public interface IAnimeProvider
     /// Search for anime.
     /// </summary>
     /// <param name="query">The search query.</param>
-    /// <returns>An instance of <see cref="AnimeInfo"/> for the provider.</returns>
-    Task<List<AnimeInfo>> SearchAsync(
+    /// <returns>A <see cref="List{T}"/> of <see cref="IAnimeInfo"/>s.</returns>
+    ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the anime info by Id.
     /// </summary>
-    /// <param name="id">The anime Id.</param>
-    /// <returns>An instance of <see cref="AnimeInfo"/> for the provider.</returns>
-    Task<AnimeInfo> GetAnimeInfoAsync(
+    /// <param name="animeId">The anime Id.</param>
+    /// <returns>An instance of <see cref="IAnimeInfo"/> for the provider.</returns>
+    ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string animeId,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets episodes for anime.
     /// </summary>
-    /// <param name="id">The anime Id.</param>
+    /// <param name="animeId">The anime Id.</param>
     /// <returns>A <see cref="List{T}"/> of <see cref="Episode"/>s.</returns>
-    Task<List<Episode>> GetEpisodesAsync(
+    ValueTask<List<Episode>> GetEpisodesAsync(
         string animeId,
         CancellationToken cancellationToken = default);
 
@@ -54,7 +54,7 @@ public interface IAnimeProvider
     /// </summary>
     /// <param name="episodeId">The episode Id.</param>
     /// <returns>A <see cref="List{T}"/> of <see cref="VideoServer"/>s.</returns>
-    Task<List<VideoServer>> GetVideoServersAsync(
+    ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         CancellationToken cancellationToken = default);
 
@@ -63,7 +63,7 @@ public interface IAnimeProvider
     /// </summary>
     /// <param name="server">The server of the episode.</param>
     /// <returns>A <see cref="List{T}"/> of <see cref="VideoSource"/>s.</returns>
-    Task<List<VideoSource>> GetVideosAsync(
+    ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default);
 }

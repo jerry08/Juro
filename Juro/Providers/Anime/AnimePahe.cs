@@ -49,11 +49,11 @@ public class AnimePahe : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<AnimeInfo>> SearchAsync(
+    public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default)
     {
-        var animes = new List<AnimeInfo>();
+        var animes = new List<IAnimeInfo>();
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}/api?m=search&q={Uri.EscapeDataString(query)}",
@@ -67,7 +67,7 @@ public class AnimePahe : IAnimeProvider
         if (data is null)
             return animes;
 
-        return data.Select(x => new AnimeInfo()
+        return data.Select(x => (IAnimeInfo)new AnimePaheInfo()
         {
             Id = x["session"]!.ToString(),
             Title = x["title"]!.ToString(),
@@ -83,7 +83,7 @@ public class AnimePahe : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> GetAiringAsync(
+    public async ValueTask<List<AnimeInfo>> GetAiringAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -111,7 +111,7 @@ public class AnimePahe : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<AnimeInfo> GetAnimeInfoAsync(
+    public async ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -119,7 +119,7 @@ public class AnimePahe : IAnimeProvider
 
         var document = Html.Parse(response);
 
-        var anime = new AnimeInfo()
+        var anime = new AnimePaheInfo()
         {
             Id = id,
             Site = AnimeSites.AnimePahe
@@ -177,7 +177,7 @@ public class AnimePahe : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<Episode>> GetEpisodesAsync(
+    public async ValueTask<List<Episode>> GetEpisodesAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -229,7 +229,7 @@ public class AnimePahe : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<VideoServer>> GetVideoServersAsync(
+    public async ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         CancellationToken cancellationToken = default)
     {
@@ -277,7 +277,7 @@ public class AnimePahe : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<VideoSource>> GetVideosAsync(
+    public async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default)
     {

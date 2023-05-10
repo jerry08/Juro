@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Clients;
@@ -11,7 +12,6 @@ using Juro.Models.Anime;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Anime;
 
@@ -48,7 +48,7 @@ public class NineAnime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<AnimeInfo>> SearchAsync(
+    public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default)
     {
@@ -76,7 +76,7 @@ public class NineAnime : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> GetPopularAsync(
+    public async ValueTask<List<IAnimeInfo>> GetPopularAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -93,7 +93,7 @@ public class NineAnime : IAnimeProvider
     /// </summary>
     /// <param name="page"></param>
     /// <param name="cancellationToken"></param>
-    public async Task<List<AnimeInfo>> GetLastUpdatedAsync(
+    public async ValueTask<List<IAnimeInfo>> GetLastUpdatedAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -105,9 +105,9 @@ public class NineAnime : IAnimeProvider
         return ParseAnimeResponse(response);
     }
 
-    private List<AnimeInfo> ParseAnimeResponse(string? response)
+    private List<IAnimeInfo> ParseAnimeResponse(string? response)
     {
-        var list = new List<AnimeInfo>();
+        var list = new List<IAnimeInfo>();
 
         if (string.IsNullOrWhiteSpace(response))
             return list;
@@ -146,7 +146,7 @@ public class NineAnime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<AnimeInfo> GetAnimeInfoAsync(
+    public async ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -206,7 +206,7 @@ public class NineAnime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<Episode>> GetEpisodesAsync(
+    public async ValueTask<List<Episode>> GetEpisodesAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -236,7 +236,7 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-        var html = JObject.Parse(response2)!["result"]!.ToString();
+        var html = JsonNode.Parse(response2)!["result"]!.ToString();
         document = Html.Parse(html);
 
         var nodes = document.DocumentNode
@@ -259,7 +259,7 @@ public class NineAnime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<VideoServer>> GetVideoServersAsync(
+    public async ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         CancellationToken cancellationToken = default)
     {
@@ -274,7 +274,7 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-        var html = JObject.Parse(response)["result"]!.ToString();
+        var html = JsonNode.Parse(response)!["result"]!.ToString();
 
         var document = Html.Parse(html);
 
@@ -308,7 +308,7 @@ public class NineAnime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<VideoSource>> GetVideosAsync(
+    public async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default)
     {
@@ -323,7 +323,7 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-        var encryptedUrl = JObject.Parse(response)["result"]!["url"]!.ToString();
+        var encryptedUrl = JsonNode.Parse(response)!["result"]!["url"]!.ToString();
 
         server.Embed.Url = await _consumet.NineAnime.ExecuteActionAsync(
             encryptedUrl,

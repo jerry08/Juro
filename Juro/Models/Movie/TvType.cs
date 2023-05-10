@@ -1,4 +1,4 @@
-﻿namespace Juro.Models.Movies;
+﻿namespace Juro.Models.Movie;
 
 public enum TvType
 {

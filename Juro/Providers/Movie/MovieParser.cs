@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Juro.Models.Movies;
+using Juro.Models.Movie;
 using Juro.Models.Videos;
 
-namespace Juro.Providers.Movies;
+namespace Juro.Providers.Movie;
 
 public abstract class MovieParser<TMovieResult, TMovieInfo, TEpisodeServer, TVideoSource>
 {

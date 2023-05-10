@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net.Http;
-using Juro.Providers.Movies;
+using Juro.Providers.Movie;
 using Juro.Utils;
 
 namespace Juro.Clients;

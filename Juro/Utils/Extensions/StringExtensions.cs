@@ -2,7 +2,7 @@
 
 namespace Juro.Utils.Extensions;
 
-public static class StringExtensions
+internal static class StringExtensions
 {
     public static int? ToIntOrNull(this string? value)
         => int.TryParse(value, out var i) ? i : null;
@@ -20,18 +20,24 @@ public static class StringExtensions
         30, 31, 32, 33, 34, 35
     };
 
-    internal static int digitOf(char c, int radix)
+    internal static int DigitOf(char c, int radix)
     {
+        int result;
+
         if (c >= '0' && c <= 'z')
-            return _digits[c - '0'];
+            result = _digits[c - '0'];
         else if (c < '\u0080')
-            return -1;
-        else if (c >= '\uFF21' && c <= '\uFF3A')
-            return c - '\uFF21' + 10;
-        else if (c >= '\uFF41' && c <= '\uFF5A')
-            return c - '\uFF41' + 10;
+            result = -1;
+        else if (c >= '\uFF21' && c <= '\uFF3A') // full-width latin capital letter
+            result = c - '\uFF21' + 10;
+        else if (c >= '\uFF41' && c <= '\uFF5A') // full-width latin small letter
+            result = c - '\uFF41' + 10;
         else
-            return (int)c;
+            result = c;
+
+        if (result >= radix)
+            return -1;
+        else return result;
     }
 
     public static int? ToIntOrNull(this string? value, int radix)
@@ -85,7 +91,7 @@ public static class StringExtensions
 
         for (var i = start; i < length; i++)
         {
-            var digit = digitOf(value[i], radix);
+            var digit = DigitOf(value[i], radix);
 
             if (digit < 0)
                 return null;

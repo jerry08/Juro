@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Juro.Models.Movies;
+namespace Juro.Models.Movie;
 
 public class MovieInfo
 {

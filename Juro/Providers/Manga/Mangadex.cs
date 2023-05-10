@@ -47,7 +47,7 @@ public class Mangadex : IMangaProvider
     /// <param name="query">Search query.</param>
     /// <param name="cancellationToken"></param>
     /// <returns>A <see cref="List{IMangaResult}"/> of <see cref="IMangaResult"/>s from <see cref="MangadexResult"/>s.</returns>
-    public async Task<List<IMangaResult>> SearchAsync(
+    public async ValueTask<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
     {
@@ -62,7 +62,7 @@ public class Mangadex : IMangaProvider
     /// <param name="limit">Limit of results to return. (default: 20) (max: 100) (min: 1)</param>
     /// <returns>A <see cref="List{IMangaResult}"/> of <see cref="IMangaResult"/>s from <see cref="MangadexResult"/>s.</returns>
     /// <exception cref="Exception"></exception>
-    public async Task<List<IMangaResult>> SearchAsync(
+    public async ValueTask<List<IMangaResult>> SearchAsync(
         string query,
         int page = 1,
         int limit = 20,
@@ -124,7 +124,7 @@ public class Mangadex : IMangaProvider
     /// </summary>
     /// <param name="mangaId">The Id of the manga</param>
     /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangadexInfo"/>.</returns>
-    public async Task<IMangaInfo> GetMangaInfoAsync(
+    public async ValueTask<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
@@ -181,7 +181,7 @@ public class Mangadex : IMangaProvider
     /// <summary>
     /// Currently only supports english.
     /// </summary>
-    public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
+    public async ValueTask<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
@@ -208,7 +208,7 @@ public class Mangadex : IMangaProvider
     /// <summary>
     /// Gets all chapters from Mangadex Id.
     /// </summary>
-    public async Task<List<MangadexChapter>> GetAllChaptersAsync(
+    public async ValueTask<List<MangadexChapter>> GetAllChaptersAsync(
         string mangaId,
         int offset,
         CancellationToken cancellationToken = default!)
@@ -245,7 +245,7 @@ public class Mangadex : IMangaProvider
     /// <summary>
     /// Gets cover image by cover Id.
     /// </summary>
-    public async Task<string> GetCoverImageAsync(
+    public async ValueTask<string> GetCoverImageAsync(
         string coverId,
         CancellationToken cancellationToken = default!)
     {

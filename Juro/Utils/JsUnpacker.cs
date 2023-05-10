@@ -85,12 +85,26 @@ public static class JsUnpacker
         return Unpacking(scriptBlock);
     }
 
+    /// <summary>
+    /// Unpack the passed [scriptBlock].
+    /// It matches all found occurrences and combines them into a single String.
+    /// </summary>
+    /// <param name="scriptBlock">The String to unpack.</param>
+    /// <returns>Unpacked code in a list combined by a whitespace to a single String.</returns>
     public static string UnpackAndCombine(string? scriptBlock)
     {
         var unpacked = Unpack(scriptBlock);
         return string.Join(" ", unpacked);
     }
 
+    /// <summary>
+    /// Unpacking functionality.
+    /// Match all found occurrences, get the information group and unbase it.
+    /// If found symtabs are more or less than the count provided in code, the occurrence will be ignored
+    /// because it cannot be unpacked correctly.
+    /// </summary>
+    /// <param name="scriptBlock">The String to unpack.</param>
+    /// <returns>A list of all unpacked code from all found packed and unpackable occurrences found.</returns>
     private static List<string?> Unpacking(string? scriptBlock)
     {
         if (scriptBlock is null)

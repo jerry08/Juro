@@ -46,7 +46,7 @@ public class Zoro : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<AnimeInfo>> SearchAsync(
+    public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default)
     {
@@ -61,7 +61,7 @@ public class Zoro : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> GetPopularAsync(
+    public async ValueTask<List<IAnimeInfo>> GetPopularAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -78,7 +78,7 @@ public class Zoro : IAnimeProvider
     /// </summary>
     /// <param name="page"></param>
     /// <param name="cancellationToken"></param>
-    public async Task<List<AnimeInfo>> GetRecentlyAddedAsync(
+    public async ValueTask<List<IAnimeInfo>> GetRecentlyAddedAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -91,7 +91,7 @@ public class Zoro : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> GetAiringAsync(
+    public async ValueTask<List<IAnimeInfo>> GetAiringAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -103,9 +103,9 @@ public class Zoro : IAnimeProvider
         return ParseAnimeResponse(response);
     }
 
-    private List<AnimeInfo> ParseAnimeResponse(string? response)
+    private List<IAnimeInfo> ParseAnimeResponse(string? response)
     {
-        var animes = new List<AnimeInfo>();
+        var animes = new List<IAnimeInfo>();
 
         if (string.IsNullOrWhiteSpace(response))
             return animes;
@@ -138,7 +138,7 @@ public class Zoro : IAnimeProvider
                 title = nameNode.Attributes["title"].Value; //OR name = nameNode.InnerText;
             }
 
-            animes.Add(new()
+            animes.Add(new AnimeInfo()
             {
                 Id = category,
                 Site = AnimeSites.Zoro,
@@ -153,7 +153,7 @@ public class Zoro : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<AnimeInfo> GetAnimeInfoAsync(
+    public async ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -232,7 +232,7 @@ public class Zoro : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<Episode>> GetEpisodesAsync(
+    public async ValueTask<List<Episode>> GetEpisodesAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -270,13 +270,13 @@ public class Zoro : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<VideoServer>> GetVideoServersAsync(
+    public async ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         CancellationToken cancellationToken = default)
         => await GetVideoServersAsync(episodeId, SubDub.All, cancellationToken);
 
     /// <inheritdoc cref="GetVideoServersAsync"/>
-    public async Task<List<VideoServer>> GetVideoServersAsync(
+    public async ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         SubDub subDub,
         CancellationToken cancellationToken = default)
@@ -354,7 +354,7 @@ public class Zoro : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<VideoSource>> GetVideosAsync(
+    public async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default)
     {

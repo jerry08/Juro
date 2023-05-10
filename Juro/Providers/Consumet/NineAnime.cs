@@ -30,7 +30,7 @@ public class NineAnime
     {
     }
 
-    public async Task<string> ExecuteActionAsync(
+    public async ValueTask<string> ExecuteActionAsync(
         string query,
         string action,
         CancellationToken cancellationToken = default)

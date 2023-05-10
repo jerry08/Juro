@@ -48,7 +48,7 @@ public class Gogoanime : IAnimeProvider
     {
     }
 
-    private async Task EnsureUrlsSet(CancellationToken cancellationToken = default)
+    private async ValueTask EnsureUrlsSet(CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(BaseUrl))
             return;
@@ -68,7 +68,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<AnimeInfo>> SearchAsync(
+    public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default)
     {
@@ -76,7 +76,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> SearchAsync(
+    public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         bool selectDub,
         CancellationToken cancellationToken = default)
@@ -98,7 +98,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> GetPopularAsync(
+    public async ValueTask<List<IAnimeInfo>> GetPopularAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -113,7 +113,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> GetNewSeasonAsync(
+    public async ValueTask<List<IAnimeInfo>> GetNewSeasonAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -128,7 +128,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async Task<List<AnimeInfo>> GetLastUpdatedAsync(
+    public async ValueTask<List<IAnimeInfo>> GetLastUpdatedAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
@@ -142,9 +142,9 @@ public class Gogoanime : IAnimeProvider
         return ParseAnimeResponse(response);
     }
 
-    private List<AnimeInfo> ParseAnimeResponse(string response)
+    private List<IAnimeInfo> ParseAnimeResponse(string response)
     {
-        var animes = new List<AnimeInfo>();
+        var animes = new List<IAnimeInfo>();
 
         if (string.IsNullOrWhiteSpace(response))
             return animes;
@@ -197,7 +197,7 @@ public class Gogoanime : IAnimeProvider
 
                 link = BaseUrl + category;
 
-                animes.Add(new()
+                animes.Add(new AnimeInfo()
                 {
                     Id = id,
                     Site = AnimeSites.GogoAnime,
@@ -214,7 +214,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<AnimeInfo> GetAnimeInfoAsync(
+    public async ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -306,7 +306,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<Episode>> GetEpisodesAsync(
+    public async ValueTask<List<Episode>> GetEpisodesAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
@@ -376,7 +376,7 @@ public class Gogoanime : IAnimeProvider
         => string.Join("", text.Take(2)) == "//" ? $"https:{text}" : text;
 
     /// <inheritdoc />
-    public async Task<List<VideoServer>> GetVideoServersAsync(
+    public async ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
         CancellationToken cancellationToken = default)
     {
@@ -439,7 +439,7 @@ public class Gogoanime : IAnimeProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<VideoSource>> GetVideosAsync(
+    public async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default)
     {
@@ -453,7 +453,7 @@ public class Gogoanime : IAnimeProvider
         return await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
     }
 
-    public async Task<List<Genre>> GetGenresAsync(CancellationToken cancellationToken)
+    public async ValueTask<List<Genre>> GetGenresAsync(CancellationToken cancellationToken)
     {
         await EnsureUrlsSet(cancellationToken);
 

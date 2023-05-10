@@ -42,7 +42,7 @@ public class MangaKatana : IMangaProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<IMangaResult>> SearchAsync(
+    public async ValueTask<List<IMangaResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default!)
     {
@@ -64,7 +64,7 @@ public class MangaKatana : IMangaProvider
     }
 
     /// <inheritdoc />
-    public async Task<IMangaInfo> GetMangaInfoAsync(
+    public async ValueTask<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
@@ -101,7 +101,7 @@ public class MangaKatana : IMangaProvider
     }
 
     /// <inheritdoc />
-    public async Task<List<IMangaChapterPage>> GetChapterPagesAsync(
+    public async ValueTask<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
