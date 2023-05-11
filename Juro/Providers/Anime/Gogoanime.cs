@@ -48,7 +48,7 @@ public class Gogoanime : IAnimeProvider
     {
     }
 
-    private async ValueTask EnsureUrlsSet(CancellationToken cancellationToken = default)
+    private async ValueTask LoadUrlsAsync(CancellationToken cancellationToken = default)
     {
         if (!string.IsNullOrWhiteSpace(BaseUrl))
             return;
@@ -81,7 +81,7 @@ public class Gogoanime : IAnimeProvider
         bool selectDub,
         CancellationToken cancellationToken = default)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         //query = selectDub ? query + "%(Dub)" : query;
         //query = query.Replace(" ", "+");
@@ -102,7 +102,7 @@ public class Gogoanime : IAnimeProvider
         int page = 1,
         CancellationToken cancellationToken = default)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}popular.html?page={page}",
@@ -117,7 +117,7 @@ public class Gogoanime : IAnimeProvider
         int page = 1,
         CancellationToken cancellationToken = default)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}new-season.html?page={page}",
@@ -132,7 +132,7 @@ public class Gogoanime : IAnimeProvider
         int page = 1,
         CancellationToken cancellationToken = default)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}?page={page}",
@@ -218,7 +218,7 @@ public class Gogoanime : IAnimeProvider
         string id,
         CancellationToken cancellationToken = default)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         var url = BaseUrl + id;
 
@@ -310,7 +310,7 @@ public class Gogoanime : IAnimeProvider
         string id,
         CancellationToken cancellationToken = default)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         var episodes = new List<Episode>();
 
@@ -321,9 +321,9 @@ public class Gogoanime : IAnimeProvider
 
         var document = Html.Parse(response);
 
-        var lastEpisodes = document.DocumentNode.Descendants().Where(x => x.Attributes["ep_end"] is not null)
-            .ToList();
-        var lastEpisode = lastEpisodes.LastOrDefault()?.Attributes["ep_end"].Value;
+        var lastEpisode = document.DocumentNode.Descendants()
+            .LastOrDefault(x => x.Attributes["ep_end"] is not null)?
+            .Attributes["ep_end"].Value;
 
         var animeId = document.DocumentNode.Descendants().FirstOrDefault(x => x.Id == "movie_id")?.Attributes["value"].Value;
 
@@ -380,7 +380,7 @@ public class Gogoanime : IAnimeProvider
         string episodeId,
         CancellationToken cancellationToken = default)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         var episodeUrl = BaseUrl + episodeId;
 
@@ -455,7 +455,7 @@ public class Gogoanime : IAnimeProvider
 
     public async ValueTask<List<Genre>> GetGenresAsync(CancellationToken cancellationToken)
     {
-        await EnsureUrlsSet(cancellationToken);
+        await LoadUrlsAsync(cancellationToken);
 
         var genres = new List<Genre>();
 
