@@ -9,7 +9,7 @@ public interface IVideoExtractor
 {
     public string ServerName { get; }
 
-    Task<List<VideoSource>> ExtractAsync(
+    ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default);
 }

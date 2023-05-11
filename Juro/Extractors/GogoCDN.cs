@@ -28,7 +28,7 @@ public class GogoCDN : IVideoExtractor
         _httpClientProvider = httpClientProvider;
     }
 
-    public async Task<List<VideoSource>> ExtractAsync(
+    public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
     {

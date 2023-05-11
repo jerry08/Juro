@@ -22,7 +22,7 @@ public class StreamTape : IVideoExtractor
         _httpClientProvider = httpClientProvider;
     }
 
-    public async Task<List<VideoSource>> ExtractAsync(
+    public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
     {
