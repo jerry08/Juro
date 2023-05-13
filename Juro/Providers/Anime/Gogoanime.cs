@@ -434,6 +434,10 @@ public class Gogoanime : IAnimeProvider
         {
             return new FPlayer(_httpClientProvider);
         }
+        else if (domainInfo.Domain.Contains("dood"))
+        {
+            return new DoodExtractor(_httpClientProvider);
+        }
 
         return null;
     }
