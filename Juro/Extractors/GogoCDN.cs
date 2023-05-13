@@ -5,12 +5,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Extractors;
 
@@ -78,23 +78,23 @@ public class GogoCDN : IVideoExtractor
             if (string.IsNullOrWhiteSpace(encHtmlData))
                 return list;
 
-            var jsonObj = JObject.Parse(encHtmlData);
+            var jsonObj = JsonNode.Parse(encHtmlData)!;
             var jumbledJson = CryptoHandler(jsonObj["data"]!.ToString(), keys.Item2, keys.Item3, false);
             jumbledJson = jumbledJson.Replace(@"o""<P{#meme"":""", @"e"":[{""file"":""");
 
-            var source = JObject.Parse(jumbledJson)["source"]!.ToString();
-            var array = JArray.Parse(source);
+            var source = JsonNode.Parse(jumbledJson)!["source"]!.ToString();
+            var array = JsonNode.Parse(source)!.AsArray();
 
-            var sourceBk = JObject.Parse(jumbledJson)["source_bk"]!.ToString();
-            var arrayBk = JArray.Parse(sourceBk);
+            var sourceBk = JsonNode.Parse(jumbledJson)!["source_bk"]!.ToString();
+            var arrayBk = JsonNode.Parse(sourceBk)!.AsArray();
 
-            void AddSources(JArray array)
+            void AddSources(JsonArray array)
             {
                 for (var i = 0; i < array.Count; i++)
                 {
-                    var label = array[i]["label"]!.ToString();
-                    var fileURL = array[i]["file"]!.ToString().Trim('"');
-                    var type = array[i]["type"]?.ToString().ToLower();
+                    var label = array[i]!["label"]!.ToString();
+                    var fileURL = array[i]!["file"]!.ToString().Trim('"');
+                    var type = array[i]?["type"]?.ToString().ToLower();
 
                     if (type == "hls" || type == "auto")
                     {
@@ -127,57 +127,6 @@ public class GogoCDN : IVideoExtractor
 
             AddSources(array);
             AddSources(arrayBk);
-
-            /*for (int i = 0; i < array.Count; i++)
-            {
-                var type = array[i]["type"]?.ToString().ToLower();
-
-                if (type == "hls" || type == "auto")
-                {
-                    var fileURL = array[i]["file"]!.ToString().Trim('"');
-                    var masterPlaylist = await _http.ExecuteAsync(fileURL, cancellationToken);
-                    var masterSplit = masterPlaylist.Split(new string[] { "#EXT-X-STREAM-INF:" }, StringSplitOptions.None).ToList();
-                    masterSplit.Remove(masterSplit[0]);
-
-                    for (int j = 0; j < masterSplit.Count; j++)
-                    {
-                        var videoUrlSplit = fileURL.Split('/').ToList();
-                        videoUrlSplit.RemoveAt(videoUrlSplit.Count - 1);
-                        var itSplit = masterSplit[j].Split(new string[] { "\n" }, StringSplitOptions.None).ToList();
-                        itSplit.RemoveAll(x => string.IsNullOrWhiteSpace(x));
-
-                        var video = itSplit[0].SubstringAfter("RESOLUTION=").SubstringBefore("x") + " p";
-                        var videoUrl = string.Join("/", videoUrlSplit) + "/" + itSplit.LastOrDefault();
-
-                        list.Add(new Video()
-                        {
-                            Format = VideoType.M3u8,
-                            VideoUrl = videoUrl,
-                            Resolution = video,
-                            Headers = new()
-                            {
-                                { "Referer", url },
-                            }
-                        });
-                    }
-                }
-                else
-                {
-                    var label = array[i]["label"]!.ToString();
-                    var fileURL = array[i]["file"]!.ToString().Trim('"');
-
-                    list.Add(new Video()
-                    {
-                        Format = VideoType.Container,
-                        VideoUrl = fileURL,
-                        Resolution = label,
-                        Headers = new()
-                        {
-                            { "Referer", url },
-                        }
-                    });
-                }
-            }*/
         }
         else if (url.Contains("embedplus"))
         {

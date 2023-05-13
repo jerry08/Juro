@@ -7,7 +7,7 @@ namespace Juro.Utils.Extensions;
 
 public static class StreamExtensions
 {
-    public static async Task CopyToAsync(this Stream source,
+    public static async ValueTask CopyToAsync(this Stream source,
         Stream destination,
         IProgress<double>? progress = null,
         long totalLength = 0,

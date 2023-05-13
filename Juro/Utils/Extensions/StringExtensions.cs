@@ -158,4 +158,19 @@ internal static class StringExtensions
 
         return string.Empty;
     }
+
+    public static string SubstringBefore(this string text, string stopAt)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            var charLocation = text.IndexOf(stopAt, StringComparison.Ordinal);
+
+            if (charLocation > 0)
+            {
+                return text.Substring(0, charLocation);
+            }
+        }
+
+        return string.Empty;
+    }
 }

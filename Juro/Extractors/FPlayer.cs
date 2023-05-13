@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models.Videos;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Extractors;
 
@@ -40,22 +40,25 @@ public class FPlayer : IVideoExtractor
             var json = await http.PostAsync(apiLink, headers, cancellationToken);
             if (!string.IsNullOrWhiteSpace(json))
             {
-                var data = JArray.Parse(JObject.Parse(json)["data"]!.ToString());
+                var data = JsonNode.Parse(JsonNode.Parse(json)!["data"]!.ToString())!.AsArray();
                 for (var i = 0; i < data.Count; i++)
                 {
                     list.Add(new()
                     {
-                        VideoUrl = data[i]["file"]!.ToString(),
-                        Resolution = data[i]["label"]!.ToString(),
+                        VideoUrl = data[i]!["file"]!.ToString(),
+                        Resolution = data[i]!["label"]!.ToString(),
                         Format = VideoType.Container,
-                        FileType = data[i]["type"]!.ToString(),
+                        FileType = data[i]!["type"]!.ToString(),
                     });
                 }
 
                 return list;
             }
         }
-        catch { }
+        catch
+        {
+            // Ignore
+        }
 
         return list;
     }

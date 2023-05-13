@@ -34,12 +34,12 @@ public class StreamSB : IVideoExtractor
         if (string.IsNullOrWhiteSpace(id))
             id = url.Split(new[] { "/e/" }, StringSplitOptions.None)[1];
 
-        //var source = await http.ExecuteAsync(
-        //    "https://raw.githubusercontent.com/jerry08/anistream-extras/main/streamsb.txt",
-        //    cancellationToken
-        //);
+        var source = await http.ExecuteAsync(
+            "https://raw.githubusercontent.com/jerry08/juro-data/main/streamsb.txt",
+            cancellationToken
+        );
 
-        var jsonLink = $"https://sbani.pro/375664356a494546326c4b797c7c6e756577776778623171737/{Encode(id)}";
+        var jsonLink = $"{source.Trim()}/{Encode(id)}";
 
         var headers = new Dictionary<string, string>()
         {
@@ -73,7 +73,7 @@ public class StreamSB : IVideoExtractor
         var output = "";
         var arr = id.ToArray();
 
-        for (var i = 0; i < id.Length; i++)
+        for (var i = 0; i < arr.Length; i++)
         {
             output += Convert.ToString(Convert.ToInt32(((int)arr[i]).ToString(), 10), 16);
         }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Juro.Utils.Extensions;
 
-public static class HttpExtensions
+internal static class HttpExtensions
 {
     public static bool GetAllowAutoRedirect(this HttpClient http)
     {
@@ -157,7 +157,7 @@ public static class HttpExtensions
         return await http.ExecuteAsync(request, cancellationToken);
     }
 
-    public static async Task<string> ExecuteAsync(
+    public static async ValueTask<string> ExecuteAsync(
         this HttpClient http,
         HttpRequestMessage request,
         CancellationToken cancellationToken = default)

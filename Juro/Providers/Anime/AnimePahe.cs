@@ -83,11 +83,11 @@ public class AnimePahe : IAnimeProvider
     }
 
     /// <inheritdoc cref="SearchAsync"/>
-    public async ValueTask<List<AnimeInfo>> GetAiringAsync(
+    public async ValueTask<List<IAnimeInfo>> GetAiringAsync(
         int page = 1,
         CancellationToken cancellationToken = default)
     {
-        var animes = new List<AnimeInfo>();
+        var animes = new List<IAnimeInfo>();
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}/api?m=airing&page={page}",
@@ -101,7 +101,7 @@ public class AnimePahe : IAnimeProvider
         if (data is null)
             return animes;
 
-        return data.Select(x => new AnimeInfo()
+        return data.Select(x => (IAnimeInfo)new AnimeInfo()
         {
             Id = x["anime_session"]!.ToString(),
             Title = x["anime_title"]!.ToString(),

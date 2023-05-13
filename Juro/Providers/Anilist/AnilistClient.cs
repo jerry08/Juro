@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using AnimeDl.Utils.Extensions;
 using Juro.Providers.Anilist.Api;
 using Juro.Providers.Aniskip;
 using Juro.Utils;

@@ -317,8 +317,8 @@ public class Zoro : IAnimeProvider
             response = await _http.ExecuteAsync(url, cancellationToken);
 
             data = JObject.Parse(response);
-            var type = data["type"]!.ToString();
-            var server = data["server"]!.ToString();
+            //var type = data["type"]!.ToString();
+            //var server = data["server"]!.ToString();
 
             var link = data["link"]!.ToString();
             var embedHeaders = new Dictionary<string, string>()
