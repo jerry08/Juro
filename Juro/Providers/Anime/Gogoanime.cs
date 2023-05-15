@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,6 @@ using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 using Nager.PublicSuffix;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Anime;
 
@@ -60,7 +60,7 @@ public class Gogoanime : IAnimeProvider
 
         if (!string.IsNullOrWhiteSpace(response))
         {
-            var data = JObject.Parse(response);
+            var data = JsonNode.Parse(response)!;
 
             BaseUrl = data["base_url"]!.ToString();
             CdnUrl = data["cdn_url"]!.ToString();
@@ -422,17 +422,17 @@ public class Gogoanime : IAnimeProvider
             || domainInfo.Domain.Contains("anihdplay")
             || domainInfo.Domain.Contains("playtaku"))
         {
-            return new GogoCDN(_httpClientProvider);
+            return new GogoCDNExtractor(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("sb")
             || domainInfo.Domain.Contains("sss"))
         {
-            return new StreamSB(_httpClientProvider);
+            return new StreamSBExtractor(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("fplayer")
             || domainInfo.Domain.Contains("fembed"))
         {
-            return new FPlayer(_httpClientProvider);
+            return new FPlayerExtractor(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("dood"))
         {

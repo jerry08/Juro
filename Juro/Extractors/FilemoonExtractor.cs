@@ -10,13 +10,13 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
-public class Filemoon : IVideoExtractor
+public class FilemoonExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
     public string ServerName => "Filemoon";
 
-    public Filemoon(Func<HttpClient> httpClientProvider)
+    public FilemoonExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }

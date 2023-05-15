@@ -17,13 +17,13 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for Gogoanime.
 /// </summary>
-public class GogoCDN : IVideoExtractor
+public class GogoCDNExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
     public string ServerName => "Gogo";
 
-    public GogoCDN(Func<HttpClient> httpClientProvider)
+    public GogoCDNExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }

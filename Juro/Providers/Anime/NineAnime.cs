@@ -298,11 +298,11 @@ public class NineAnime : IAnimeProvider
     {
         return server.Name.ToLower() switch
         {
-            "vidstream" => new VizCloud(_httpClientProvider, "vizcloud"),
-            "mycloud" => new VizCloud(_httpClientProvider, "mcloud"),
-            "filemoon" => new Filemoon(_httpClientProvider),
-            "streamtape" => new StreamTape(_httpClientProvider),
-            "mp4upload" => new Mp4upload(_httpClientProvider),
+            "vidstream" => new VizCloudExtractor(_httpClientProvider, "vizcloud"),
+            "mycloud" => new VizCloudExtractor(_httpClientProvider, "mcloud"),
+            "filemoon" => new FilemoonExtractor(_httpClientProvider),
+            "streamtape" => new StreamTapeExtractor(_httpClientProvider),
+            "mp4upload" => new Mp4uploadExtractor(_httpClientProvider),
             _ => null
         };
     }

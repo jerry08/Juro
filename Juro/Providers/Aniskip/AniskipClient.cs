@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json;
 
 namespace Juro.Providers.Aniskip;
 
@@ -44,7 +44,13 @@ public class AniskipClient
         if (response is null)
             return null;
 
-        var result = JsonConvert.DeserializeObject<AniSkipResponse>(response);
+        var result = JsonSerializer.Deserialize<AniSkipResponse>(
+            response,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }
+        );
 
         return result?.IsFound == true ? result.Results : null;
     }

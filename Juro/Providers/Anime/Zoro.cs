@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Extractors;
@@ -11,7 +12,6 @@ using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 using Nager.PublicSuffix;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Anime;
 
@@ -241,7 +241,7 @@ public class Zoro : IAnimeProvider
 
         //Get anime episodes
         var json = await _http.ExecuteAsync(url, cancellationToken);
-        var jObj = JObject.Parse(json);
+        var jObj = JsonNode.Parse(json)!;
         var response = jObj["html"]!.ToString();
 
         var document = Html.Parse(response);
@@ -289,7 +289,7 @@ public class Zoro : IAnimeProvider
         if (string.IsNullOrWhiteSpace(response))
             return new();
 
-        var data = JObject.Parse(response);
+        var data = JsonNode.Parse(response)!;
 
         var doc = Html.Parse(data["html"]!.ToString());
 
@@ -316,7 +316,7 @@ public class Zoro : IAnimeProvider
             url = $"https://zoro.to/ajax/v2/episode/sources?id={dataId}";
             response = await _http.ExecuteAsync(url, cancellationToken);
 
-            data = JObject.Parse(response);
+            data = JsonNode.Parse(response)!;
             //var type = data["type"]!.ToString();
             //var server = data["server"]!.ToString();
 
@@ -339,15 +339,15 @@ public class Zoro : IAnimeProvider
 
         if (domainInfo.Domain.Contains("rapid"))
         {
-            return new RapidCloud(_httpClientProvider);
+            return new RapidCloudExtractor(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("sb"))
         {
-            return new StreamSB(_httpClientProvider);
+            return new StreamSBExtractor(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("streamta"))
         {
-            return new StreamTape(_httpClientProvider);
+            return new StreamTapeExtractor(_httpClientProvider);
         }
 
         return null;

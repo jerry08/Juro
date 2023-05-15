@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Extractors;
@@ -10,7 +11,6 @@ using Juro.Models.Movie;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Movie;
 
@@ -215,10 +215,10 @@ public class FlixHQ : MovieParser
             return server switch
             {
                 StreamingServers.MixDrop => new(),
-                StreamingServers.UpCloud => await new VidCloud(_httpClientProvider)
+                StreamingServers.UpCloud => await new VidCloudExtractor(_httpClientProvider)
                     .ExtractAsync(serverUrl, cancellationToken),
                 StreamingServers.VidCloud => new(),
-                _ => await new VidCloud(_httpClientProvider)
+                _ => await new VidCloudExtractor(_httpClientProvider)
                     .ExtractAsync(serverUrl, cancellationToken),
             };
         }
@@ -235,7 +235,7 @@ public class FlixHQ : MovieParser
         var url = $"{BaseUrl}/ajax/get_link/{servers[serverIndex].Url.Split('.').LastOrDefault()}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        serverUrl = JObject.Parse(response)["link"]!.ToString();
+        serverUrl = JsonNode.Parse(response)!["link"]!.ToString();
 
         return await GetEpisodeSourcesAsync(serverUrl, mediaId, server, cancellationToken);
     }

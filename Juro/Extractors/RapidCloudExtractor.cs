@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models;
 using Juro.Models.Videos;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Extractors;
 
-public class RapidCloud : IVideoExtractor
+public class RapidCloudExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
@@ -20,7 +19,7 @@ public class RapidCloud : IVideoExtractor
     private readonly string _fallbackKey = "c1d17096f2ca11b7";
     private readonly string _host = "https://rapid-cloud.co";
 
-    public RapidCloud(Func<HttpClient> httpClientProvider)
+    public RapidCloudExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
@@ -51,13 +50,13 @@ public class RapidCloud : IVideoExtractor
         if (string.IsNullOrWhiteSpace(decryptKey))
             decryptKey = _fallbackKey;
 
-        var data = JObject.Parse(response);
+        var data = JsonNode.Parse(response);
 
-        var sources = data["sources"]?.ToString();
+        var sources = data?["sources"]?.ToString();
         if (string.IsNullOrWhiteSpace(sources))
             return new();
 
-        var isEncrypted = (bool)data["encrypted"]!;
+        var isEncrypted = (bool)data!["encrypted"]!;
         if (isEncrypted)
         {
             try
@@ -75,9 +74,9 @@ public class RapidCloud : IVideoExtractor
         var tracksStr = data["tracks"]?.ToString();
         if (!string.IsNullOrWhiteSpace(tracksStr))
         {
-            foreach (var subtitle in JArray.Parse(tracksStr!))
+            foreach (var subtitle in JsonNode.Parse(tracksStr!)!.AsArray())
             {
-                var kind = subtitle["kind"]?.ToString();
+                var kind = subtitle!["kind"]?.ToString();
                 var label = subtitle["label"]?.ToString();
                 var file = subtitle["file"]?.ToString();
 
@@ -90,7 +89,7 @@ public class RapidCloud : IVideoExtractor
             }
         }
 
-        var m3u8File = JArray.Parse(sources!)[0]["file"]!.ToString();
+        var m3u8File = JsonNode.Parse(sources!)![0]!["file"]!.ToString();
 
         return new List<VideoSource>
         {

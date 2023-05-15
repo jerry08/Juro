@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Juro.Providers.Anilist.Api;
 
@@ -9,254 +9,254 @@ public class Media
     /// <summary>
     /// The id of the media
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
 
     /// <summary>
     /// The mal id of the media
     /// </summary>
-    [JsonProperty("idMal")]
+    [JsonPropertyName("idMal")]
     public int? IdMal { get; set; }
 
     /// <summary>
     /// The official titles of the media in various languages
     /// </summary>
-    [JsonProperty("title")]
+    [JsonPropertyName("title")]
     public MediaTitle? Title { get; set; }
 
     /// <summary>
     /// The type of the media; anime or manga
     /// </summary>
-    [JsonProperty("type")]
+    [JsonPropertyName("type")]
     public MediaType? Type { get; set; }
 
     /// <summary>
     /// The format the media was released in
     /// </summary>
-    [JsonProperty("format")]
+    [JsonPropertyName("format")]
     public MediaFormat? Format { get; set; }
 
     /// <summary>
     /// The current releasing status of the media
     /// </summary>
-    [JsonProperty("status")]
+    [JsonPropertyName("status")]
     public MediaStatus? Status { get; set; }
 
     /// <summary>
     /// Short description of the media's story and characters
     /// </summary>
-    [JsonProperty("description")]
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
 
     /// <summary>
     /// The first official release date of the media
     /// </summary>
-    [JsonProperty("startDate")]
+    [JsonPropertyName("startDate")]
     public FuzzyDate? StartDate { get; set; }
 
     /// <summary>
     /// The last official release date of the media
     /// </summary>
-    [JsonProperty("endDate")]
+    [JsonPropertyName("endDate")]
     public FuzzyDate? EndDate { get; set; }
 
     /// <summary>
     /// The season the media was initially released in
     /// </summary>
-    [JsonProperty("season")]
+    [JsonPropertyName("season")]
     public MediaSeason? Season { get; set; }
 
     /// <summary>
     /// The season year the media was initially released in
     /// </summary>
-    [JsonProperty("seasonYear")]
+    [JsonPropertyName("seasonYear")]
     public int? SeasonYear { get; set; }
 
     /// <summary>
     /// The year &#38; season the media was initially released in
     /// </summary>
-    [JsonProperty("seasonInt")]
+    [JsonPropertyName("seasonInt")]
     public int? SeasonInt { get; set; }
 
     /// <summary>
     /// The amount of episodes the anime has when complete
     /// </summary>
-    [JsonProperty("episodes")]
+    [JsonPropertyName("episodes")]
     public int? Episodes { get; set; }
 
     /// <summary>
     /// The general length of each anime episode in minutes
     /// </summary>
-    [JsonProperty("duration")]
+    [JsonPropertyName("duration")]
     public int? Duration { get; set; }
 
     /// <summary>
     /// The amount of chapters the manga has when complete
     /// </summary>
-    [JsonProperty("chapters")]
+    [JsonPropertyName("chapters")]
     public int? Chapters { get; set; }
 
     /// <summary>
     /// The amount of volumes the manga has when complete
     /// </summary>
-    [JsonProperty("volumes")]
+    [JsonPropertyName("volumes")]
     public int? Volumes { get; set; }
 
     /// <summary>
     /// Where the media was created. (ISO 3166-1 alpha-2)
     /// Originally a "CountryCode"
     /// </summary>
-    [JsonProperty("countryOfOrigin")]
+    [JsonPropertyName("countryOfOrigin")]
     public string? CountryOfOrigin { get; set; }
 
     /// <summary>
     /// Source type the media was adapted from.
     /// </summary>
-    [JsonProperty("source")]
+    [JsonPropertyName("source")]
     public MediaSource? Source { get; set; }
 
     /// <summary>
     /// Official Twitter hashtags for the media
     /// </summary>
-    [JsonProperty("hashtag")]
+    [JsonPropertyName("hashtag")]
     public string? Hashtag { get; set; }
 
     /// <summary>
     /// Media trailer or advertisement
     /// </summary>
-    [JsonProperty("trailer")]
+    [JsonPropertyName("trailer")]
     public MediaTrailer? Trailer { get; set; }
 
     /// <summary>
     /// When the media's data was last updated
     /// </summary>
-    [JsonProperty("updatedAt")]
+    [JsonPropertyName("updatedAt")]
     public int? UpdatedAt { get; set; }
 
     /// <summary>
     /// The cover images of the media
     /// </summary>
-    [JsonProperty("coverImage")]
+    [JsonPropertyName("coverImage")]
     public MediaCoverImage? CoverImage { get; set; }
 
     /// <summary>
     /// The banner image of the media
     /// </summary>
-    [JsonProperty("bannerImage")]
+    [JsonPropertyName("bannerImage")]
     public string? BannerImage { get; set; }
 
     /// <summary>
     /// The genres of the media
     /// </summary>
-    [JsonProperty("genres")]
+    [JsonPropertyName("genres")]
     public List<string>? Genres { get; set; }
 
     /// <summary>
     /// Alternative titles of the media
     /// </summary>
-    [JsonProperty("synonyms")]
+    [JsonPropertyName("synonyms")]
     public List<string>? Synonyms { get; set; }
 
     /// <summary>
     /// A weighted average score of all the user's scores of the media
     /// </summary>
-    [JsonProperty("averageScore")]
+    [JsonPropertyName("averageScore")]
     public int? AverageScore { get; set; }
 
     /// <summary>
     /// Mean score of all the user's scores of the media
     /// </summary>
-    [JsonProperty("meanScore")]
+    [JsonPropertyName("meanScore")]
     public int? MeanScore { get; set; }
 
     /// <summary>
     /// The number of users with the media on their list
     /// </summary>
-    [JsonProperty("popularity")]
+    [JsonPropertyName("popularity")]
     public int? Popularity { get; set; }
 
     /// <summary>
     /// Locked media may not be added to lists our favorited. This may be due to the entry pending for deletion or other reasons.
     /// </summary>
-    [JsonProperty("isLocked")]
+    [JsonPropertyName("isLocked")]
     public bool? IsLocked { get; set; }
 
     /// <summary>
     /// The amount of related activity in the past hour
     /// </summary>
-    [JsonProperty("trending")]
+    [JsonPropertyName("trending")]
     public int? Trending { get; set; }
 
     /// <summary>
     /// The amount of user's who have favourited the media
     /// </summary>
-    [JsonProperty("favourites")]
+    [JsonPropertyName("favourites")]
     public int? Favourites { get; set; }
 
     /// <summary>
     /// List of tags that describes elements and themes of the media
     /// </summary>
-    [JsonProperty("tags")]
+    [JsonPropertyName("tags")]
     public List<MediaTag>? Tags { get; set; }
 
     /// <summary>
     /// Other media in the same or connecting franchise
     /// </summary>
-    [JsonProperty("relations")]
+    [JsonPropertyName("relations")]
     public MediaConnection? Relations { get; set; }
 
     /// <summary>
     /// The characters in the media
     /// </summary>
-    [JsonProperty("characters")]
+    [JsonPropertyName("characters")]
     public CharacterConnection? Characters { get; set; }
 
     /// <summary>
     /// The companies who produced the media
     /// </summary>
-    [JsonProperty("studios")]
+    [JsonPropertyName("studios")]
     public StudioConnection? Studios { get; set; }
 
     /// <summary>
     /// If the media is marked as favourite by the current authenticated user
     /// </summary>
-    [JsonProperty("isFavourite")]
+    [JsonPropertyName("isFavourite")]
     public bool? IsFavourite { get; set; }
 
     /// <summary>
     /// If the media is blocked from being added to favourites
     /// </summary>
-    [JsonProperty("isFavouriteBlocked")]
+    [JsonPropertyName("isFavouriteBlocked")]
     public bool? IsFavouriteBlocked { get; set; }
 
     /// <summary>
     /// If the media is intended only for 18+ adult audiences
     /// </summary>
-    [JsonProperty("isAdult")]
+    [JsonPropertyName("isAdult")]
     public bool? IsAdult { get; set; }
 
     /// <summary>
     /// The media's next episode airing schedule
     /// </summary>
-    [JsonProperty("nextAiringEpisode")]
+    [JsonPropertyName("nextAiringEpisode")]
     public AiringSchedule? NextAiringEpisode { get; set; }
 
     /// <summary>
     /// External links to another site related to the media
     /// </summary>
-    [JsonProperty("externalLinks")]
+    [JsonPropertyName("externalLinks")]
     public List<MediaExternalLink>? ExternalLinks { get; set; }
 
     /// <summary>
     /// The authenticated user's media list entry for the media
     /// </summary>
-    [JsonProperty("mediaListEntry")]
+    [JsonPropertyName("mediaListEntry")]
     public MediaList? MediaListEntry { get; set; }
 
     /// <summary>
     /// User recommendations for similar media
     /// </summary>
-    [JsonProperty("recommendations")]
+    [JsonPropertyName("recommendations")]
     public RecommendationConnection? Recommendations { get; set; }
 }
 
@@ -265,25 +265,25 @@ public class MediaTitle
     /// <summary>
     /// The romanization of the native language title
     /// </summary>
-    [JsonProperty("romaji")]
+    [JsonPropertyName("romaji")]
     public string? Romaji { get; set; }
 
     /// <summary>
     /// The official english title
     /// </summary>
-    [JsonProperty("english")]
+    [JsonPropertyName("english")]
     public string? English { get; set; }
 
     /// <summary>
     /// Official title in it's native language
     /// </summary>
-    [JsonProperty("native")]
+    [JsonPropertyName("native")]
     public string? Native { get; set; }
 
     /// <summary>
     /// The currently authenticated users preferred title language. Default romaji for non-authenticated
     /// </summary>
-    [JsonProperty("userPreferred")]
+    [JsonPropertyName("userPreferred")]
     public string? UserPreferred { get; set; }
 }
 
@@ -308,37 +308,37 @@ public class AiringSchedule
     /// <summary>
     /// The id of the airing schedule item
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int? Id { get; set; }
 
     /// <summary>
     /// The time the episode airs at
     /// </summary>
-    [JsonProperty("airingAt")]
+    [JsonPropertyName("airingAt")]
     public int? AiringAt { get; set; }
 
     /// <summary>
     /// Seconds until episode starts airing
     /// </summary>
-    [JsonProperty("timeUntilAiring")]
+    [JsonPropertyName("timeUntilAiring")]
     public int? TimeUntilAiring { get; set; }
 
     /// <summary>
     /// The airing episode number
     /// </summary>
-    [JsonProperty("episode")]
+    [JsonPropertyName("episode")]
     public int? Episode { get; set; }
 
     /// <summary>
     /// The associate media id of the airing episode
     /// </summary>
-    [JsonProperty("mediaId")]
+    [JsonPropertyName("mediaId")]
     public int? MediaId { get; set; }
 
     /// <summary>
     /// The associate media of the airing episode
     /// </summary>
-    [JsonProperty("media")]
+    [JsonPropertyName("media")]
     public Media? Media { get; set; }
 }
 
@@ -347,25 +347,25 @@ public class MediaCoverImage
     /// <summary>
     /// The cover image url of the media at its largest size. If this size isn't available, large will be provided instead.
     /// </summary>
-    [JsonProperty("extraLarge")]
+    [JsonPropertyName("extraLarge")]
     public string? ExtraLarge { get; set; }
 
     /// <summary>
     /// The cover image url of the media at a large size
     /// </summary>
-    [JsonProperty("large")]
+    [JsonPropertyName("large")]
     public string? Large { get; set; }
 
     /// <summary>
     /// The cover image url of the media at medium size
     /// </summary>
-    [JsonProperty("medium")]
+    [JsonPropertyName("medium")]
     public string? Medium { get; set; }
 
     /// <summary>
     /// Average #hex color of cover image
     /// </summary>
-    [JsonProperty("color")]
+    [JsonPropertyName("color")]
     public string? Color { get; set; }
 }
 
@@ -374,109 +374,109 @@ public class MediaList
     /// <summary>
     /// The id of the list entry
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int? Id { get; set; }
 
     /// <summary>
     /// The id of the user owner of the list entry
     /// </summary>
-    [JsonProperty("userId")]
+    [JsonPropertyName("userId")]
     public int? UserId { get; set; }
 
     /// <summary>
     /// The id of the media
     /// </summary>
-    [JsonProperty("mediaId")]
+    [JsonPropertyName("mediaId")]
     public int? MediaId { get; set; }
 
     /// <summary>
     /// The watching/reading status
     /// </summary>
-    [JsonProperty("status")]
+    [JsonPropertyName("status")]
     public MediaListStatus? Status { get; set; }
 
     /// <summary>
     /// The score of the entry
     /// </summary>
-    [JsonProperty("score")]
+    [JsonPropertyName("score")]
     public float? Score { get; set; }
 
     /// <summary>
     /// The amount of episodes/chapters consumed by the user
     /// </summary>
-    [JsonProperty("progress")]
+    [JsonPropertyName("progress")]
     public int? Progress { get; set; }
 
     /// <summary>
     /// The amount of volumes read by the user
     /// </summary>
-    [JsonProperty("progressVolumes")]
+    [JsonPropertyName("progressVolumes")]
     public int? ProgressVolumes { get; set; }
 
     /// <summary>
     /// The amount of times the user has rewatched/read the media
     /// </summary>
-    [JsonProperty("repeat")]
+    [JsonPropertyName("repeat")]
     public int? Repeat { get; set; }
 
     /// <summary>
     /// Priority of planning
     /// </summary>
-    [JsonProperty("priority")]
+    [JsonPropertyName("priority")]
     public int? Priority { get; set; }
 
     /// <summary>
     /// If the entry should only be visible to authenticated user
     /// </summary>
-    [JsonProperty("private")]
+    [JsonPropertyName("private")]
     public bool? IsPrivate { get; set; }
 
     /// <summary>
     /// Text notes
     /// </summary>
-    [JsonProperty("notes")]
+    [JsonPropertyName("notes")]
     public string? Notes { get; set; }
 
     /// <summary>
     /// If the entry shown be hidden from non-custom lists
     /// </summary>
-    [JsonProperty("hiddenFromStatusLists")]
+    [JsonPropertyName("hiddenFromStatusLists")]
     public bool? HiddenFromStatusLists { get; set; }
 
     /// <summary>
     /// Map of booleans for which custom lists the entry are in
     /// </summary>
-    [JsonProperty("customLists")]
+    [JsonPropertyName("customLists")]
     public Dictionary<string, bool>? CustomLists { get; set; }
 
     /// <summary>
     /// When the entry was started by the user
     /// </summary>
-    [JsonProperty("startedAt")]
+    [JsonPropertyName("startedAt")]
     public FuzzyDate? StartedAt { get; set; }
 
     /// <summary>
     /// When the entry was completed by the user
     /// </summary>
-    [JsonProperty("completedAt")]
+    [JsonPropertyName("completedAt")]
     public FuzzyDate? CompletedAt { get; set; }
 
     /// <summary>
     /// When the entry data was last updated
     /// </summary>
-    [JsonProperty("updatedAt")]
+    [JsonPropertyName("updatedAt")]
     public int? UpdatedAt { get; set; }
 
     /// <summary>
     /// When the entry data was created
     /// </summary>
-    [JsonProperty("createdAt")]
+    [JsonPropertyName("createdAt")]
     public int? CreatedAt { get; set; }
 
-    [JsonProperty("media")]
+    [JsonPropertyName("media")]
     public Media? Media { get; set; }
 
-    [JsonProperty("user")]
+    [JsonPropertyName("user")]
     public User? User { get; set; }
 }
 
@@ -537,25 +537,25 @@ public class MediaTrailer
     /// <summary>
     /// The trailer video id
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public string? Id { get; set; }
 
     /// <summary>
     /// The site the video is hosted by (Currently either youtube or dailymotion)
     /// </summary>
-    [JsonProperty("site")]
+    [JsonPropertyName("site")]
     public string? Site { get; set; }
 
     /// <summary>
     /// The url for the thumbnail image of the video
     /// </summary>
-    [JsonProperty("thumbnail")]
+    [JsonPropertyName("thumbnail")]
     public string? Thumbnail { get; set; }
 }
 
 public class MediaTagCollection
 {
-    [JsonProperty("tags")]
+    [JsonPropertyName("tags")]
     public List<MediaTag>? Tags { get; set; }
 }
 
@@ -564,70 +564,70 @@ public class MediaTag
     /// <summary>
     /// The id of the tag
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int? Id { get; set; }
 
     /// <summary>
     /// The name of the tag
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string? Name { get; set; }
 
     /// <summary>
     /// A general description of the tag
     /// </summary>
-    [JsonProperty("description")]
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
 
     /// <summary>
     /// The categories of tags this tag belongs to
     /// </summary>
-    [JsonProperty("category")]
+    [JsonPropertyName("category")]
     public string? Category { get; set; }
 
     /// <summary>
     /// The relevance ranking of the tag out of the 100 for this media
     /// </summary>
-    [JsonProperty("rank")]
+    [JsonPropertyName("rank")]
     public int? Rank { get; set; }
 
     /// <summary>
     /// If the tag could be a spoiler for any media
     /// </summary>
-    [JsonProperty("isGeneralSpoiler")]
+    [JsonPropertyName("isGeneralSpoiler")]
     public bool? IsGeneralSpoiler { get; set; }
 
     /// <summary>
     /// If the tag is a spoiler for this media
     /// </summary>
-    [JsonProperty("isMediaSpoiler")]
+    [JsonPropertyName("isMediaSpoiler")]
     public bool? IsMediaSpoiler { get; set; }
 
     /// <summary>
     /// If the tag is only for adult 18+ media
     /// </summary>
-    [JsonProperty("isAdult")]
+    [JsonPropertyName("isAdult")]
     public bool? IsAdult { get; set; }
 
     /// <summary>
     /// The user who submitted the tag
     /// </summary>
-    [JsonProperty("userId")]
+    [JsonPropertyName("userId")]
     public int? UserId { get; set; }
 }
 
 public class MediaConnection
 {
-    [JsonProperty("edges")]
+    [JsonPropertyName("edges")]
     public List<MediaEdge>? Edges { get; set; }
 
-    [JsonProperty("nodes")]
+    [JsonPropertyName("nodes")]
     public List<Media>? Nodes { get; set; }
 
     /// <summary>
     /// The pagination information
     /// </summary>
-    [JsonProperty("pageInfo")]
+    [JsonPropertyName("pageInfo")]
     public PageInfo? PageInfo { get; set; }
 }
 

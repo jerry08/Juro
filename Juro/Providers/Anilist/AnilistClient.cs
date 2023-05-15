@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Juro.Providers.Anilist.Api;
 using Juro.Providers.Aniskip;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json;
 using Character = Juro.Providers.Anilist.Models.Character;
 using Media = Juro.Providers.Anilist.Models.Media;
 using Studio = Juro.Providers.Anilist.Models.Studio;
@@ -62,7 +62,7 @@ public class AnilistClient
             { "Accept", "application/json" }
         };
 
-        var serialized = JsonConvert.SerializeObject(data);
+        var serialized = JsonSerializer.Serialize(data);
 
         //var content = new StringContent(query, Encoding.UTF8, "application/json");
         var content = new StringContent(serialized, Encoding.UTF8, "application/json");
@@ -71,7 +71,13 @@ public class AnilistClient
         if (!json.StartsWith("{"))
             throw new Exception("Seems like Anilist is down, maybe try using a VPN or you can wait for it to comeback.");
 
-        return JsonConvert.DeserializeObject<T>(json);
+        return JsonSerializer.Deserialize<T>(
+            json,
+            new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            }
+        );
     }
 
     public async ValueTask<Media?> GetMediaDetailsAsync(Media media)

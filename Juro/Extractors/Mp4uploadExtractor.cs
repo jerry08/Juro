@@ -9,13 +9,13 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
-public class Mp4upload : IVideoExtractor
+public class Mp4uploadExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
     public string ServerName => "Mp4upload";
 
-    public Mp4upload(Func<HttpClient> httpClientProvider)
+    public Mp4uploadExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }

@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Clients;
 using Juro.Models.Videos;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Extractors;
 
-public class VizCloud : IVideoExtractor
+public class VizCloudExtractor : IVideoExtractor
 {
     private readonly ConsumetClient _consumet;
 
@@ -17,7 +17,7 @@ public class VizCloud : IVideoExtractor
 
     public string ServerName => "VizCloud";
 
-    public VizCloud(Func<HttpClient> httpClientProvider, string consumetAction)
+    public VizCloudExtractor(Func<HttpClient> httpClientProvider, string consumetAction)
     {
         _consumetAction = consumetAction;
         _consumet = new(httpClientProvider);
@@ -35,7 +35,7 @@ public class VizCloud : IVideoExtractor
             cancellationToken
         );
 
-        var m3u8File = JObject.Parse(playlistUrl)["media"]!["sources"]![0]!["file"]!.ToString();
+        var m3u8File = JsonNode.Parse(playlistUrl)!["media"]!["sources"]![0]!["file"]!.ToString();
 
         return new()
         {

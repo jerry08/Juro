@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Consumet;
 
@@ -45,7 +45,7 @@ public class NineAnime
         if (string.IsNullOrWhiteSpace(response))
             return string.Empty;
 
-        var data = JObject.Parse(response)!;
+        var data = JsonNode.Parse(response)!;
 
         if (action is "vizcloud" or "mcloud")
             return data["data"]!.ToString();

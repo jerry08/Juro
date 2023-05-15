@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Extractors;
 
-public class StreamSB : IVideoExtractor
+public class StreamSBExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
@@ -19,7 +19,7 @@ public class StreamSB : IVideoExtractor
 
     public string ServerName => "StreamSB";
 
-    public StreamSB(Func<HttpClient> httpClientProvider)
+    public StreamSBExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
@@ -51,8 +51,8 @@ public class StreamSB : IVideoExtractor
 
         var response = await http.ExecuteAsync(jsonLink, headers, cancellationToken);
 
-        var data = JObject.Parse(response);
-        var masterUrl = data["stream_data"]?["file"]?.ToString().Trim('"')!;
+        var data = JsonNode.Parse(response);
+        var masterUrl = data?["stream_data"]?["file"]?.ToString().Trim('"')!;
 
         return new List<VideoSource>
         {

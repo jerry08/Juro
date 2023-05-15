@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Juro.Providers.Aniskip;
 
 public class AniSkipResponse
 {
-    [JsonProperty("found")]
+    [JsonPropertyName("found")]
     public bool IsFound { get; set; }
 
     public List<Stamp>? Results { get; set; }

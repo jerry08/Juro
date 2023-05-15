@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Extractors.Decryptors;
@@ -9,11 +10,10 @@ using Juro.Models;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Extractors;
 
-public class VidCloud : IVideoExtractor
+public class VidCloudExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
@@ -23,7 +23,7 @@ public class VidCloud : IVideoExtractor
 
     public string ServerName => "VidCloud";
 
-    public VidCloud(Func<HttpClient> httpClientProvider, bool isAlternative = false)
+    public VidCloudExtractor(Func<HttpClient> httpClientProvider, bool isAlternative = false)
     {
         _httpClientProvider = httpClientProvider;
         _isAlternative = isAlternative;
@@ -49,7 +49,7 @@ public class VidCloud : IVideoExtractor
             cancellationToken
         );
 
-        var data = JObject.Parse(response);
+        var data = JsonNode.Parse(response)!;
         var sourcesJson = data["sources"]!.ToString();
 
         if (!JsonExtensions.IsValidJson(sourcesJson))
@@ -64,19 +64,19 @@ public class VidCloud : IVideoExtractor
             sourcesJson = decryptor.Decrypt(sourcesJson, key);
         }
 
-        var sources = JArray.Parse(sourcesJson);
-
-        var subtitles = data["tracks"]!
-            .Where(x => x["kind"]?.ToString() == "captions")
+        var subtitles = data["tracks"]!.AsArray()
+            .Where(x => x!["kind"]?.ToString() == "captions")
             .Select(track => new Subtitle()
             {
-                Url = track["file"]!.ToString(),
+                Url = track!["file"]!.ToString(),
                 Language = track["label"]!.ToString()
             }).ToList();
 
+        var sources = JsonNode.Parse(sourcesJson)!.AsArray()!;
+
         var list = sources.Select(source => new VideoSource()
         {
-            VideoUrl = source["file"]!.ToString(),
+            VideoUrl = source!["file"]!.ToString(),
             Format = source["file"]!.ToString().Contains(".m3u8")
                 ? VideoType.M3u8 : source["type"]!.ToString().ToLower() switch
                 {

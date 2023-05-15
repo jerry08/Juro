@@ -1,6 +1,5 @@
 ﻿using System;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Juro.Utils.Extensions;
 
@@ -16,17 +15,8 @@ public class JsonExtensions
         {
             try
             {
-                var obj = JToken.Parse(strInput);
-                return true;
-            }
-            catch (JsonReaderException jex)
-            {
-#if DEBUG
-                //Exception in parsing json
-                Console.WriteLine(jex.Message);
-                System.Diagnostics.Debug.WriteLine(jex.Message);
-#endif
-                return false;
+                var obj = JsonNode.Parse(strInput);
+                return obj is not null;
             }
             catch (Exception ex) //some other exception
             {

@@ -9,13 +9,13 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
-public class FPlayer : IVideoExtractor
+public class FPlayerExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
     public string ServerName => "FPlayer";
 
-    public FPlayer(Func<HttpClient> httpClientProvider)
+    public FPlayerExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }

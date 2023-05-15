@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Juro.Providers.Anilist.Api;
 
@@ -7,108 +7,108 @@ public class Query
 {
     public class Viewer
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("Viewer")]
+            [JsonPropertyName("Viewer")]
             public Api.User? User { get; set; }
         }
     }
 
     public class Media
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("Media")]
+            [JsonPropertyName("Media")]
             public Api.Media? Media { get; set; }
         }
     }
 
     public class Page
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("page")]
+            [JsonPropertyName("page")]
             public Api.Page? Page { get; set; }
         }
     }
 
     public class Character
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("Character")]
+            [JsonPropertyName("Character")]
             public Api.Character? Character { get; set; }
         }
     }
 
     public class Studio
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("Studio")]
+            [JsonPropertyName("Studio")]
             public Api.Studio? Studio { get; set; }
         }
     }
 
     public class MediaListCollection
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("MediaListCollection")]
+            [JsonPropertyName("MediaListCollection")]
             public Api.MediaListCollection? MediaListCollection { get; set; }
         }
     }
 
     public class GenreCollection
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("GenreCollection")]
+            [JsonPropertyName("GenreCollection")]
             public List<string>? GenreCollection { get; set; }
         }
     }
 
     public class MediaTagCollection
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("MediaTagCollection")]
+            [JsonPropertyName("MediaTagCollection")]
             public List<MediaTag>? MediaTagCollection { get; set; }
         }
     }
 
     public class User
     {
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public Data2? Data { get; set; }
 
         public class Data2
         {
-            [JsonProperty("User")]
+            [JsonPropertyName("User")]
             public Api.User? User { get; set; }
         }
     }

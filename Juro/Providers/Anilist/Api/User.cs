@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Juro.Providers.Anilist.Api;
 
@@ -8,49 +8,49 @@ public class User
     /// <summary>
     /// The id of the user
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
 
     /// <summary>
     /// The name of the user
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string? Name { get; set; }
 
     /// <summary>
     /// The user's avatar images
     /// </summary>
-    [JsonProperty("avatar")]
+    [JsonPropertyName("avatar")]
     public UserAvatar? Avatar { get; set; }
 
     /// <summary>
     /// The user's banner images
     /// </summary>
-    [JsonProperty("bannerImage")]
+    [JsonPropertyName("bannerImage")]
     public string? BannerImage { get; set; }
 
     /// <summary>
     /// The user's general options
     /// </summary>
-    [JsonProperty("options")]
+    [JsonPropertyName("options")]
     public UserOptions? Options { get; set; }
 
     /// <summary>
     /// The user's media list options
     /// </summary>
-    [JsonProperty("mediaListOptions")]
+    [JsonPropertyName("mediaListOptions")]
     public MediaListOptions? MediaListOptions { get; set; }
 
     /// <summary>
     /// The users favourites
     /// </summary>
-    [JsonProperty("favourites")]
+    [JsonPropertyName("favourites")]
     public Favourites? Favourites { get; set; }
 
     /// <summary>
     /// The users anime &#38; manga list statistics
     /// </summary>
-    [JsonProperty("statistics")]
+    [JsonPropertyName("statistics")]
     public UserStatisticTypes? Statistics { get; set; }
 }
 
@@ -59,19 +59,19 @@ public class UserOptions
     /// <summary>
     /// Whether the user has enabled viewing of 18+ content
     /// </summary>
-    [JsonProperty("displayAdultContent")]
+    [JsonPropertyName("displayAdultContent")]
     public bool? DisplayAdultContent { get; set; }
 
     /// <summary>
     /// Whether the user receives notifications when a show they are watching aires
     /// </summary>
-    [JsonProperty("airingNotifications")]
+    [JsonPropertyName("airingNotifications")]
     public bool? AiringNotifications { get; set; }
 
     /// <summary>
     /// Profile highlight color (blue, purple, pink, orange, red, green, gray)
     /// </summary>
-    [JsonProperty("profileColor")]
+    [JsonPropertyName("profileColor")]
     public string? ProfileColor { get; set; }
 }
 
@@ -80,46 +80,46 @@ public class UserAvatar
     /// <summary>
     /// The avatar of user at its largest size
     /// </summary>
-    [JsonProperty("large")]
+    [JsonPropertyName("large")]
     public string? Large { get; set; }
 
     /// <summary>
     /// The avatar of user at medium size
     /// </summary>
-    [JsonProperty("medium")]
+    [JsonPropertyName("medium")]
     public string? Medium { get; set; }
 }
 
 public class UserStatisticTypes
 {
-    [JsonProperty("anime")]
+    [JsonPropertyName("anime")]
     public UserStatistics? Anime { get; set; }
 
-    [JsonProperty("manga")]
+    [JsonPropertyName("manga")]
     public UserStatistics? Manga { get; set; }
 }
 
 public class UserStatistics
 {
-    [JsonProperty("count")]
+    [JsonPropertyName("count")]
     public int? Count { get; set; }
 
-    [JsonProperty("meanScore")]
+    [JsonPropertyName("meanScore")]
     public int? MeanScore { get; set; }
 
-    [JsonProperty("standardDeviation")]
+    [JsonPropertyName("standardDeviation")]
     public float? StandardDeviation { get; set; }
 
-    [JsonProperty("minutesWatched")]
+    [JsonPropertyName("minutesWatched")]
     public int? MinutesWatched { get; set; }
 
-    [JsonProperty("episodesWatched")]
+    [JsonPropertyName("episodesWatched")]
     public int? EpisodesWatched { get; set; }
 
-    [JsonProperty("chaptersRead")]
+    [JsonPropertyName("chaptersRead")]
     public int? ChaptersRead { get; set; }
 
-    [JsonProperty("volumesRead")]
+    [JsonPropertyName("volumesRead")]
     public int? VolumesRead { get; set; }
 }
 
@@ -128,31 +128,31 @@ public class Favourites
     /// <summary>
     /// Favourite anime
     /// </summary>
-    [JsonProperty("anime")]
+    [JsonPropertyName("anime")]
     public MediaConnection? Anime { get; set; }
 
     /// <summary>
     /// Favourite manga
     /// </summary>
-    [JsonProperty("manga")]
+    [JsonPropertyName("manga")]
     public MediaConnection? Manga { get; set; }
 
     /// <summary>
     /// Favourite characters
     /// </summary>
-    [JsonProperty("characters")]
+    [JsonPropertyName("characters")]
     public CharacterConnection? Characters { get; set; }
 
     /// <summary>
     /// Favourite staff
     /// </summary>
-    [JsonProperty("staff")]
+    [JsonPropertyName("staff")]
     public StaffConnection? Staff { get; set; }
 
     /// <summary>
     /// Favourite studios
     /// </summary>
-    [JsonProperty("studios")]
+    [JsonPropertyName("studios")]
     public StudioConnection? Studios { get; set; }
 }
 
@@ -161,19 +161,19 @@ public class MediaListOptions
     /// <summary>
     /// The default order list rows should be displayed in
     /// </summary>
-    [JsonProperty("rowOrder")]
+    [JsonPropertyName("rowOrder")]
     public string? RowOrder { get; set; }
 
     /// <summary>
     /// The user's anime list options
     /// </summary>
-    [JsonProperty("animeList")]
+    [JsonPropertyName("animeList")]
     public MediaListTypeOptions? AnimeList { get; set; }
 
     /// <summary>
     /// The user's manga list options
     /// </summary>
-    [JsonProperty("mangaList")]
+    [JsonPropertyName("mangaList")]
     public MediaListTypeOptions? MangaList { get; set; }
 }
 
@@ -182,18 +182,18 @@ public class MediaListTypeOptions
     /// <summary>
     /// The order each list should be displayed in
     /// </summary>
-    [JsonProperty("sectionOrder")]
+    [JsonPropertyName("sectionOrder")]
     public List<string>? SectionOrder { get; set; }
 
     /// <summary>
     /// If the completed sections of the list should be separated by format
     /// </summary>
-    [JsonProperty("splitCompletedSectionByFormat")]
+    [JsonPropertyName("splitCompletedSectionByFormat")]
     public bool? SplitCompletedSectionByFormat { get; set; }
 
     /// <summary>
     /// The names of the user's custom lists
     /// </summary>
-    [JsonProperty("customLists")]
+    [JsonPropertyName("customLists")]
     public List<string>? CustomLists { get; set; }
 }

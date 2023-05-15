@@ -9,7 +9,7 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
-public class StreamTape : IVideoExtractor
+public class StreamTapeExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
@@ -17,7 +17,7 @@ public class StreamTape : IVideoExtractor
 
     public string ServerName => "StreamTape";
 
-    public StreamTape(Func<HttpClient> httpClientProvider)
+    public StreamTapeExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }

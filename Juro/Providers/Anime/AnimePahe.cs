@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,6 @@ using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 using Juro.Utils.Tasks;
-using Newtonsoft.Json.Linq;
 
 namespace Juro.Providers.Anime;
 
@@ -63,13 +63,13 @@ public class AnimePahe : IAnimeProvider
         if (string.IsNullOrWhiteSpace(response))
             return animes;
 
-        var data = JObject.Parse(response)["data"];
+        var data = JsonNode.Parse(response)?["data"];
         if (data is null)
             return animes;
 
-        return data.Select(x => (IAnimeInfo)new AnimePaheInfo()
+        return data.AsArray().Select(x => (IAnimeInfo)new AnimePaheInfo()
         {
-            Id = x["session"]!.ToString(),
+            Id = x!["session"]!.ToString(),
             Title = x["title"]!.ToString(),
             Type = x["type"]!.ToString(),
             Episodes = int.TryParse(x["episodes"]?.ToString(), out var episodes) ? episodes : 0,
@@ -97,13 +97,13 @@ public class AnimePahe : IAnimeProvider
         if (string.IsNullOrWhiteSpace(response))
             return animes;
 
-        var data = JObject.Parse(response)["data"];
+        var data = JsonNode.Parse(response)?["data"];
         if (data is null)
             return animes;
 
-        return data.Select(x => (IAnimeInfo)new AnimeInfo()
+        return data.AsArray().Select(x => (IAnimeInfo)new AnimeInfo()
         {
-            Id = x["anime_session"]!.ToString(),
+            Id = x!["anime_session"]!.ToString(),
             Title = x["anime_title"]!.ToString(),
             Image = x["snapshot"]!.ToString(),
             Site = AnimeSites.AnimePahe
@@ -188,11 +188,11 @@ public class AnimePahe : IAnimeProvider
             cancellationToken
         );
 
-        var data = JObject.Parse(response);
+        var data = JsonNode.Parse(response);
 
-        Func<JToken, Episode> epsSelector = (JToken el) =>
+        Func<JsonNode?, Episode> epsSelector = (JsonNode? el) =>
         {
-            var link = $"{BaseUrl}/play/{id}/{el["session"]}";
+            var link = $"{BaseUrl}/play/{id}/{el!["session"]}";
 
             return new Episode()
             {
@@ -200,7 +200,7 @@ public class AnimePahe : IAnimeProvider
                 //Id = el["id"]!.ToString(),
                 //Id = el["session"]!.ToString(),
                 Id = link,
-                Number = Convert.ToInt32(el["episode"]!),
+                Number = Convert.ToInt32(el["episode"]?.ToString()),
                 Image = el["snapshot"]!.ToString(),
                 Description = el["title"]!.ToString(),
                 Link = link,
@@ -208,9 +208,9 @@ public class AnimePahe : IAnimeProvider
             };
         };
 
-        list.AddRange(data["data"]!.Select(epsSelector));
+        list.AddRange(data!["data"]!.AsArray().Select(epsSelector));
 
-        var lastPage = Convert.ToInt32(data["last_page"]);
+        var lastPage = Convert.ToInt32(data["last_page"]?.ToString());
 
         if (lastPage < 2)
             return list;
@@ -223,7 +223,11 @@ public class AnimePahe : IAnimeProvider
 
         var results = await TaskEx.Run(functions, 20);
 
-        list.AddRange(results.SelectMany(response => JObject.Parse(response)["data"]!.Select(epsSelector)));
+        list.AddRange(
+            results.SelectMany(
+                response => JsonNode.Parse(response)!["data"]!.AsArray().Select(epsSelector)
+            )
+        );
 
         return list;
     }
@@ -284,7 +288,7 @@ public class AnimePahe : IAnimeProvider
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
             return new();
 
-        return await new Kwik(_httpClientProvider)
+        return await new KwikExtractor(_httpClientProvider)
             .ExtractAsync(server.Embed.Url, cancellationToken);
     }
 }

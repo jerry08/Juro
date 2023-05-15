@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Juro.Providers.Anilist.Api;
 
@@ -8,40 +8,40 @@ public class Page
     /// <summary>
     /// The pagination information
     /// </summary>
-    [JsonProperty("pageInfo")]
+    [JsonPropertyName("pageInfo")]
     public PageInfo? PageInfo { get; set; }
 
-    [JsonProperty("users")]
+    [JsonPropertyName("users")]
     public List<User>? Users { get; set; }
 
-    [JsonProperty("media")]
+    [JsonPropertyName("media")]
     public List<Media>? Media { get; set; }
 
-    [JsonProperty("characters")]
+    [JsonPropertyName("characters")]
     public List<Character>? Characters { get; set; }
 
-    [JsonProperty("staff")]
+    [JsonPropertyName("staff")]
     public List<Staff>? Staff { get; set; }
 
-    [JsonProperty("studios")]
+    [JsonPropertyName("studios")]
     public List<Studio>? Studio { get; set; }
 
-    [JsonProperty("mediaList")]
+    [JsonPropertyName("mediaList")]
     public List<MediaList>? MediaList { get; set; }
 
-    [JsonProperty("airingSchedules")]
+    [JsonPropertyName("airingSchedules")]
     public List<AiringSchedule>? AiringSchedules { get; set; }
 
-    [JsonProperty("followers")]
+    [JsonPropertyName("followers")]
     public List<User>? Followers { get; set; }
 
-    [JsonProperty("following")]
+    [JsonPropertyName("following")]
     public List<User>? Following { get; set; }
 
-    [JsonProperty("recommendations")]
+    [JsonPropertyName("recommendations")]
     public List<Recommendation>? Recommendations { get; set; }
 
-    [JsonProperty("likes")]
+    [JsonPropertyName("likes")]
     public List<User>? Likes { get; set; }
 }
 
@@ -50,30 +50,30 @@ public class PageInfo
     /// <summary>
     /// The total number of items. Note: This value is not guaranteed to be accurate, do not rely on this for logic
     /// </summary>
-    [JsonProperty("total")]
+    [JsonPropertyName("total")]
     public int? Total { get; set; }
 
     /// <summary>
     /// The count on a page
     /// </summary>
-    [JsonProperty("perPage")]
+    [JsonPropertyName("perPage")]
     public int? PerPage { get; set; }
 
     /// <summary>
     /// The current page
     /// </summary>
-    [JsonProperty("currentPage")]
+    [JsonPropertyName("currentPage")]
     public int? CurrentPage { get; set; }
 
     /// <summary>
     /// The last page
     /// </summary>
-    [JsonProperty("lastPage")]
+    [JsonPropertyName("lastPage")]
     public int? LastPage { get; set; }
 
     /// <summary>
     /// If there is another page
     /// </summary>
-    [JsonProperty("hasNextPage")]
+    [JsonPropertyName("hasNextPage")]
     public bool? HasNextPage { get; set; }
 }

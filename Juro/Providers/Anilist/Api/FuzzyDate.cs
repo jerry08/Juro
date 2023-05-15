@@ -1,15 +1,15 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Juro.Providers.Anilist.Api;
 
 public class FuzzyDate
 {
-    [JsonProperty("year")]
+    [JsonPropertyName("year")]
     public int? Year { get; set; }
 
-    [JsonProperty("month")]
+    [JsonPropertyName("month")]
     public int? Month { get; set; }
 
-    [JsonProperty("day")]
+    [JsonPropertyName("day")]
     public int? Day { get; set; }
 }

@@ -51,16 +51,53 @@ public class MangaKatana : IMangaProvider
 
         var document = Html.Parse(response);
 
-        var gg = document.GetElementbyId("book_list");
+        var list = new List<IMangaResult>();
 
-        return document.GetElementbyId("book_list")?
-            .SelectNodes(".//div[contains(@class, 'media-left')]")?
-            .Select(el => (IMangaResult)new MangaResult()
+        var bookListEl = document.GetElementbyId("book_list");
+        if (bookListEl is not null)
+        {
+            var results = bookListEl.SelectNodes(".//div[contains(@class, 'item')]")?
+                .Select(el => (IMangaResult)new MangaResult()
+                {
+                    Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
+                    Title = el.SelectSingleNode(".//img")?.Attributes["alt"]?.Value,
+                    Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value
+                });
+
+            if (results is not null)
+                list.AddRange(results);
+        }
+
+        var singleBookEl = document.GetElementbyId("single_book");
+        if (singleBookEl is not null)
+        {
+            var result = new MangaResult()
             {
-                Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
-                Title = el.SelectSingleNode(".//img")?.Attributes["alt"]?.Value,
-                Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value
-            }).ToList() ?? new();
+                Title = singleBookEl.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
+                Image = singleBookEl.SelectSingleNode(".//div[@class='info']/h1[@class='heading']")?.InnerText
+            };
+
+            var i = 0;
+
+            var chapters = document.DocumentNode
+                .SelectNodes(".//div[@class='chapters']//div[@class='chapter']//a")
+                .Select(el => new MangaChapterPage()
+                {
+                    Image = el.Attributes["href"]!.Value,
+                    Title = el.InnerText,
+                    Page = i++
+                }).Reverse().ToList();
+
+            var imgSplit = chapters.FirstOrDefault()!.Image.Split('/');
+
+            result.Id = string.Join("/" , imgSplit.Take(imgSplit.Length - 1));
+
+            //result.Chapters = chapters;
+
+            list.Add(result);
+        }
+
+        return list;
     }
 
     /// <inheritdoc />
@@ -68,7 +105,8 @@ public class MangaKatana : IMangaProvider
         string mangaId,
         CancellationToken cancellationToken = default!)
     {
-        var url = BaseUrl + mangaId;
+        //var url = BaseUrl + mangaId;
+        var url = mangaId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         var document = Html.Parse(response);
@@ -112,11 +150,17 @@ public class MangaKatana : IMangaProvider
 
         var i = 1;
 
-        return document.DocumentNode.SelectNodes(".//img[@class='js-page']")
-            .Select(el => (IMangaChapterPage)new MangaChapterPage()
-            {
-                Image = el.Attributes["data-src"]!.Value,
-                Page = i++
-            }).ToList();
+        var list = new List<IMangaChapterPage>();
+
+        list.AddRange(
+            document.DocumentNode.SelectNodes(".//img[@class='js-page']")
+                .Select(el => new MangaChapterPage()
+                {
+                    Image = el.Attributes["data-src"]!.Value,
+                    Page = i++
+                })
+        );
+
+        return list;
     }
 }

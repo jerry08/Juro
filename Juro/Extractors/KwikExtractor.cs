@@ -11,7 +11,7 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
-public class Kwik : IVideoExtractor
+public class KwikExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
@@ -24,7 +24,7 @@ public class Kwik : IVideoExtractor
 
     public string ServerName => "Kwik";
 
-    public Kwik(Func<HttpClient> httpClientProvider)
+    public KwikExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
