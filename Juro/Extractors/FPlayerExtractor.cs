@@ -9,17 +9,25 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
+/// <summary>
+/// Extractor for Dood.
+/// </summary>
 public class FPlayerExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
+    /// <inheritdoc />
     public string ServerName => "FPlayer";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="FPlayerExtractor"/>.
+    /// </summary>
     public FPlayerExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 
 namespace Juro.Utils.Extensions;
 
@@ -159,18 +160,24 @@ internal static class StringExtensions
         return string.Empty;
     }
 
-    public static string SubstringBefore(this string text, string stopAt)
+    public static string SubstringBefore(this string value, string stopAt)
     {
-        if (!string.IsNullOrWhiteSpace(text))
+        if (!string.IsNullOrWhiteSpace(value))
         {
-            var charLocation = text.IndexOf(stopAt, StringComparison.Ordinal);
+            var charLocation = value.IndexOf(stopAt, StringComparison.Ordinal);
 
             if (charLocation > 0)
             {
-                return text.Substring(0, charLocation);
+                return value.Substring(0, charLocation);
             }
         }
 
         return string.Empty;
+    }
+
+    public static string DecodeBase64(this string value)
+    {
+        var data = Convert.FromBase64String(value);
+        return Encoding.UTF8.GetString(data);
     }
 }

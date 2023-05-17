@@ -427,7 +427,7 @@ public class Gogoanime : IAnimeProvider
         else if (domainInfo.Domain.Contains("sb")
             || domainInfo.Domain.Contains("sss"))
         {
-            return new StreamSBExtractor(_httpClientProvider);
+            return new StreamSBProExtractor(_httpClientProvider);
         }
         else if (domainInfo.Domain.Contains("fplayer")
             || domainInfo.Domain.Contains("fembed"))

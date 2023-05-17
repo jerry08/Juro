@@ -6,24 +6,33 @@ using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
+/// <summary>
+/// Extractor for RapidCloud.
+/// </summary>
 public class RapidCloudExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
-    public string ServerName => "RapidCloud";
-
     private readonly string _fallbackKey = "c1d17096f2ca11b7";
     private readonly string _host = "https://rapid-cloud.co";
 
+    /// <inheritdoc />
+    public string ServerName => "RapidCloud";
+
+    /// <summary>
+    /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
+    /// </summary>
     public RapidCloudExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
@@ -61,7 +70,7 @@ public class RapidCloudExtractor : IVideoExtractor
         {
             try
             {
-                sources = new RapidCloudDecryptor().Decrypt(sources!, decryptKey);
+                sources = AesHelper.Decrypt(sources!, decryptKey);
             }
             catch
             {

@@ -9,20 +9,28 @@ using Juro.Models.Videos;
 
 namespace Juro.Extractors;
 
+/// <summary>
+/// Extractor for VizCloud.
+/// </summary>
 public class VizCloudExtractor : IVideoExtractor
 {
     private readonly ConsumetClient _consumet;
 
     private readonly string _consumetAction;
 
+    /// <inheritdoc />
     public string ServerName => "VizCloud";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="VizCloudExtractor"/>.
+    /// </summary>
     public VizCloudExtractor(Func<HttpClient> httpClientProvider, string consumetAction)
     {
         _consumetAction = consumetAction;
         _consumet = new(httpClientProvider);
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default!)

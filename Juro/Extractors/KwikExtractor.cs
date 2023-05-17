@@ -11,6 +11,9 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
+/// <summary>
+/// Extractor for Kwik.
+/// </summary>
 public class KwikExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
@@ -22,13 +25,18 @@ public class KwikExtractor : IVideoExtractor
     private readonly Regex _urlRegex = new("action=\"(.+?)\"");
     private readonly Regex _tokenRegex = new("value=\"(.+?)\"");
 
+    /// <inheritdoc />
     public string ServerName => "Kwik";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="KwikExtractor"/>.
+    /// </summary>
     public KwikExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)

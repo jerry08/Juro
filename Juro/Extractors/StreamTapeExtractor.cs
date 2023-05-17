@@ -9,19 +9,27 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
+/// <summary>
+/// Extractor for StreamTape.
+/// </summary>
 public class StreamTapeExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
     private readonly Regex _linkRegex = new(@"'robotlink'\)\.innerHTML = '(.+?)'\+ \('(.+?)'\)");
 
+    /// <inheritdoc />
     public string ServerName => "StreamTape";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="StreamTapeExtractor"/>.
+    /// </summary>
     public StreamTapeExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)

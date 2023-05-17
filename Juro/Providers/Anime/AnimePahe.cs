@@ -24,13 +24,13 @@ public class AnimePahe : IAnimeProvider
     private readonly HttpClient _http;
     private readonly Func<HttpClient> _httpClientProvider;
 
+    private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
+
     public string Name => "AnimePahe";
 
     public bool IsDubAvailableSeparately => false;
 
     public string BaseUrl => "https://animepahe.com";
-
-    private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
 
     /// <summary>
     /// Initializes an instance of <see cref="AnimePahe"/>.

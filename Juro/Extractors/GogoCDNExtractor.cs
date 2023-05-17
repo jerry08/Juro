@@ -21,13 +21,18 @@ public class GogoCDNExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
+    /// <inheritdoc />
     public string ServerName => "Gogo";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="GogoCDNExtractor"/>.
+    /// </summary>
     public GogoCDNExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,21 +12,21 @@ using Juro.Utils.Extensions;
 namespace Juro.Extractors;
 
 /// <summary>
-/// Extractor for StreamSB.
+/// Extractor for StreamSB Pro.
 /// </summary>
-public class StreamSBExtractor : IVideoExtractor
+public class StreamSBProExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
-    private readonly char[] hexArray = "0123456789ABCDEF".ToCharArray();
+    private readonly string _alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     /// <inheritdoc />
-    public string ServerName => "StreamSB";
+    public string ServerName => "StreamSB Pro";
 
     /// <summary>
-    /// Initializes an instance of <see cref="StreamSBExtractor"/>.
+    /// Initializes an instance of <see cref="StreamSBProExtractor"/>.
     /// </summary>
-    public StreamSBExtractor(Func<HttpClient> httpClientProvider)
+    public StreamSBProExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
@@ -42,15 +42,12 @@ public class StreamSBExtractor : IVideoExtractor
         if (string.IsNullOrWhiteSpace(id))
             id = url.Split(new[] { "/e/" }, StringSplitOptions.None)[1];
 
-        var bytes = Encoding.ASCII.GetBytes($"||{id}||||streamsb");
-        var bytesToHex = BytesToHex(bytes);
-
         var source = await http.ExecuteAsync(
-            "https://raw.githubusercontent.com/jerry08/anistream-extras/main/streamsb.txt",
+            "https://raw.githubusercontent.com/jerry08/juro-data/main/streamsb.txt",
             cancellationToken
         );
 
-        var jsonLink = $"{source.Trim()}/{bytesToHex}/";
+        var jsonLink = $"{source.Trim()}/{Encode(id)}";
 
         var headers = new Dictionary<string, string>()
         {
@@ -62,8 +59,8 @@ public class StreamSBExtractor : IVideoExtractor
 
         var response = await http.ExecuteAsync(jsonLink, headers, cancellationToken);
 
-        var data = JsonNode.Parse(response)!;
-        var masterUrl = data["stream_data"]?["file"]?.ToString().Trim('"')!;
+        var data = JsonNode.Parse(response);
+        var masterUrl = data?["stream_data"]?["file"]?.ToString().Trim('"')!;
 
         return new List<VideoSource>
         {
@@ -77,17 +74,30 @@ public class StreamSBExtractor : IVideoExtractor
         };
     }
 
-    private string BytesToHex(byte[] bytes)
+    private string Encode(string id)
     {
-        var hexChars = new char[bytes.Length * 2];
-        for (var j = 0; j < bytes.Length; j++)
-        {
-            var v = bytes[j] & 0xFF;
+        id = $"{MakeId(12)}||{id}||{MakeId(12)}||streamsb";
 
-            hexChars[j * 2] = hexArray[v >> 4];
-            hexChars[(j * 2) + 1] = hexArray[v & 0x0F];
+        var output = "";
+        var arr = id.ToArray();
+
+        for (var i = 0; i < arr.Length; i++)
+        {
+            output += Convert.ToString(Convert.ToInt32(((int)arr[i]).ToString(), 10), 16);
         }
 
-        return new string(hexChars);
+        return output;
+    }
+
+    private string MakeId(int length)
+    {
+        var output = "";
+
+        for (var i = 0; i < length; i++)
+        {
+            output += _alphabet[(int)Math.Floor(new Random().NextDouble() * _alphabet.Length)];
+        }
+
+        return output;
     }
 }

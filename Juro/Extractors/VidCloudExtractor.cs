@@ -13,6 +13,9 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
+/// <summary>
+/// Extractor for VidCloud.
+/// </summary>
 public class VidCloudExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
@@ -21,14 +24,19 @@ public class VidCloudExtractor : IVideoExtractor
     private readonly string _host2 = "https://rabbitstream.net";
     private readonly bool _isAlternative;
 
+    /// <inheritdoc />
     public string ServerName => "VidCloud";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="VidCloudExtractor"/>.
+    /// </summary>
     public VidCloudExtractor(Func<HttpClient> httpClientProvider, bool isAlternative = false)
     {
         _httpClientProvider = httpClientProvider;
         _isAlternative = isAlternative;
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default!)

@@ -83,13 +83,13 @@ internal class VidCloudDecryptor
     static byte[] EncryptStringToBytesAes(string plainText, byte[] key, byte[] iv)
     {
         // Check arguments.
-        if (plainText is null || plainText.Length <= 0)
+        if (plainText is null || plainText.Length == 0)
             throw new ArgumentNullException(nameof(plainText));
 
-        if (key is null || key.Length <= 0)
+        if (key is null || key.Length == 0)
             throw new ArgumentNullException(nameof(key));
 
-        if (iv is null || iv.Length <= 0)
+        if (iv is null || iv.Length == 0)
             throw new ArgumentNullException(nameof(iv));
 
         // Declare the stream used to encrypt to an in memory
@@ -132,13 +132,13 @@ internal class VidCloudDecryptor
     static string DecryptStringFromBytesAes(byte[] cipherText, byte[] key, byte[] iv)
     {
         // Check arguments.
-        if (cipherText is null || cipherText.Length <= 0)
+        if (cipherText is null || cipherText.Length == 0)
             throw new ArgumentNullException(nameof(cipherText));
 
-        if (key is null || key.Length <= 0)
+        if (key is null || key.Length == 0)
             throw new ArgumentNullException(nameof(key));
 
-        if (iv is null || iv.Length <= 0)
+        if (iv is null || iv.Length == 0)
             throw new ArgumentNullException(nameof(iv));
 
         // Declare the RijndaelManaged object

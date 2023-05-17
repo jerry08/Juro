@@ -9,17 +9,25 @@ using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
 
+/// <summary>
+/// Extractor for Mp4upload.
+/// </summary>
 public class Mp4uploadExtractor : IVideoExtractor
 {
     private readonly Func<HttpClient> _httpClientProvider;
 
+    /// <inheritdoc />
     public string ServerName => "Mp4upload";
 
+    /// <summary>
+    /// Initializes an instance of <see cref="Mp4uploadExtractor"/>.
+    /// </summary>
     public Mp4uploadExtractor(Func<HttpClient> httpClientProvider)
     {
         _httpClientProvider = httpClientProvider;
     }
 
+    /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default)
