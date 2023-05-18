@@ -34,42 +34,58 @@ public class DoodExtractor : IVideoExtractor
     {
         var http = _httpClientProvider();
 
-        var response = await http.ExecuteAsync(url, cancellationToken);
+        var list = new List<VideoSource>();
 
-        if (!response.Contains("'/pass_md5/"))
-            return new();
-
-        var doodTld = url.SubstringAfter("https://dood.").SubstringBefore("/");
-        var md5 = response.SubstringAfter("'/pass_md5/").SubstringBefore("',");
-        var token = md5.Split(new[] { "/" }, StringSplitOptions.None).LastOrDefault();
-        var randomString = RandomString();
-        var expiry = DateTime.Now.CurrentTimeMillis();
-
-        var videoUrlStart = await http.ExecuteAsync(
-            $"https://dood.{doodTld}/pass_md5/{md5}",
-            new()
-            {
-                ["Referer"] = url
-            },
-            cancellationToken
-        );
-
-        var videoUrl = $"{videoUrlStart}{randomString}?token={token}&expiry={expiry}";
-
-        return new()
+        try
         {
-            new()
+            var response = await http.ExecuteAsync(
+                url,
+                new Dictionary<string, string>()
+                {
+                    ["User-Agent"] = "Juro"
+                },
+                cancellationToken
+            );
+
+            if (!response.Contains("'/pass_md5/"))
+                return new();
+
+            var doodTld = url.SubstringAfter("https://dood.").SubstringBefore("/");
+            var md5 = response.SubstringAfter("'/pass_md5/").SubstringBefore("',");
+            var token = md5.Split(new[] { "/" }, StringSplitOptions.None).LastOrDefault();
+            var randomString = RandomString();
+            var expiry = DateTime.Now.CurrentTimeMillis();
+
+            var videoUrlStart = await http.ExecuteAsync(
+                $"https://dood.{doodTld}/pass_md5/{md5}",
+                new Dictionary<string, string>()
+                {
+                    ["Referer"] = url,
+                    ["User-Agent"] = "Juro"
+                },
+                cancellationToken
+            );
+
+            var videoUrl = $"{videoUrlStart}{randomString}?token={token}&expiry={expiry}";
+
+            list.Add(new()
             {
-                Format = VideoType.Container,
+                Format = VideoType.M3u8,
                 VideoUrl = videoUrl,
                 Resolution = "Default Quality",
                 Headers = new()
                 {
-                    ["User-Agent"] = "Anistream",
+                    ["User-Agent"] = "Juro",
                     ["Referer"] = $"https://dood.{doodTld}"
                 }
-            }
-        };
+            });
+        }
+        catch
+        {
+            // Ignore
+        }
+
+        return list;
     }
 
     private static Random random = new();
