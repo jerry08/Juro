@@ -420,7 +420,7 @@ public class Gogoanime : IAnimeProvider
             || domainInfo.Domain.Contains("goload")
             || domainInfo.Domain.Contains("playgo")
             || domainInfo.Domain.Contains("anihdplay")
-            || domainInfo.Domain.Contains("playtaku"))
+            || domainInfo.Domain.Contains("taku"))
         {
             return new GogoCDNExtractor(_httpClientProvider);
         }
