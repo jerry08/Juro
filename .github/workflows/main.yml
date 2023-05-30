@@ -1,0 +1,8 @@
+name: main
+
+on: [push, pull_request]
+
+jobs:
+  main:
+    with:
+      dotnet-version: 7.0.x
