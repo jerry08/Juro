@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Httpz;
 using Juro.Clients;
-using Juro.Utils;
-using Juro.Utils.Extensions;
+using Juro.Providers.Aniskip;
 
 namespace Juro.DemoConsole;
 
@@ -20,17 +22,21 @@ internal class Program
 
     private static async Task AnimeDemo()
     {
-        //var test = "k".ToIntOrNull(36);
-
         var client = new AnimeClient();
-        var animes = await client.NineAnime.SearchAsync("jujutsu kaisen");
-        var animeInfo = await client.NineAnime.GetAnimeInfoAsync(animes[0].Id);
-        var episodes = await client.NineAnime.GetEpisodesAsync(animes[0].Id);
-        var videoServers = await client.NineAnime.GetVideoServersAsync(episodes[0].Id);
-        var videos = await client.NineAnime.GetVideosAsync(videoServers[3]);
+        var animes = await client.Gogoanime.SearchAsync("spy x family");
+        var animeInfo = await client.Gogoanime.GetAnimeInfoAsync(animes[0].Id);
+        var episodes = await client.Gogoanime.GetEpisodesAsync(animes[0].Id);
+        var videoServers = await client.Gogoanime.GetVideoServersAsync(episodes[0].Id);
+        var videos = await client.Gogoanime.GetVideosAsync(videoServers[4]);
+
+        var filePath = @"D:\Downloads\svs.mp4";
+
+        //var downloader2 = new Downloader();
+        //await downloader2.DownloadAsync(videos[0].VideoUrl, filePath, videos[0].Headers);
 
         var downloader = new HlsDownloader();
-        var test = await downloader.GetHlsStreamMetadatasAsync(videos[0].VideoUrl, videos[0].Headers);
+        var qualities = await downloader.GetQualitiesAsync(videos[0].VideoUrl, videos[0].Headers);
+        await downloader.DownloadAllThenMergeAsync(qualities[0].Stream!, videos[0].Headers, filePath);
     }
 
     private static async Task MovieDemo()
@@ -62,9 +68,9 @@ internal class Program
     {
         var client = new MangaClient();
         //var results = await client.MangaKakalot.SearchAsync("Tomodachi Game");
-        var results = await client.MangaPill.SearchAsync("solo leveling");
-        var mangaInfo = await client.MangaPill.GetMangaInfoAsync(results[0].Id);
-        var pages = await client.MangaPill.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
+        var results = await client.MangaKatana.SearchAsync("solo leveling");
+        var mangaInfo = await client.MangaKatana.GetMangaInfoAsync(results[0].Id);
+        var pages = await client.MangaKatana.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
 
         // Download the image
         var fileName = $@"{Environment.CurrentDirectory}\page1.png";
