@@ -65,7 +65,7 @@ public class NineAnime : IAnimeProvider
 
         var response = await _http.ExecuteAsync(
             url,
-            new()
+            new Dictionary<string, string>()
             {
                 ["Referer"] = BaseUrl
             },
@@ -229,7 +229,7 @@ public class NineAnime : IAnimeProvider
 
         var response2 = await _http.ExecuteAsync(
             $"{BaseUrl}/ajax/episode/list/{dataId}?vrf={vrf}",
-            new()
+            new Dictionary<string, string>()
             {
                 ["url"] = $"{BaseUrl}{id}"
             },
