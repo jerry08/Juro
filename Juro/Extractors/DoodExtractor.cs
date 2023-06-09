@@ -70,7 +70,7 @@ public class DoodExtractor : IVideoExtractor
 
             list.Add(new()
             {
-                Format = VideoType.M3u8,
+                Format = VideoType.Container,
                 VideoUrl = videoUrl,
                 Resolution = "Default Quality",
                 Headers = new()
