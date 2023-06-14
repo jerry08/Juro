@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Extractors;
@@ -20,7 +19,7 @@ namespace Juro.Providers.Anime;
 public class HentaiFF : IAnimeProvider
 {
     private readonly HttpClient _http;
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public virtual string Name => "HentaiFF";
 
@@ -31,10 +30,18 @@ public class HentaiFF : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="HentaiFF"/>.
     /// </summary>
-    public HentaiFF(Func<HttpClient> httpClientProvider)
+    public HentaiFF(IHttpClientFactory httpClientFactory)
     {
-        _http = httpClientProvider();
-        _httpClientProvider = httpClientProvider;
+        _http = httpClientFactory.CreateClient();
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="HentaiFF"/>.
+    /// </summary>
+    public HentaiFF(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
     }
 
     /// <summary>
@@ -168,9 +175,9 @@ public class HentaiFF : IAnimeProvider
     public IVideoExtractor? GetVideoExtractor(VideoServer server)
     {
         if (server.Embed.Url.Contains("amhentai"))
-            return new FPlayerExtractor(_httpClientProvider);
+            return new FPlayerExtractor(_httpClientFactory);
         else if (server.Embed.Url.Contains("cdnview"))
-            return new CdnViewExtractor(_httpClientProvider);
+            return new CdnViewExtractor(_httpClientFactory);
         else if (server.Embed.Url.Contains("hentaistream"))
             return new HentaiStreamExtractor();
 
@@ -179,20 +186,20 @@ public class HentaiFF : IAnimeProvider
 
     private class CdnViewExtractor : IVideoExtractor
     {
-        private readonly Func<HttpClient> _httpClientProvider;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public string ServerName => string.Empty;
 
-        public CdnViewExtractor(Func<HttpClient> httpClientProvider)
+        public CdnViewExtractor(IHttpClientFactory httpClientFactory)
         {
-            _httpClientProvider = httpClientProvider;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async ValueTask<List<VideoSource>> ExtractAsync(
             string url,
             CancellationToken cancellationToken = default)
         {
-            var http = _httpClientProvider();
+            var http = _httpClientFactory.CreateClient();
 
             var response = await http.ExecuteAsync(url, cancellationToken);
 

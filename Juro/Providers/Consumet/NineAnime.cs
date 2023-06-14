@@ -13,18 +13,26 @@ namespace Juro.Providers.Consumet;
 /// </summary>
 public class NineAnime
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    /// <summary>
+    /// Initializes an instance of <see cref="NineAnime"/>.
+    /// </summary>
+    public NineAnime(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
 
     /// <summary>
     /// Initializes an instance of <see cref="NineAnime"/>.
     /// </summary>
     public NineAnime(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
     {
-        _httpClientProvider = httpClientProvider;
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="ConsumetProvider"/>.
+    /// Initializes an instance of <see cref="NineAnime"/>.
     /// </summary>
     public NineAnime() : this(Http.ClientProvider)
     {
@@ -35,7 +43,7 @@ public class NineAnime
         string action,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var response = await http.ExecuteAsync(
             $"https://api.consumet.org/anime/9anime/helper?query={query}&action={action}",

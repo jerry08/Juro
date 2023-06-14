@@ -22,7 +22,7 @@ namespace Juro.Providers.Anime;
 public class Gogoanime : IAnimeProvider
 {
     private readonly HttpClient _http;
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public string Name => "Gogo";
 
@@ -35,10 +35,18 @@ public class Gogoanime : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="Gogoanime"/>.
     /// </summary>
-    public Gogoanime(Func<HttpClient> httpClientProvider)
+    public Gogoanime(IHttpClientFactory httpClientFactory)
     {
-        _http = httpClientProvider();
-        _httpClientProvider = httpClientProvider;
+        _http = httpClientFactory.CreateClient();
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="Gogoanime"/>.
+    /// </summary>
+    public Gogoanime(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
     }
 
     /// <summary>
@@ -422,21 +430,21 @@ public class Gogoanime : IAnimeProvider
             || domainInfo.Domain.Contains("anihdplay")
             || domainInfo.Domain.Contains("taku"))
         {
-            return new GogoCDNExtractor(_httpClientProvider);
+            return new GogoCDNExtractor(_httpClientFactory);
         }
         else if (domainInfo.Domain.Contains("sb")
             || domainInfo.Domain.Contains("sss"))
         {
-            return new StreamSBProExtractor(_httpClientProvider);
+            return new StreamSBProExtractor(_httpClientFactory);
         }
         else if (domainInfo.Domain.Contains("fplayer")
             || domainInfo.Domain.Contains("fembed"))
         {
-            return new FPlayerExtractor(_httpClientProvider);
+            return new FPlayerExtractor(_httpClientFactory);
         }
         else if (domainInfo.Domain.Contains("dood"))
         {
-            return new DoodExtractor(_httpClientProvider);
+            return new DoodExtractor(_httpClientFactory);
         }
 
         return null;

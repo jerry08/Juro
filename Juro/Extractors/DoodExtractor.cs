@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
@@ -14,7 +15,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class DoodExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "Dood";
@@ -22,9 +23,24 @@ public class DoodExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="DoodExtractor"/>.
     /// </summary>
-    public DoodExtractor(Func<HttpClient> httpClientProvider)
+    public DoodExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="DoodExtractor"/>.
+    /// </summary>
+    public DoodExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="DoodExtractor"/>.
+    /// </summary>
+    public DoodExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -32,7 +48,7 @@ public class DoodExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var list = new List<VideoSource>();
 

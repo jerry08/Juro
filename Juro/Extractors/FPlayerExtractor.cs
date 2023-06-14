@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
@@ -14,7 +15,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class FPlayerExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "FPlayer";
@@ -22,9 +23,24 @@ public class FPlayerExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="FPlayerExtractor"/>.
     /// </summary>
-    public FPlayerExtractor(Func<HttpClient> httpClientProvider)
+    public FPlayerExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="FPlayerExtractor"/>.
+    /// </summary>
+    public FPlayerExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="FPlayerExtractor"/>.
+    /// </summary>
+    public FPlayerExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -32,7 +48,7 @@ public class FPlayerExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var apiLink = url.Replace("/v/", "/api/source/");
 

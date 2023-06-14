@@ -16,7 +16,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class KwikExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     private readonly string _host = "https://animepahe.com";
 
@@ -31,9 +31,24 @@ public class KwikExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="KwikExtractor"/>.
     /// </summary>
-    public KwikExtractor(Func<HttpClient> httpClientProvider)
+    public KwikExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="KwikExtractor"/>.
+    /// </summary>
+    public KwikExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="KwikExtractor"/>.
+    /// </summary>
+    public KwikExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -41,7 +56,7 @@ public class KwikExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var response = await http.ExecuteAsync(
             url,
@@ -92,7 +107,7 @@ public class KwikExtractor : IVideoExtractor
 
         request.Content = formContent;
 
-        http = _httpClientProvider();
+        http = _httpClientFactory.CreateClient();
 
         //var allowAutoRedirect = http.GetAllowAutoRedirect();
 

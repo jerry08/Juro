@@ -21,7 +21,7 @@ namespace Juro.Providers.Anime;
 public class NineAnime : IAnimeProvider
 {
     private readonly HttpClient _http;
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly ConsumetClient _consumet;
 
     public string Name => "9anime";
@@ -33,15 +33,23 @@ public class NineAnime : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="NineAnime"/>.
     /// </summary>
-    public NineAnime(Func<HttpClient> httpClientProvider)
+    public NineAnime(IHttpClientFactory httpClientFactory)
     {
-        _http = httpClientProvider();
-        _httpClientProvider = httpClientProvider;
-        _consumet = new(httpClientProvider);
+        _http = httpClientFactory.CreateClient();
+        _httpClientFactory = httpClientFactory;
+        _consumet = new(httpClientFactory);
     }
 
     /// <summary>
     /// Initializes an instance of <see cref="NineAnime"/>.
+    /// </summary>
+    public NineAnime(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="Gogoanime"/>.
     /// </summary>
     public NineAnime() : this(Http.ClientProvider)
     {
@@ -298,11 +306,11 @@ public class NineAnime : IAnimeProvider
     {
         return server.Name.ToLower() switch
         {
-            "vidstream" => new VizCloudExtractor(_httpClientProvider, "vizcloud"),
-            "mycloud" => new VizCloudExtractor(_httpClientProvider, "mcloud"),
-            "filemoon" => new FilemoonExtractor(_httpClientProvider),
-            "streamtape" => new StreamTapeExtractor(_httpClientProvider),
-            "mp4upload" => new Mp4uploadExtractor(_httpClientProvider),
+            "vidstream" => new VizCloudExtractor(_httpClientFactory, "vizcloud"),
+            "mycloud" => new VizCloudExtractor(_httpClientFactory, "mcloud"),
+            "filemoon" => new FilemoonExtractor(_httpClientFactory),
+            "streamtape" => new StreamTapeExtractor(_httpClientFactory),
+            "mp4upload" => new Mp4uploadExtractor(_httpClientFactory),
             _ => null
         };
     }

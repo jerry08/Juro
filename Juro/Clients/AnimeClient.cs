@@ -33,12 +33,20 @@ public class AnimeClient
     /// <summary>
     /// Initializes an instance of <see cref="AnimeClient"/>.
     /// </summary>
-    public AnimeClient(Func<HttpClient> httpClientProvider)
+    public AnimeClient(IHttpClientFactory httpClientFactory)
     {
-        Gogoanime = new(httpClientProvider);
-        Zoro = new(httpClientProvider);
-        AnimePahe = new(httpClientProvider);
-        NineAnime = new(httpClientProvider);
+        Gogoanime = new(httpClientFactory);
+        Zoro = new(httpClientFactory);
+        AnimePahe = new(httpClientFactory);
+        NineAnime = new(httpClientFactory);
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="AnimeClient"/>.
+    /// </summary>
+    public AnimeClient(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
     }
 
     /// <summary>

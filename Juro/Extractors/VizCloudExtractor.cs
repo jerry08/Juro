@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Juro.Clients;
 using Juro.Models.Videos;
+using Juro.Utils;
 
 namespace Juro.Extractors;
 
@@ -24,10 +25,30 @@ public class VizCloudExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="VizCloudExtractor"/>.
     /// </summary>
-    public VizCloudExtractor(Func<HttpClient> httpClientProvider, string consumetAction)
+    public VizCloudExtractor(
+        IHttpClientFactory httpClientFactory,
+        string consumetAction)
     {
         _consumetAction = consumetAction;
-        _consumet = new(httpClientProvider);
+        _consumet = new(httpClientFactory);
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="VizCloudExtractor"/>.
+    /// </summary>
+    public VizCloudExtractor(
+        Func<HttpClient> httpClientProvider,
+        string consumetAction)
+        : this(new HttpClientFactory(httpClientProvider), consumetAction)
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="VizCloudExtractor"/>.
+    /// </summary>
+    public VizCloudExtractor(string consumetAction)
+        : this(Http.ClientProvider, consumetAction)
+    {
     }
 
     /// <inheritdoc />

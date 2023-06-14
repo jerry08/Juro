@@ -18,7 +18,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class VidCloudExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     private readonly string _host = "https://dokicloud.one";
     private readonly string _host2 = "https://rabbitstream.net";
@@ -30,10 +30,30 @@ public class VidCloudExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="VidCloudExtractor"/>.
     /// </summary>
-    public VidCloudExtractor(Func<HttpClient> httpClientProvider, bool isAlternative = false)
+    public VidCloudExtractor(
+        IHttpClientFactory httpClientFactory,
+        bool isAlternative = false)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
         _isAlternative = isAlternative;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="VidCloudExtractor"/>.
+    /// </summary>
+    public VidCloudExtractor(
+        Func<HttpClient> httpClientProvider,
+        bool isAlternative = false)
+        : this(new HttpClientFactory(httpClientProvider), isAlternative)
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="VidCloudExtractor"/>.
+    /// </summary>
+    public VidCloudExtractor(bool isAlternative = false)
+        : this(Http.ClientProvider, isAlternative)
+    {
     }
 
     /// <inheritdoc />
@@ -41,7 +61,7 @@ public class VidCloudExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default!)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var id = new Stack<string>(url.Split('/')).Pop()?.Split('?')[0];
         var headers = new Dictionary<string, string>()

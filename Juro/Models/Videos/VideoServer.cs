@@ -19,4 +19,7 @@ public class VideoServer
         Name = name;
         Embed = embed;
     }
+
+    /// <inheritdoc />
+    public override string ToString() => Name;
 }

@@ -22,7 +22,7 @@ namespace Juro.Providers.Anime;
 public class AnimePahe : IAnimeProvider
 {
     private readonly HttpClient _http;
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
 
@@ -35,10 +35,18 @@ public class AnimePahe : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="AnimePahe"/>.
     /// </summary>
-    public AnimePahe(Func<HttpClient> httpClientProvider)
+    public AnimePahe(IHttpClientFactory httpClientFactory)
     {
-        _http = httpClientProvider();
-        _httpClientProvider = httpClientProvider;
+        _http = httpClientFactory.CreateClient();
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="AnimePahe"/>.
+    /// </summary>
+    public AnimePahe(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
     }
 
     /// <summary>
@@ -288,7 +296,7 @@ public class AnimePahe : IAnimeProvider
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
             return new();
 
-        return await new KwikExtractor(_httpClientProvider)
+        return await new KwikExtractor(_httpClientFactory)
             .ExtractAsync(server.Embed.Url, cancellationToken);
     }
 }

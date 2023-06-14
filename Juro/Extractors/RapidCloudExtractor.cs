@@ -16,7 +16,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class RapidCloudExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     private readonly string _fallbackKey = "c1d17096f2ca11b7";
     private readonly string _host = "https://rapid-cloud.co";
@@ -27,9 +27,24 @@ public class RapidCloudExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
     /// </summary>
-    public RapidCloudExtractor(Func<HttpClient> httpClientProvider)
+    public RapidCloudExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
+    /// </summary>
+    public RapidCloudExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
+    /// </summary>
+    public RapidCloudExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -37,7 +52,7 @@ public class RapidCloudExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
 

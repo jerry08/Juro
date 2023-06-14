@@ -16,7 +16,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class StreamSBProExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     private readonly string _alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -26,9 +26,24 @@ public class StreamSBProExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="StreamSBProExtractor"/>.
     /// </summary>
-    public StreamSBProExtractor(Func<HttpClient> httpClientProvider)
+    public StreamSBProExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="StreamSBProExtractor"/>.
+    /// </summary>
+    public StreamSBProExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="StreamSBProExtractor"/>.
+    /// </summary>
+    public StreamSBProExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -36,7 +51,7 @@ public class StreamSBProExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var id = url.FindBetween("/e/", ".html");
         if (string.IsNullOrWhiteSpace(id))

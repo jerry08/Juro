@@ -15,7 +15,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class FilemoonExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "Filemoon";
@@ -23,9 +23,24 @@ public class FilemoonExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="FilemoonExtractor"/>.
     /// </summary>
-    public FilemoonExtractor(Func<HttpClient> httpClientProvider)
+    public FilemoonExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="FilemoonExtractor"/>.
+    /// </summary>
+    public FilemoonExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="FilemoonExtractor"/>.
+    /// </summary>
+    public FilemoonExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -33,7 +48,7 @@ public class FilemoonExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var response = await http.ExecuteAsync(url, cancellationToken);
 

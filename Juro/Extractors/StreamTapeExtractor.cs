@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Models.Videos;
+using Juro.Utils;
 using Juro.Utils.Extensions;
 
 namespace Juro.Extractors;
@@ -14,7 +15,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class StreamTapeExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     private readonly Regex _linkRegex = new(@"'robotlink'\)\.innerHTML = '(.+?)'\+ \('(.+?)'\)");
 
@@ -24,9 +25,24 @@ public class StreamTapeExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="StreamTapeExtractor"/>.
     /// </summary>
-    public StreamTapeExtractor(Func<HttpClient> httpClientProvider)
+    public StreamTapeExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="StreamTapeExtractor"/>.
+    /// </summary>
+    public StreamTapeExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="StreamTapeExtractor"/>.
+    /// </summary>
+    public StreamTapeExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -34,7 +50,9 @@ public class StreamTapeExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
+
+        var id = url.Split(new[] { "/e/" }, StringSplitOptions.None)[1];
 
         var response = await http.ExecuteAsync(
             url.Replace("tape.com", "adblocker.xyz"),

@@ -16,7 +16,15 @@ public class HentaiStream : HentaiFF
     /// <summary>
     /// Initializes an instance of <see cref="HentaiStream"/>.
     /// </summary>
-    public HentaiStream(Func<HttpClient> httpClientProvider) : base(httpClientProvider)
+    public HentaiStream(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="HentaiStream"/>.
+    /// </summary>
+    public HentaiStream(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
     {
     }
 

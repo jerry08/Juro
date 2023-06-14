@@ -17,7 +17,7 @@ namespace Juro.Providers.Movie;
 public class FlixHQ : MovieParser
 {
     private readonly HttpClient _http;
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public override string Name { get; set; } = "FlixHQ";
 
@@ -25,10 +25,28 @@ public class FlixHQ : MovieParser
 
     public override string Logo => "https://img.flixhq.to/xxrz/400x400/100/ab/5f/ab5f0e1996cc5b71919e10e910ad593e/ab5f0e1996cc5b71919e10e910ad593e.png";
 
-    public FlixHQ(Func<HttpClient> httpClientProvider)
+    /// <summary>
+    /// Initializes an instance of <see cref="FlixHQ"/>.
+    /// </summary>
+    public FlixHQ(IHttpClientFactory httpClientFactory)
     {
-        _http = httpClientProvider();
-        _httpClientProvider = httpClientProvider;
+        _http = httpClientFactory.CreateClient();
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="FlixHQ"/>.
+    /// </summary>
+    public FlixHQ(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="FlixHQ"/>.
+    /// </summary>
+    public FlixHQ() : this(Http.ClientProvider)
+    {
     }
 
     public override Task<List<MovieResult>> SearchAsync(
@@ -215,10 +233,10 @@ public class FlixHQ : MovieParser
             return server switch
             {
                 StreamingServers.MixDrop => new(),
-                StreamingServers.UpCloud => await new VidCloudExtractor(_httpClientProvider)
+                StreamingServers.UpCloud => await new VidCloudExtractor(_httpClientFactory)
                     .ExtractAsync(serverUrl, cancellationToken),
                 StreamingServers.VidCloud => new(),
-                _ => await new VidCloudExtractor(_httpClientProvider)
+                _ => await new VidCloudExtractor(_httpClientFactory)
                     .ExtractAsync(serverUrl, cancellationToken),
             };
         }

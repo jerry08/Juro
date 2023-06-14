@@ -18,9 +18,17 @@ public class ConsumetClient
     /// <summary>
     /// Initializes an instance of <see cref="ConsumetClient"/>.
     /// </summary>
-    public ConsumetClient(Func<HttpClient> httpClientProvider)
+    public ConsumetClient(IHttpClientFactory httpClientFactory)
     {
-        NineAnime = new(httpClientProvider);
+        NineAnime = new(httpClientFactory);
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="ConsumetClient"/>.
+    /// </summary>
+    public ConsumetClient(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
     }
 
     /// <summary>

@@ -21,7 +21,7 @@ namespace Juro.Providers.Anime;
 public class Zoro : IAnimeProvider
 {
     private readonly HttpClient _http;
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public string Name => "Zoro";
 
@@ -32,10 +32,18 @@ public class Zoro : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="Zoro"/>.
     /// </summary>
-    public Zoro(Func<HttpClient> httpClientProvider)
+    public Zoro(IHttpClientFactory httpClientFactory)
     {
-        _http = httpClientProvider();
-        _httpClientProvider = httpClientProvider;
+        _http = httpClientFactory.CreateClient();
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="Zoro"/>.
+    /// </summary>
+    public Zoro(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
     }
 
     /// <summary>
@@ -339,15 +347,15 @@ public class Zoro : IAnimeProvider
 
         if (domainInfo.Domain.Contains("rapid"))
         {
-            return new RapidCloudExtractor(_httpClientProvider);
+            return new RapidCloudExtractor(_httpClientFactory);
         }
         else if (domainInfo.Domain.Contains("sb"))
         {
-            return new StreamSBExtractor(_httpClientProvider);
+            return new StreamSBExtractor(_httpClientFactory);
         }
         else if (domainInfo.Domain.Contains("streamta"))
         {
-            return new StreamTapeExtractor(_httpClientProvider);
+            return new StreamTapeExtractor(_httpClientFactory);
         }
 
         return null;

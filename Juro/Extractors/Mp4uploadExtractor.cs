@@ -14,7 +14,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class Mp4uploadExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "Mp4upload";
@@ -22,9 +22,24 @@ public class Mp4uploadExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="Mp4uploadExtractor"/>.
     /// </summary>
-    public Mp4uploadExtractor(Func<HttpClient> httpClientProvider)
+    public Mp4uploadExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="Mp4uploadExtractor"/>.
+    /// </summary>
+    public Mp4uploadExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="Mp4uploadExtractor"/>.
+    /// </summary>
+    public Mp4uploadExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -32,7 +47,7 @@ public class Mp4uploadExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var headers = new Dictionary<string, string>()
         {

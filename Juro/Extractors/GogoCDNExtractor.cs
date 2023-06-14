@@ -19,7 +19,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class GogoCDNExtractor : IVideoExtractor
 {
-    private readonly Func<HttpClient> _httpClientProvider;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "Gogo";
@@ -27,9 +27,24 @@ public class GogoCDNExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="GogoCDNExtractor"/>.
     /// </summary>
-    public GogoCDNExtractor(Func<HttpClient> httpClientProvider)
+    public GogoCDNExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientProvider = httpClientProvider;
+        _httpClientFactory = httpClientFactory;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="GogoCDNExtractor"/>.
+    /// </summary>
+    public GogoCDNExtractor(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
+    {
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="GogoCDNExtractor"/>.
+    /// </summary>
+    public GogoCDNExtractor() : this(Http.ClientProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -37,7 +52,7 @@ public class GogoCDNExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientProvider();
+        var http = _httpClientFactory.CreateClient();
 
         var host = new Uri(url).Host;
 
