@@ -23,6 +23,8 @@ public class HentaiFF : IAnimeProvider
 
     public virtual string Name => "HentaiFF";
 
+    public string Language => "en";
+
     public bool IsDubAvailableSeparately => false;
 
     public virtual string BaseUrl => "https://hentaiff.com";

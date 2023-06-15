@@ -25,6 +25,8 @@ public class Zoro : IAnimeProvider
 
     public string Name => "Zoro";
 
+    public string Language => "en";
+
     public bool IsDubAvailableSeparately => true;
 
     public string BaseUrl => "https://zoro.to";

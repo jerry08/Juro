@@ -28,6 +28,8 @@ public class AnimePahe : IAnimeProvider
 
     public string Name => "AnimePahe";
 
+    public string Language => "en";
+
     public bool IsDubAvailableSeparately => false;
 
     public string BaseUrl => "https://animepahe.com";

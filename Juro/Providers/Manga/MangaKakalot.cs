@@ -19,6 +19,8 @@ public class MangaKakalot : IMangaProvider
 
     public string Name { get; set; } = "MangaKakalot";
 
+    public string Language => "en";
+
     public string BaseUrl => "https://mangakakalot.com";
 
     public string Logo => "https://scontent-lga3-1.xx.fbcdn.net/v/t31.18172-8/23592342_1993674674222540_3098972633173711780_o.png?stp=cp0_dst-png_p64x64&_nc_cat=105&ccb=1-7&_nc_sid=85a577&_nc_ohc=j_WvAOX4tOwAX9dNL_4&_nc_ht=scontent-lga3-1.xx&oh=00_AT-ZFkuaHiS33j-oUCtn-jzwkLfVuCONx0aqF3QXrcFKvg&oe=62FC016C";

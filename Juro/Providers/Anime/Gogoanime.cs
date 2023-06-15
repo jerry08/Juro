@@ -26,6 +26,8 @@ public class Gogoanime : IAnimeProvider
 
     public string Name => "Gogo";
 
+    public string Language => "en";
+
     public bool IsDubAvailableSeparately => true;
 
     public string BaseUrl { get; private set; } = default!;

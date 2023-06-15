@@ -18,6 +18,11 @@ public interface IAnimeProvider
     public string Name { get; }
 
     /// <summary>
+    /// Language of the provider.
+    /// </summary>
+    public string Language { get; }
+
+    /// <summary>
     /// If dub is available separately for the provider.
     /// </summary>
     public bool IsDubAvailableSeparately { get; }

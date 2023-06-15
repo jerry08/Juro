@@ -1,44 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using Juro.Providers.Anime;
 using Juro.Utils;
 
 namespace Juro.Clients;
 
 /// <summary>
-/// Client for interacting with various anime providers.
+/// Client for managining all available anime providers.
 /// </summary>
 public class AnimeClient
 {
-    /// <summary>
-    /// Operations related to Gogoanime.
-    /// </summary>
-    public Gogoanime Gogoanime { get; }
-
-    /// <summary>
-    /// Operations related to Zoro.
-    /// </summary>
-    public Zoro Zoro { get; }
-
-    /// <summary>
-    /// Operations related to AnimePahe.
-    /// </summary>
-    public AnimePahe AnimePahe { get; }
-
-    /// <summary>
-    /// Operations related to NineAnime.
-    /// </summary>
-    public NineAnime NineAnime { get; }
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
     /// Initializes an instance of <see cref="AnimeClient"/>.
     /// </summary>
     public AnimeClient(IHttpClientFactory httpClientFactory)
     {
-        Gogoanime = new(httpClientFactory);
-        Zoro = new(httpClientFactory);
-        AnimePahe = new(httpClientFactory);
-        NineAnime = new(httpClientFactory);
+        _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
@@ -55,4 +37,14 @@ public class AnimeClient
     public AnimeClient() : this(Http.ClientProvider)
     {
     }
+
+    public IList<IAnimeProvider> GetAllProviders() => GetProviders();
+
+    public IList<IAnimeProvider> GetProviders(string? language = null)
+        => Assembly.GetExecutingAssembly().GetTypes()
+            .Where(x => x.GetInterfaces().Contains(typeof(IAnimeProvider))
+                && x.GetConstructor(Type.EmptyTypes) != null)
+            .Select(x => (IAnimeProvider)Activator.CreateInstance(x, new object[] { _httpClientFactory })!)
+            .Where(x => x.Language.Equals(language, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 }

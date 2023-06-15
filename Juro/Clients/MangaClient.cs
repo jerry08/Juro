@@ -1,44 +1,34 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using Juro.Providers.Manga;
 using Juro.Utils;
 
 namespace Juro.Clients;
 
 /// <summary>
-/// Client for interacting with various manga providers.
+/// Client for managining all available manga providers.
 /// </summary>
 public class MangaClient
 {
-    /// <summary>
-    /// Operations related to MangaKakalot.
-    /// </summary>
-    public MangaKakalot MangaKakalot { get; }
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
-    /// Operations related to Mangadex.
+    /// Initializes an instance of <see cref="MangaClient"/>.
     /// </summary>
-    public Mangadex Mangadex { get; }
-
-    /// <summary>
-    /// Operations related to MangaPill.
-    /// </summary>
-    public MangaPill MangaPill { get; }
-
-    /// <summary>
-    /// Operations related to MangaKatana.
-    /// </summary>
-    public MangaKatana MangaKatana { get; }
+    public MangaClient(IHttpClientFactory httpClientFactory)
+    {
+        _httpClientFactory = httpClientFactory;
+    }
 
     /// <summary>
     /// Initializes an instance of <see cref="MangaClient"/>.
     /// </summary>
     public MangaClient(Func<HttpClient> httpClientProvider)
+        : this(new HttpClientFactory(httpClientProvider))
     {
-        MangaKakalot = new(httpClientProvider);
-        Mangadex = new(httpClientProvider);
-        MangaPill = new(httpClientProvider);
-        MangaKatana = new(httpClientProvider);
     }
 
     /// <summary>
@@ -47,4 +37,14 @@ public class MangaClient
     public MangaClient() : this(Http.ClientProvider)
     {
     }
+
+    public IList<IMangaProvider> GetAllProviders() => GetProviders();
+
+    public IList<IMangaProvider> GetProviders(string? language = null)
+        => Assembly.GetExecutingAssembly().GetTypes()
+            .Where(x => x.GetInterfaces().Contains(typeof(IMangaProvider))
+                && x.GetConstructor(Type.EmptyTypes) != null)
+            .Select(x => (IMangaProvider)Activator.CreateInstance(x, new object[] { _httpClientFactory })!)
+            .Where(x => x.Language.Equals(language, StringComparison.OrdinalIgnoreCase))
+            .ToList();
 }

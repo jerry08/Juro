@@ -26,6 +26,8 @@ public class NineAnime : IAnimeProvider
 
     public string Name => "9anime";
 
+    public string Language => "en";
+
     public bool IsDubAvailableSeparately => false;
 
     public string BaseUrl => "https://9anime.to";

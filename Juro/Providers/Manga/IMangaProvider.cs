@@ -16,6 +16,11 @@ public interface IMangaProvider
     public string Name { get; }
 
     /// <summary>
+    /// Language of the provider.
+    /// </summary>
+    public string Language { get; }
+
+    /// <summary>
     /// Base url of the provider.
     /// </summary>
     public string BaseUrl { get; }

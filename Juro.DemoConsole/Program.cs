@@ -5,7 +5,9 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Httpz;
 using Juro.Clients;
+using Juro.Providers.Anime;
 using Juro.Providers.Aniskip;
+using Juro.Providers.Manga;
 
 namespace Juro.DemoConsole;
 
@@ -23,11 +25,16 @@ internal class Program
     private static async Task AnimeDemo()
     {
         var client = new AnimeClient();
-        var animes = await client.Gogoanime.SearchAsync("spy x family");
-        var animeInfo = await client.Gogoanime.GetAnimeInfoAsync(animes[0].Id);
-        var episodes = await client.Gogoanime.GetEpisodesAsync(animes[0].Id);
-        var videoServers = await client.Gogoanime.GetVideoServersAsync(episodes[0].Id);
-        var videos = await client.Gogoanime.GetVideosAsync(videoServers[4]);
+
+        var allProviders = client.GetAllProviders();
+
+        var provider = new Zoro();
+
+        var animes = await provider.SearchAsync("spy x family");
+        var animeInfo = await provider.GetAnimeInfoAsync(animes[0].Id);
+        var episodes = await provider.GetEpisodesAsync(animes[0].Id);
+        var videoServers = await provider.GetVideoServersAsync(episodes[0].Id);
+        var videos = await provider.GetVideosAsync(videoServers[3]);
 
         var filePath = @"D:\Downloads\svs.mp4";
 
@@ -67,10 +74,15 @@ internal class Program
     private static async Task MangaDemo()
     {
         var client = new MangaClient();
-        //var results = await client.MangaKakalot.SearchAsync("Tomodachi Game");
-        var results = await client.MangaKatana.SearchAsync("solo leveling");
-        var mangaInfo = await client.MangaKatana.GetMangaInfoAsync(results[0].Id);
-        var pages = await client.MangaKatana.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
+
+        var allProviders = client.GetAllProviders();
+
+        var provider = new MangaKatana();
+
+        //var results = await provider.SearchAsync("Tomodachi Game");
+        var results = await provider.SearchAsync("solo leveling");
+        var mangaInfo = await provider.GetMangaInfoAsync(results[0].Id);
+        var pages = await provider.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
 
         // Download the image
         var fileName = $@"{Environment.CurrentDirectory}\page1.png";

@@ -22,6 +22,8 @@ public class Mangadex : IMangaProvider
 
     public string Name { get; set; } = "Mangadex";
 
+    public string Language => "en";
+
     public string BaseUrl => "https://mangadex.org";
 
     public string Logo => "https://pbs.twimg.com/profile_images/1391016345714757632/xbt_jW78_400x400.jpg";

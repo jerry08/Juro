@@ -17,10 +17,16 @@ public class MangaPill : IMangaProvider
 {
     private readonly HttpClient _http;
 
+    /// <inheritdoc />
     public string Name { get; set; } = "MangaPill";
 
+    /// <inheritdoc />
+    public string Language => "en";
+
+    /// <inheritdoc />
     public string BaseUrl => "https://mangapill.com";
 
+    /// <inheritdoc />
     public string Logo => "";
 
     /// <summary>

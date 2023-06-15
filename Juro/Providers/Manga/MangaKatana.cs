@@ -21,6 +21,9 @@ public class MangaKatana : IMangaProvider
     public string Name { get; set; } = "MangaKatana";
 
     /// <inheritdoc />
+    public string Language => "en";
+
+    /// <inheritdoc />
     public string BaseUrl => "https://mangakatana.com";
 
     /// <inheritdoc />
