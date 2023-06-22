@@ -1,7 +1,7 @@
 ﻿namespace Juro.Models.Anime;
 
 /// <summary>
-/// Filter applied to a anime sites.
+/// Filter applied to anime sites.
 /// </summary>
 public enum AnimeSites
 {
@@ -23,5 +23,15 @@ public enum AnimeSites
     /// <summary>
     /// Parses anime and information from 9anime.
     /// </summary>
-    NineAnime
+    NineAnime,
+
+    /// <summary>
+    /// Parses anime and information from Aniflix.
+    /// </summary>
+    Aniflix,
+
+    /// <summary>
+    /// Parses anime and information from OtakuDesu.
+    /// </summary>
+    OtakuDesu
 }

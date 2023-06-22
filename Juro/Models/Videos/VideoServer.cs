@@ -1,8 +1,7 @@
 ﻿namespace Juro.Models;
 
 /// <summary>
-/// A simple class containing name, link and extraData(in case you want to give some to it)
-/// of the embed which shows the video present on the site.
+/// A simple class containing name and link of the embed which shows the video present on the site.
 /// </summary>
 public class VideoServer
 {
@@ -10,14 +9,38 @@ public class VideoServer
 
     public FileUrl Embed { get; set; } = default!;
 
+    /// <summary>
+    /// Initializes an instance of <see cref="VideoServer"/>.
+    /// </summary>
     public VideoServer()
     {
     }
 
+    /// <summary>
+    /// Initializes an instance of <see cref="VideoServer"/>.
+    /// </summary>
+    public VideoServer(string url)
+    {
+        Name = "Default Server";
+        Embed = new(url);
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="VideoServer"/>.
+    /// </summary>
     public VideoServer(string name, FileUrl embed)
     {
         Name = name;
         Embed = embed;
+    }
+
+    /// <summary>
+    /// Initializes an instance of <see cref="VideoServer"/>.
+    /// </summary>
+    public VideoServer(string name, string url)
+    {
+        Name = name;
+        Embed = new(url);
     }
 
     /// <inheritdoc />

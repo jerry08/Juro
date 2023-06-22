@@ -45,6 +45,7 @@ public class AnimeClient
             .Where(x => x.GetInterfaces().Contains(typeof(IAnimeProvider))
                 && x.GetConstructor(Type.EmptyTypes) != null)
             .Select(x => (IAnimeProvider)Activator.CreateInstance(x, new object[] { _httpClientFactory })!)
-            .Where(x => x.Language.Equals(language, StringComparison.OrdinalIgnoreCase))
+            .Where(x => string.IsNullOrEmpty(language)
+                || x.Language.Equals(language, StringComparison.OrdinalIgnoreCase))
             .ToList();
 }

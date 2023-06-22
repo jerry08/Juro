@@ -165,7 +165,7 @@ public class HentaiFF : IAnimeProvider
             if (string.IsNullOrWhiteSpace(link))
                 continue;
 
-            list.Add(new(node.InnerText, new()
+            list.Add(new(node.InnerText, new FileUrl()
             {
                 Url = link
             }));

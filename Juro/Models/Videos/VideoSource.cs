@@ -18,7 +18,7 @@ public class VideoSource
     public string VideoUrl { get; set; } = default!;
 
     /// <summary>
-    /// No need to set it on M3U8 links
+    /// Size in bytes.
     /// </summary>
     public long? Size { get; set; }
 

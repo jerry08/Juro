@@ -176,8 +176,5 @@ internal static class StringExtensions
     }
 
     public static string DecodeBase64(this string value)
-    {
-        var data = Convert.FromBase64String(value);
-        return Encoding.UTF8.GetString(data);
-    }
+        => Encoding.UTF8.GetString(Convert.FromBase64String(value));
 }

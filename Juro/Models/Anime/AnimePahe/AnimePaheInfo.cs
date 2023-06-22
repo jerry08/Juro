@@ -1,5 +1,6 @@
 ﻿namespace Juro.Models.Anime;
 
+/// <inheritdoc />
 public class AnimePaheInfo : AnimeInfo
 {
     public int AnilistId { get; set; }

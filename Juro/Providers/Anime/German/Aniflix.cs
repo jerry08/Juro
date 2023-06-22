@@ -15,7 +15,7 @@ public class Aniflix : IAnimeProvider
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public string Name => "AnimePahe";
+    public string Name => "Aniflix";
 
     public string Language => "de";
 
@@ -47,6 +47,11 @@ public class Aniflix : IAnimeProvider
     {
     }
 
+    public ValueTask<List<IAnimeInfo>> SearchAsync(string query, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public ValueTask<IAnimeInfo> GetAnimeInfoAsync(string animeId, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
@@ -63,11 +68,6 @@ public class Aniflix : IAnimeProvider
     }
 
     public ValueTask<List<VideoServer>> GetVideoServersAsync(string episodeId, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
-
-    public ValueTask<List<IAnimeInfo>> SearchAsync(string query, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
