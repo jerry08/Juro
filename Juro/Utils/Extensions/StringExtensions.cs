@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Juro.Utils.Extensions;
 
@@ -177,4 +178,12 @@ internal static class StringExtensions
 
     public static string DecodeBase64(this string value)
         => Encoding.UTF8.GetString(Convert.FromBase64String(value));
+
+    private static readonly Regex _whitespace = new(@"\s+");
+
+    public static string ReplaceWhitespaces(this string input, string replacement)
+        => _whitespace.Replace(input, replacement);
+
+    public static string RemoveWhitespaces(this string input)
+        => input.ReplaceWhitespaces(string.Empty);
 }
