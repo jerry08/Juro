@@ -85,10 +85,11 @@ public class AnimePahe : IAnimeProvider
             Episodes = int.TryParse(x["episodes"]?.ToString(), out var episodes) ? episodes : 0,
             Status = x["status"]!.ToString(),
             Season = x["season"]!.ToString(),
-            Year = int.TryParse(x["year"]?.ToString(), out var year) ? year : 0,
+            Released = x["year"]?.ToString(),
             Score = int.TryParse(x["score"]?.ToString(), out var score) ? score : 0,
             Image = x["poster"]!.ToString(),
-            Site = AnimeSites.AnimePahe
+            Site = AnimeSites.AnimePahe,
+            
         }).ToList();
     }
 
