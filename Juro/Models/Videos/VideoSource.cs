@@ -9,7 +9,14 @@ public class VideoSource
     /// If quality is null, shows "Unknown Quality".
     /// If isM3U8 is true, shows "Multi Quality"
     /// </summary>
-    public string Resolution { get; set; } = default!;
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Will represent quality to user in form of `$"{quality}p"` (1080p).
+    /// If quality is null, shows "Unknown Quality".
+    /// If isM3U8 is true, shows "Multi Quality"
+    /// </summary>
+    public string? Resolution { get; set; }
 
     /// <summary>
     /// The direct url to the Video.
@@ -26,7 +33,7 @@ public class VideoSource
     /// The direct url to the Video
     /// Supports mp4, mkv, dash &#38; m3u8, afaik
     /// </summary>
-    public string FileType { get; set; } = default!;
+    public string? FileType { get; set; }
 
     /// <summary>
     /// If not a "CONTAINER" format, the app show video as a "Multi Quality" Link
@@ -44,7 +51,7 @@ public class VideoSource
     /// In case, you want to show some extra notes to the User
     /// Ex: "Backup" which could be used if the site provides some
     /// </summary>
-    public string ExtraNote { get; set; } = default!;
+    public string? ExtraNote { get; set; }
 
     /// <summary>
     /// Http headers for making requests.
