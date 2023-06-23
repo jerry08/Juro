@@ -93,7 +93,7 @@ public class MangaKatana : IMangaProvider
 
             var imgSplit = chapters.FirstOrDefault()!.Image.Split('/');
 
-            result.Id = string.Join("/" , imgSplit.Take(imgSplit.Length - 1));
+            result.Id = string.Join("/", imgSplit.Take(imgSplit.Length - 1));
 
             //result.Chapters = chapters;
 

@@ -70,8 +70,8 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-      //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-         var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
+        //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
+        var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
         //url = $"{url}&sort=${filters.sort}&{vrf}&page={page}";
         //url = $"{url}&{vrf}";
 
@@ -158,7 +158,7 @@ public class NineAnime : IAnimeProvider
 
         return list;
     }
-    
+
     private List<IAnimeInfo> ParseAnimeSearchResponse(string? response)
     {
         var list = new List<IAnimeInfo>();
@@ -175,24 +175,24 @@ public class NineAnime : IAnimeProvider
             {
                 Site = AnimeSites.NineAnime
             };
-            
+
             animeInfo.Id = node.GetAttributeValue("href", "");
-            
+
             animeInfo.Title = node.SelectSingleNode(".//div[@class='name d-title']")
                 .InnerText.Trim();
-            
+
             animeInfo.Image = node.SelectSingleNode(".//img")
                 .GetAttributeValue("src", "");
 
             animeInfo.Released = node.SelectSingleNode(".//div[@class='meta']/span[last()]")
                 .InnerText.Trim();
-            
+
             animeInfo.Type = node.SelectSingleNode(".//div[@class='meta']/span[last()-1]")
                 .InnerText.Trim();
-            
+
             list.Add(animeInfo);
         }
-        
+
         return list;
     }
 

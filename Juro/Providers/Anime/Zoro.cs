@@ -176,22 +176,22 @@ public class Zoro : IAnimeProvider
 
 
         animes.AddRange(from a in document.DocumentNode.Descendants("a").Where(e => !e.Attributes["class"].Value.Contains("nav-bottom"))
-        let href = a.GetAttributeValue("href", "")
-        let title = a.Descendants("h3").FirstOrDefault()?.InnerText?.Trim()!
-        let imgUrl = a.Descendants("img").FirstOrDefault()?.GetAttributeValue("src", "")!
-        let releaseDate = a.Descendants("span").FirstOrDefault()?.InnerText?.Trim()
-        let type = a.Descendants("i").ElementAtOrDefault(0)?.NextSibling?.InnerText?.Trim()
-        select new AnimeInfo()
-        {
-            Id = href,
-            Site = AnimeSites.Zoro,
-            Image = imgUrl,
-            Title = title,
-            Category = href,
-            Link = BaseUrl + href,
-            Released = releaseDate,
-            Type = type,
-        });
+                        let href = a.GetAttributeValue("href", "")
+                        let title = a.Descendants("h3").FirstOrDefault()?.InnerText?.Trim()!
+                        let imgUrl = a.Descendants("img").FirstOrDefault()?.GetAttributeValue("src", "")!
+                        let releaseDate = a.Descendants("span").FirstOrDefault()?.InnerText?.Trim()
+                        let type = a.Descendants("i").ElementAtOrDefault(0)?.NextSibling?.InnerText?.Trim()
+                        select new AnimeInfo()
+                        {
+                            Id = href,
+                            Site = AnimeSites.Zoro,
+                            Image = imgUrl,
+                            Title = title,
+                            Category = href,
+                            Link = BaseUrl + href,
+                            Released = releaseDate,
+                            Type = type,
+                        });
 
         return animes;
     }

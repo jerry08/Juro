@@ -89,7 +89,7 @@ public class AnimePahe : IAnimeProvider
             Score = int.TryParse(x["score"]?.ToString(), out var score) ? score : 0,
             Image = x["poster"]!.ToString(),
             Site = AnimeSites.AnimePahe,
-            
+
         }).ToList();
     }
 
