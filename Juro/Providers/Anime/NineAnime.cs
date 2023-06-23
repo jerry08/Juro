@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 using Juro.Clients;
 using Juro.Extractors;
 using Juro.Models;
@@ -68,10 +70,10 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-        var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-
+      //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
+         var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
         //url = $"{url}&sort=${filters.sort}&{vrf}&page={page}";
-        url = $"{url}&{vrf}";
+        //url = $"{url}&{vrf}";
 
         var response = await _http.ExecuteAsync(
             url,
@@ -82,7 +84,7 @@ public class NineAnime : IAnimeProvider
             cancellationToken
         );
 
-        return ParseAnimeResponse(response);
+        return ParseAnimeSearchResponse(response);
     }
 
     /// <inheritdoc cref="SearchAsync"/>
@@ -111,7 +113,9 @@ public class NineAnime : IAnimeProvider
             $"{BaseUrl}/filter?sort=recently_updated&page={page}",
             cancellationToken
         );
-
+        var jDoc = JsonDocument.Parse(response);
+        var root = jDoc.RootElement;
+        var html = root.GetProperty("result").GetProperty("html").GetString();
         return ParseAnimeResponse(response);
     }
 
@@ -152,6 +156,43 @@ public class NineAnime : IAnimeProvider
             list.Add(animeInfo);
         }
 
+        return list;
+    }
+    
+    private List<IAnimeInfo> ParseAnimeSearchResponse(string? response)
+    {
+        var list = new List<IAnimeInfo>();
+
+        if (string.IsNullOrWhiteSpace(response))
+            return list;
+
+        var document = Html.Parse(response!);
+        var nodes = document.DocumentNode.SelectNodes("//a[contains(@class, 'item')]");
+
+        foreach (var node in nodes)
+        {
+            var animeInfo = new AnimeInfo()
+            {
+                Site = AnimeSites.NineAnime
+            };
+            
+            animeInfo.Id = node.GetAttributeValue("href", "");
+            
+            animeInfo.Title = node.SelectSingleNode(".//div[@class='name d-title']")
+                .InnerText.Trim();
+            
+            animeInfo.Image = node.SelectSingleNode(".//img")
+                .GetAttributeValue("src", "");
+
+            animeInfo.Released = node.SelectSingleNode(".//div[@class='meta']/span[last()]")
+                .InnerText.Trim();
+            
+            animeInfo.Type = node.SelectSingleNode(".//div[@class='meta']/span[last()-1]")
+                .InnerText.Trim();
+            
+            list.Add(animeInfo);
+        }
+        
         return list;
     }
 
