@@ -65,36 +65,6 @@ public class OtakuDesu : IAnimeProvider
             cancellationToken
         );
 
-        return ParseAnimeResponse(response);
-    }
-
-    /// <summary>
-    /// Searches for anime by specified genre.
-    /// </summary>
-    /// <param name="id">The name or url of the genre.</param>
-    public async ValueTask<List<IAnimeInfo>> SearchByGenreAsync(
-        string id,
-        int page = 1,
-        CancellationToken cancellationToken = default)
-    {
-        var list = new List<IAnimeInfo>();
-
-        var genre = Genres.Find(x => x.Url?.ToLower() == id.ToLower()
-            || x.Name?.ToLower() == id.ToLower());
-
-        if (genre is null)
-            return list;
-
-        var response = await _http.ExecuteAsync(
-            $"{genre.Url}/page/{page}",
-            cancellationToken
-        );
-
-        return ParseAnimeResponse(response);
-    }
-
-    private List<IAnimeInfo> ParseAnimeResponse(string? response)
-    {
         var list = new List<IAnimeInfo>();
 
         if (string.IsNullOrWhiteSpace(response))
@@ -156,10 +126,113 @@ public class OtakuDesu : IAnimeProvider
         return list;
     }
 
-    /// <inheritdoc />
-    public ValueTask<IAnimeInfo> GetAnimeInfoAsync(string animeId, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Searches for anime by specified genre.
+    /// </summary>
+    /// <param name="id">The name or url of the genre.</param>
+    public async ValueTask<List<IAnimeInfo>> SearchByGenreAsync(
+        string id,
+        int page = 1,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var list = new List<IAnimeInfo>();
+
+        var genre = Genres.Find(x => x.Url?.ToLower() == id.ToLower()
+            || x.Name?.ToLower() == id.ToLower());
+
+        if (genre is null)
+            return list;
+
+        var response = await _http.ExecuteAsync(
+            $"{genre.Url}/page/{page}",
+            cancellationToken
+        );
+
+        if (string.IsNullOrWhiteSpace(response))
+            return list;
+
+        var document = Html.Parse(response!);
+
+        var nodes = document.DocumentNode.SelectNodes(
+            ".//div[@id='venkonten']//div[@class='venser']//div[@class='col-anime']"
+        );
+
+        for (var i = 0; i < nodes.Count; i++)
+        {
+            var anime = new OtakuDesuAnimeInfo()
+            {
+                Site = AnimeSites.OtakuDesu
+            };
+
+            anime.Title = nodes[i].SelectSingleNode(".//div[@class='col-anime-title']")
+                ?.InnerText ?? "";
+
+            anime.Link = nodes[i].SelectSingleNode(".//div[@class='col-anime-title']/a")
+                ?.Attributes["href"]?.Value ?? "";
+
+            anime.Id = anime.Link;
+
+            anime.Studio = nodes[i].SelectSingleNode(".//div[@class='col-anime-studio']")
+                ?.InnerText;
+
+            var ratingStr = nodes[i].SelectSingleNode(".//div[@class='col-anime-rating']")?.InnerText;
+            if (float.TryParse(ratingStr, out var rating))
+                anime.Rating = rating;
+
+            anime.Image = nodes[i].SelectSingleNode(".//div[@class='col-anime-cover']/img")
+                ?.Attributes["src"]?.Value;
+
+            anime.Summary = nodes[i].SelectSingleNode(".//div[@class='col-synopsis']")
+                ?.InnerText;
+
+            anime.Released = nodes[i].SelectSingleNode(".//div[@class='col-anime-date']")
+                ?.InnerText;
+
+            list.Add(anime);
+        }
+
+        return list;
+    }
+
+    /// <inheritdoc />
+    public async ValueTask<IAnimeInfo> GetAnimeInfoAsync(
+        string animeId,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.ExecuteAsync(
+            animeId,
+            cancellationToken
+        );
+
+        var animeInfo = new OtakuDesuAnimeInfo();
+
+        if (string.IsNullOrWhiteSpace(response))
+            return animeInfo;
+
+        var document = Html.Parse(response!);
+
+        animeInfo.Id = animeId;
+        animeInfo.Link = animeId;
+
+        animeInfo.Title = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[1]/span")
+            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+
+        animeInfo.Image = document.DocumentNode.SelectSingleNode(".//div[@class='fotoanime']/img")
+            .Attributes["src"]?.Value;
+
+        animeInfo.Type = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[5]/span")
+            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+
+        animeInfo.Status = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[6]/span")
+            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+
+        animeInfo.Studio = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[10]/span")
+            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+
+        animeInfo.Genres = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[11]/span")
+            ?.InnerText?.Split(':').Skip(1)).Split(',').Select(x => new Genre(x.Trim())).ToList();
+
+        return animeInfo;
     }
 
     /// <inheritdoc />
