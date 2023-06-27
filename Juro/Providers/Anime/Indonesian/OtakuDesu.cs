@@ -215,22 +215,23 @@ public class OtakuDesu : IAnimeProvider
         animeInfo.Link = animeId;
 
         animeInfo.Title = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[1]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
 
         animeInfo.Image = document.DocumentNode.SelectSingleNode(".//div[@class='fotoanime']/img")
             .Attributes["src"]?.Value;
 
         animeInfo.Type = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[5]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
 
         animeInfo.Status = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[6]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
 
         animeInfo.Studio = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[10]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1)).Trim();
+            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
 
         animeInfo.Genres = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[11]/span")
-            ?.InnerText?.Split(':').Skip(1)).Split(',').Select(x => new Genre(x.Trim())).ToList();
+            ?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>())
+            .Split(',').Select(x => new Genre(x.Trim())).ToList();
 
         return animeInfo;
     }
