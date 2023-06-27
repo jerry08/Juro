@@ -4,4 +4,6 @@
 public class OtakuDesuAnimeInfo : AnimeInfo
 {
     public float Rating { get; set; }
+
+    public string? Studio { get; set; }
 }
