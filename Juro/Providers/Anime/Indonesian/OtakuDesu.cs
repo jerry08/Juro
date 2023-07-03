@@ -255,7 +255,9 @@ public class OtakuDesu : IAnimeProvider
 
         //var nodes = document.DocumentNode.SelectNodes(".//div[@class='episodelist']//a");
         //var nodes = document.DocumentNode.SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li");
-        var nodes = document.DocumentNode.SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li");
+        var nodes = document.DocumentNode
+            .SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li")
+            .Reverse().ToList();
 
         for (var i = 0; i < nodes.Count; i++)
         {
