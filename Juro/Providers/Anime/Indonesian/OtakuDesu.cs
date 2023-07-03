@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
@@ -12,6 +13,8 @@ using Juro.Models.Anime.Indonesian;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
+using Juro.Utils.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace Juro.Providers.Anime.Indonesian;
 
@@ -74,7 +77,7 @@ public class OtakuDesu : IAnimeProvider
 
         var nodes = document.DocumentNode.SelectNodes(".//ul[@class='chivsrc']/li");
 
-        for (var i = 0; i < nodes.Count; i++)
+        for (var i = 0; i < nodes?.Count; i++)
         {
             var anime = new OtakuDesuAnimeInfo()
             {
@@ -377,105 +380,17 @@ public class OtakuDesu : IAnimeProvider
         var videoListNodes = document.DocumentNode
             .SelectNodes(".//div[@class='mirrorstream']//ul//li//a").ToList();
 
-        foreach (var videoListNode in videoListNodes)
-        {
-            //var dataContent = videoListNode.Attributes["data-content"].Value;
-            var dataContent = videoListNode.GetAttributeValue("data-content", null);
-            if (string.IsNullOrWhiteSpace(dataContent))
-                continue;
+        var functions = Enumerable.Range(0, videoListNodes.Count)
+            .Select(i => (Func<Task<List<VideoSource>>>)
+                (async () => await GetVideoSourceFromNodeAsync(
+                    videoListNodes[i],
+                    action,
+                    nonce)
+                )
+            );
 
-            var decodedData = dataContent.DecodeBase64();
-
-            var node = JsonNode.Parse(decodedData)!;
-
-            var id = node["id"]?.ToString();
-            var mirror = node["i"]?.ToString();
-            var quality = node["q"]?.ToString();
-
-            var formContent = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
-            {
-                new("id", id),
-                new("i", mirror),
-                new("q", quality),
-                new("nonce", nonce),
-                new("action", action),
-            });
-
-            var response2 = await _http.PostAsync(
-                $"{BaseUrl}/wp-admin/admin-ajax.php",
-                formContent,
-                cancellationToken);
-
-            var content = await response2.Content.ReadAsStringAsync(cancellationToken);
-
-            var data = JsonNode.Parse(content)!["data"]!.ToString().DecodeBase64();
-
-            var document2 = Html.Parse(data);
-
-            var url = document2.DocumentNode.SelectSingleNode(".//iframe")
-                .Attributes["src"].Value;
-
-            if (url.Contains("yourupload"))
-            {
-                var id2 = url.Split(new[] { "id=" }, StringSplitOptions.None)
-                    .LastOrDefault()?.Split(new[] { "&" }, StringSplitOptions.None)
-                    .FirstOrDefault();
-
-                if (!string.IsNullOrWhiteSpace(id2))
-                {
-                    var yourUploadExtractor = new YourUploadExtractor(_httpClientFactory);
-
-                    list.AddRange(
-                        await yourUploadExtractor.ExtractAsync(
-                            $"https://yourupload.com/embed/{id2}",
-                            quality,
-                            cancellationToken
-                        )
-                    );
-                }
-            }
-            else if (url.Contains("desustream"))
-            {
-                response = await _http.ExecuteAsync(url, cancellationToken);
-
-                var document3 = Html.Parse(response);
-
-                var script2 = document3.DocumentNode.Descendants()
-                    .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("sources") == true)
-                    !.InnerText.RemoveWhitespaces();
-
-                var realLink = script2.SubstringAfter("sources:[{")
-                    .SubstringAfter("file':'").SubstringBefore("'");
-
-                list.Add(new VideoSource()
-                {
-                    Format = VideoType.Container,
-                    Resolution = quality,
-                    Title = $"DesuStream - {quality}",
-                    VideoUrl = realLink
-                });
-            }
-            else if (url.Contains("mp4upload"))
-            {
-                response = await _http.ExecuteAsync(url, cancellationToken);
-
-                var document3 = Html.Parse(response);
-
-                var script2 = document3.DocumentNode.Descendants()
-                    .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("player.src") == true)
-                    !.InnerText.RemoveWhitespaces();
-
-                var realLink = script2.SubstringAfter(@"src:""").SubstringBefore(@"""");
-
-                list.Add(new VideoSource()
-                {
-                    Format = VideoType.Container,
-                    Resolution = quality,
-                    Title = $"Mp4upload - {quality}",
-                    VideoUrl = realLink
-                });
-            }
-        }
+        var results = await TaskEx.Run(functions, 20);
+        list.AddRange(results.SelectMany(x => x));
 
         return list;
     }
@@ -497,6 +412,114 @@ public class OtakuDesu : IAnimeProvider
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
         return JsonNode.Parse(content)?["data"]?.ToString();
+    }
+
+    private async Task<List<VideoSource>> GetVideoSourceFromNodeAsync(
+        HtmlNode videoListNode,
+        string action,
+        string? nonce,
+        CancellationToken cancellationToken = default)
+    {
+        var list = new List<VideoSource>();
+
+        //var dataContent = videoListNode.Attributes["data-content"].Value;
+        var dataContent = videoListNode.GetAttributeValue("data-content", null);
+        if (string.IsNullOrWhiteSpace(dataContent))
+            return list;
+
+        var decodedData = dataContent.DecodeBase64();
+
+        var node = JsonNode.Parse(decodedData)!;
+
+        var id = node["id"]?.ToString();
+        var mirror = node["i"]?.ToString();
+        var quality = node["q"]?.ToString();
+
+        var formContent = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
+        {
+            new("id", id),
+            new("i", mirror),
+            new("q", quality),
+            new("nonce", nonce),
+            new("action", action),
+        });
+
+        var response2 = await _http.PostAsync(
+            $"{BaseUrl}/wp-admin/admin-ajax.php",
+            formContent,
+            cancellationToken);
+
+        var content = await response2.Content.ReadAsStringAsync(cancellationToken);
+
+        var data = JsonNode.Parse(content)!["data"]!.ToString().DecodeBase64();
+
+        var document2 = Html.Parse(data);
+
+        var url = document2.DocumentNode.SelectSingleNode(".//iframe")
+            .Attributes["src"].Value;
+
+        if (url.Contains("yourupload"))
+        {
+            var id2 = url.Split(new[] { "id=" }, StringSplitOptions.None)
+                .LastOrDefault()?.Split(new[] { "&" }, StringSplitOptions.None)
+                .FirstOrDefault();
+
+            if (!string.IsNullOrWhiteSpace(id2))
+            {
+                var yourUploadExtractor = new YourUploadExtractor(_httpClientFactory);
+
+                list.AddRange(
+                    await yourUploadExtractor.ExtractAsync(
+                        $"https://yourupload.com/embed/{id2}",
+                        quality,
+                        cancellationToken
+                    )
+                );
+            }
+        }
+        else if (url.Contains("desustream"))
+        {
+            var response = await _http.ExecuteAsync(url, cancellationToken);
+
+            var document3 = Html.Parse(response);
+
+            var script2 = document3.DocumentNode.Descendants()
+                .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("sources") == true)
+                !.InnerText.RemoveWhitespaces();
+
+            var realLink = script2.SubstringAfter("sources:[{")
+                .SubstringAfter("file':'").SubstringBefore("'");
+
+            list.Add(new VideoSource()
+            {
+                Format = VideoType.Container,
+                Resolution = quality,
+                Title = $"DesuStream - {quality}",
+                VideoUrl = realLink
+            });
+        }
+        else if (url.Contains("mp4upload"))
+        {
+            var response = await _http.ExecuteAsync(url, cancellationToken);
+
+            var document3 = Html.Parse(response);
+
+            var script2 = document3.DocumentNode.Descendants()
+                .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("player.src") == true)
+                !.InnerText.RemoveWhitespaces();
+
+            var realLink = script2.SubstringAfter(@"src:""").SubstringBefore(@"""");
+
+            list.Add(new VideoSource()
+            {
+                Format = VideoType.Container,
+                Resolution = quality,
+                Title = $"Mp4upload - {quality}",
+                VideoUrl = realLink
+            });
+        }
+
+        return list;
     }
 
     public List<Genre> Genres => new()

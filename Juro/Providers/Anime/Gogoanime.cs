@@ -249,6 +249,11 @@ public class Gogoanime : IAnimeProvider
             url = BaseUrl + url;
         }
 
+        if (!id.StartsWith("/category"))
+        {
+            url = $"{BaseUrl}/category{id}";
+        }
+
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
