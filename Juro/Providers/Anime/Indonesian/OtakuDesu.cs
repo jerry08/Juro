@@ -330,7 +330,7 @@ public class OtakuDesu : IAnimeProvider
                 ExtraNote = x.InnerText, // Video server name
                 Resolution = x.ParentNode.FirstChild.InnerText,
                 Size = float.TryParse(x.ParentNode.LastChild.InnerText?.ToLower().Replace("mb", ""), out var size)
-                    ? (long)(size * 1024.0)
+                    ? (long)(size * 1024.0 * 1024.0)
                     : 0,
                 VideoUrl = x.Attributes["href"].Value,
             });
