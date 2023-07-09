@@ -1,7 +1,8 @@
-﻿namespace Juro.Providers.Anilist.Models;
-
-public class AnilistAnime
+﻿namespace Juro.Providers.Anilist.Models
 {
-    public string Id { get; set; } = default!;
-    public string MalId { get; set; } = default!;
+    public class AnilistAnime
+    {
+        public string Id { get; set; } = default!;
+        public string MalId { get; set; } = default!;
+    }
 }

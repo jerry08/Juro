@@ -1,17 +1,19 @@
-﻿namespace Juro.Models.Videos;
-
-public enum StreamingServers
+﻿namespace Juro.Models.Videos
 {
-    AsianLoad,
-    GogoCDN,
-    StreamSB,
-    MixDrop,
-    UpCloud,
-    VidCloud,
-    StreamTape,
-    VizCloud,
-    // same as vizcloud
-    MyCloud,
-    Filemoon,
-    VidStreaming
+    public enum StreamingServers
+    {
+        AsianLoad,
+        GogoCDN,
+        StreamSB,
+        MixDrop,
+        UpCloud,
+        VidCloud,
+        StreamTape,
+        VizCloud,
+
+        // same as vizcloud
+        MyCloud,
+        Filemoon,
+        VidStreaming
+    }
 }

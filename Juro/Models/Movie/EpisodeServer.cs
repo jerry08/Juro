@@ -1,8 +1,9 @@
-﻿namespace Juro.Models.Movie;
-
-public class EpisodeServer
+﻿namespace Juro.Models.Movie
 {
-    public string Name { get; set; } = default!;
+    public class EpisodeServer
+    {
+        public string Name { get; set; } = default!;
 
-    public string Url { get; set; } = default!;
+        public string Url { get; set; } = default!;
+    }
 }

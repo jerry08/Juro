@@ -7,51 +7,55 @@ using System.Threading.Tasks;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 
-namespace Juro.Providers.Aniskip;
-
-/// <summary>
-/// Client for interacting with aniskip api.
-/// </summary>
-public class AniskipClient
+namespace Juro.Providers.Aniskip
 {
-    private readonly HttpClient _http;
-
     /// <summary>
-    /// Initializes an instance of <see cref="AniskipClient"/>.
+    /// Client for interacting with aniskip api.
     /// </summary>
-    public AniskipClient(Func<HttpClient> httpClientProvider)
+    public class AniskipClient
     {
-        _http = httpClientProvider();
-    }
+        private readonly HttpClient _http;
 
-    /// <summary>
-    /// Initializes an instance of <see cref="AniskipClient"/>.
-    /// </summary>
-    public AniskipClient() : this(Http.ClientProvider)
-    {
-    }
+        /// <summary>
+        /// Initializes an instance of <see cref="AniskipClient"/>.
+        /// </summary>
+        public AniskipClient(Func<HttpClient> httpClientProvider)
+        {
+            _http = httpClientProvider();
+        }
 
-    /// <summary>
-    /// Gets the skip times associated with the episode.
-    /// </summary>
-    public async ValueTask<List<Stamp>?> GetAsync(
-        int malId, int episodeNumber, long episodeLength,
-        CancellationToken cancellationToken = default)
-    {
-        var url = $"https://api.aniskip.com/v2/skip-times/{malId}/{episodeNumber}?types[]=ed&types[]=mixed-ed&types[]=mixed-op&types[]=op&types[]=recap&episodeLength={episodeLength}";
+        /// <summary>
+        /// Initializes an instance of <see cref="AniskipClient"/>.
+        /// </summary>
+        public AniskipClient() : this(Http.ClientProvider)
+        {
+        }
 
-        var response = await _http.ExecuteAsync(url, cancellationToken);
-        if (response is null)
-            return null;
+        /// <summary>
+        /// Gets the skip times associated with the episode.
+        /// </summary>
+        public async ValueTask<List<Stamp>?> GetAsync(
+            int malId, int episodeNumber, long episodeLength,
+            CancellationToken cancellationToken = default)
+        {
+            var url =
+                $"https://api.aniskip.com/v2/skip-times/{malId}/{episodeNumber}?types[]=ed&types[]=mixed-ed&types[]=mixed-op&types[]=op&types[]=recap&episodeLength={episodeLength}";
 
-        var result = JsonSerializer.Deserialize<AniSkipResponse>(
-            response,
-            new JsonSerializerOptions
+            var response = await _http.ExecuteAsync(url, cancellationToken);
+            if (response is null)
             {
-                PropertyNameCaseInsensitive = true
+                return null;
             }
-        );
 
-        return result?.IsFound == true ? result.Results : null;
+            var result = JsonSerializer.Deserialize<AniSkipResponse>(
+                response,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }
+            );
+
+            return result?.IsFound == true ? result.Results : null;
+        }
     }
 }

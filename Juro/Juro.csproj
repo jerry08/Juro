@@ -1,35 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net461;net6.0;</TargetFrameworks>
-    <IsPackable>true</IsPackable>
-    <Nullable>enable</Nullable>
-    <WarningsAsErrors>nullable</WarningsAsErrors>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;netstandard2.1;net461;net6.0;</TargetFrameworks>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>nullable</WarningsAsErrors>
+    </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+        <Reference Include="System.Net.Http"/>
+    </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' OR '$(TargetFrameworkIdentifier)' == '.NETStandard'">
-    <Compile Remove="**\**\*.netcore.cs" />
-    <None Include="**\**\*.netcore.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
-    <Compile Remove="**\netcore\**\*.cs" />
-    <None Include="**\netcore\**\*.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
-  </ItemGroup>
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' OR '$(TargetFrameworkIdentifier)' == '.NETStandard'">
+        <Compile Remove="**\**\*.netcore.cs"/>
+        <None Include="**\**\*.netcore.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"/>
+        <Compile Remove="**\netcore\**\*.cs"/>
+        <None Include="**\netcore\**\*.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"/>
+    </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCOREAPP'">
-    <Compile Remove="**\**\*.netstandard.cs" />
-    <None Include="**\**\*.netstandard.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
-    <Compile Remove="**\netstandard\**\*.cs" />
-    <None Include="**\netstandard\**\*.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
-  </ItemGroup>
+    <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCOREAPP'">
+        <Compile Remove="**\**\*.netstandard.cs"/>
+        <None Include="**\**\*.netstandard.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"/>
+        <Compile Remove="**\netstandard\**\*.cs"/>
+        <None Include="**\netstandard\**\*.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
-    <PackageReference Include="Nager.PublicSuffix" Version="2.4.0" />
-    <PackageReference Include="System.Text.Json" Version="7.0.2" Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="HtmlAgilityPack" Version="1.11.46"/>
+        <PackageReference Include="Nager.PublicSuffix" Version="2.4.0"/>
+        <PackageReference Include="System.Text.Json" Version="7.0.2" Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'"/>
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'"/>
+    </ItemGroup>
 
 </Project>

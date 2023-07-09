@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 internal static class StreamPolyfills
 {
 #if !NETSTANDARD2_1 && !NETCOREAPP3_0
-    public static async Task<int> ReadAsync(this Stream stream, byte[] buffer, CancellationToken cancellationToken) =>
-        await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+    public static async Task<int> ReadAsync(this Stream stream, byte[] buffer, CancellationToken cancellationToken)
+    {
+        return await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+    }
 #endif
 
     public static async Task<Stream> ReadAsStreamAsync(

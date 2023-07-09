@@ -1,14 +1,15 @@
 ﻿using System.Collections.Generic;
 
-namespace Juro.Models.Manga;
-
-public interface IMangaResult
+namespace Juro.Models.Manga
 {
-    public string Id { get; set; }
+    public interface IMangaResult
+    {
+        public string Id { get; set; }
 
-    public string? Title { get; set; }
+        public string? Title { get; set; }
 
-    public string? Image { get; set; }
+        public string? Image { get; set; }
 
-    public Dictionary<string, string> HeaderForImage { get; set; }
+        public Dictionary<string, string> HeaderForImage { get; set; }
+    }
 }

@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 
-namespace Juro.Models.Manga.Mangadex;
-
-public class MangadexInfo : MangaInfo
+namespace Juro.Models.Manga.Mangadex
 {
-    /// <summary>
-    /// Year released
-    /// </summary>
-    public int ReleaseDate { get; set; }
+    public class MangadexInfo : MangaInfo
+    {
+        /// <summary>
+        /// Year released
+        /// </summary>
+        public int ReleaseDate { get; set; }
 
-    public List<string> Themes { get; set; } = new();
+        public List<string> Themes { get; set; } = new();
+    }
 }

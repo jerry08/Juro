@@ -1,66 +1,75 @@
 ﻿using System;
 using System.Threading;
 
-namespace Juro.Utils.Tasks;
-
-internal partial class ResizableSemaphore : IDisposable
+namespace Juro.Utils.Tasks
 {
-    private readonly object _lock = new();
-    private readonly CancellationTokenSource _cts = new();
-
-    private bool _isDisposed;
-    private int _maxCount = int.MaxValue;
-    private int _count;
-
-    public bool IsBusy => MaxCount > 0;
-
-    public int MaxCount
+    internal partial class ResizableSemaphore : IDisposable
     {
-        get
+        private readonly object _lock = new();
+        private readonly CancellationTokenSource _cts = new();
+
+        private bool _isDisposed;
+        private int _maxCount = int.MaxValue;
+        private int _count;
+
+        public bool IsBusy => MaxCount > 0;
+
+        public int MaxCount
         {
-            lock (_lock)
+            get
             {
-                return _maxCount;
+                lock (_lock)
+                {
+                    return _maxCount;
+                }
+            }
+            set
+            {
+                lock (_lock)
+                {
+                    _maxCount = value;
+                    Refresh();
+                }
             }
         }
-        set
+
+        public IDisposable Acquire()
+        {
+            return AcquireAsync().GetAwaiter().GetResult();
+        }
+
+        public void Release()
         {
             lock (_lock)
             {
-                _maxCount = value;
+                _count--;
                 Refresh();
             }
         }
-    }
 
-    public IDisposable Acquire() => AcquireAsync().GetAwaiter().GetResult();
-
-    public void Release()
-    {
-        lock (_lock)
+        public void Dispose()
         {
-            _count--;
-            Refresh();
+            _isDisposed = true;
+            _cts.Cancel();
+            _cts.Dispose();
         }
     }
 
-    public void Dispose()
+    internal partial class ResizableSemaphore
     {
-        _isDisposed = true;
-        _cts.Cancel();
-        _cts.Dispose();
-    }
-}
+        private class AcquiredAccess : IDisposable
+        {
+            private readonly ResizableSemaphore _semaphore;
 
-internal partial class ResizableSemaphore
-{
-    private class AcquiredAccess : IDisposable
-    {
-        private readonly ResizableSemaphore _semaphore;
+            public AcquiredAccess(ResizableSemaphore semaphore)
+            {
+                _semaphore = semaphore;
+            }
 
-        public AcquiredAccess(ResizableSemaphore semaphore) =>
-            _semaphore = semaphore;
-
-        public void Dispose() => _semaphore.Release();
+            public void Dispose()
+            {
+                _semaphore.Release();
+            }
+        }
     }
 }

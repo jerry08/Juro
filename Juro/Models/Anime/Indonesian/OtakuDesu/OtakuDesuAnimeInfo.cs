@@ -1,9 +1,10 @@
-﻿namespace Juro.Models.Anime.Indonesian;
-
-/// <inheritdoc />
-public class OtakuDesuAnimeInfo : AnimeInfo
+﻿namespace Juro.Models.Anime.Indonesian
 {
-    public float Rating { get; set; }
+    /// <inheritdoc />
+    public class OtakuDesuAnimeInfo : AnimeInfo
+    {
+        public float Rating { get; set; }
 
-    public string? Studio { get; set; }
+        public string? Studio { get; set; }
+    }
 }

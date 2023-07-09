@@ -1,12 +1,13 @@
-﻿namespace Juro.Models.Manga;
-
-public class MangaChapter : IMangaChapter
+﻿namespace Juro.Models.Manga
 {
-    public string Id { get; set; } = default!;
+    public class MangaChapter : IMangaChapter
+    {
+        public string Id { get; set; } = default!;
 
-    public string Title { get; set; } = default!;
+        public string Title { get; set; } = default!;
 
-    public string? Views { get; set; }
+        public string? Views { get; set; }
 
-    public string? ReleasedDate { get; set; }
+        public string? ReleasedDate { get; set; }
+    }
 }

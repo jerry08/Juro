@@ -8,82 +8,83 @@ using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 
-namespace Juro.Extractors;
-
-/// <summary>
-/// Extractor for Dood.
-/// </summary>
-public class FPlayerExtractor : IVideoExtractor
+namespace Juro.Extractors
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    /// <inheritdoc />
-    public string ServerName => "FPlayer";
-
     /// <summary>
-    /// Initializes an instance of <see cref="FPlayerExtractor"/>.
+    /// Extractor for Dood.
     /// </summary>
-    public FPlayerExtractor(IHttpClientFactory httpClientFactory)
+    public class FPlayerExtractor : IVideoExtractor
     {
-        _httpClientFactory = httpClientFactory;
-    }
+        private readonly IHttpClientFactory _httpClientFactory;
 
-    /// <summary>
-    /// Initializes an instance of <see cref="FPlayerExtractor"/>.
-    /// </summary>
-    public FPlayerExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        /// <inheritdoc />
+        public string ServerName => "FPlayer";
 
-    /// <summary>
-    /// Initializes an instance of <see cref="FPlayerExtractor"/>.
-    /// </summary>
-    public FPlayerExtractor() : this(Http.ClientProvider)
-    {
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<List<VideoSource>> ExtractAsync(
-        string url,
-        CancellationToken cancellationToken = default)
-    {
-        var http = _httpClientFactory.CreateClient();
-
-        var apiLink = url.Replace("/v/", "/api/source/");
-
-        var list = new List<VideoSource>();
-
-        try
+        /// <summary>
+        /// Initializes an instance of <see cref="FPlayerExtractor"/>.
+        /// </summary>
+        public FPlayerExtractor(IHttpClientFactory httpClientFactory)
         {
-            var headers = new Dictionary<string, string>()
-            {
-                { "Referer", url }
-            };
+            _httpClientFactory = httpClientFactory;
+        }
 
-            var json = await http.PostAsync(apiLink, headers, cancellationToken);
-            if (!string.IsNullOrWhiteSpace(json))
+        /// <summary>
+        /// Initializes an instance of <see cref="FPlayerExtractor"/>.
+        /// </summary>
+        public FPlayerExtractor(Func<HttpClient> httpClientProvider)
+            : this(new HttpClientFactory(httpClientProvider))
+        {
+        }
+
+        /// <summary>
+        /// Initializes an instance of <see cref="FPlayerExtractor"/>.
+        /// </summary>
+        public FPlayerExtractor() : this(Http.ClientProvider)
+        {
+        }
+
+        /// <inheritdoc />
+        public async ValueTask<List<VideoSource>> ExtractAsync(
+            string url,
+            CancellationToken cancellationToken = default)
+        {
+            var http = _httpClientFactory.CreateClient();
+
+            var apiLink = url.Replace("/v/", "/api/source/");
+
+            var list = new List<VideoSource>();
+
+            try
             {
-                var data = JsonNode.Parse(JsonNode.Parse(json)!["data"]!.ToString())!.AsArray();
-                for (var i = 0; i < data.Count; i++)
+                var headers = new Dictionary<string, string>()
                 {
-                    list.Add(new()
+                    { "Referer", url }
+                };
+
+                var json = await http.PostAsync(apiLink, headers, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    var data = JsonNode.Parse(JsonNode.Parse(json)!["data"]!.ToString())!.AsArray();
+                    for (var i = 0; i < data.Count; i++)
                     {
-                        VideoUrl = data[i]!["file"]!.ToString(),
-                        Resolution = data[i]!["label"]!.ToString(),
-                        Format = VideoType.Container,
-                        FileType = data[i]!["type"]!.ToString(),
-                    });
+                        list.Add(new VideoSource
+                        {
+                            VideoUrl = data[i]!["file"]!.ToString(),
+                            Resolution = data[i]!["label"]!.ToString(),
+                            Format = VideoType.Container,
+                            FileType = data[i]!["type"]!.ToString()
+                        });
+                    }
+
+                    return list;
                 }
-
-                return list;
             }
-        }
-        catch
-        {
-            // Ignore
-        }
+            catch
+            {
+                // Ignore
+            }
 
-        return list;
+            return list;
+        }
     }
 }

@@ -1,6 +1,7 @@
-﻿namespace Juro.Models.Manga;
-
-public class MangadexChapter : MangaChapter
+﻿namespace Juro.Models.Manga
 {
-    public int Pages { get; set; }
+    public class MangadexChapter : MangaChapter
+    {
+        public int Pages { get; set; }
+    }
 }

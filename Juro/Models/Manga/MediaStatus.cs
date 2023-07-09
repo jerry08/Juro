@@ -1,8 +1,9 @@
-﻿namespace Juro.Models.Manga;
-
-public enum MediaStatus
+﻿namespace Juro.Models.Manga
 {
-    Unknown,
-    Completed,
-    Ongoing
+    public enum MediaStatus
+    {
+        Unknown,
+        Completed,
+        Ongoing
+    }
 }

@@ -6,63 +6,70 @@ using System.Threading.Tasks;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 
-namespace Juro.Providers.Consumet;
-
-/// <summary>
-/// Client for interacting with consumet 9anime.
-/// </summary>
-public class NineAnime
+namespace Juro.Providers.Consumet
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
     /// <summary>
-    /// Initializes an instance of <see cref="NineAnime"/>.
+    /// Client for interacting with consumet 9anime.
     /// </summary>
-    public NineAnime(IHttpClientFactory httpClientFactory)
+    public class NineAnime
     {
-        _httpClientFactory = httpClientFactory;
-    }
+        private readonly IHttpClientFactory _httpClientFactory;
 
-    /// <summary>
-    /// Initializes an instance of <see cref="NineAnime"/>.
-    /// </summary>
-    public NineAnime(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        /// <summary>
+        /// Initializes an instance of <see cref="NineAnime"/>.
+        /// </summary>
+        public NineAnime(IHttpClientFactory httpClientFactory)
+        {
+            _httpClientFactory = httpClientFactory;
+        }
 
-    /// <summary>
-    /// Initializes an instance of <see cref="NineAnime"/>.
-    /// </summary>
-    public NineAnime() : this(Http.ClientProvider)
-    {
-    }
+        /// <summary>
+        /// Initializes an instance of <see cref="NineAnime"/>.
+        /// </summary>
+        public NineAnime(Func<HttpClient> httpClientProvider)
+            : this(new HttpClientFactory(httpClientProvider))
+        {
+        }
 
-    public async ValueTask<string> ExecuteActionAsync(
-        string query,
-        string action,
-        CancellationToken cancellationToken = default)
-    {
-        var http = _httpClientFactory.CreateClient();
+        /// <summary>
+        /// Initializes an instance of <see cref="NineAnime"/>.
+        /// </summary>
+        public NineAnime() : this(Http.ClientProvider)
+        {
+        }
 
-        var response = await http.ExecuteAsync(
-            $"https://api.consumet.org/anime/9anime/helper?query={query}&action={action}",
-            cancellationToken
-        );
+        public async ValueTask<string> ExecuteActionAsync(
+            string query,
+            string action,
+            CancellationToken cancellationToken = default)
+        {
+            var http = _httpClientFactory.CreateClient();
 
-        if (string.IsNullOrWhiteSpace(response))
+            var response = await http.ExecuteAsync(
+                $"https://api.consumet.org/anime/9anime/helper?query={query}&action={action}",
+                cancellationToken
+            );
+
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return string.Empty;
+            }
+
+            var data = JsonNode.Parse(response)!;
+
+            if (action is "vizcloud" or "mcloud")
+            {
+                return data["data"]!.ToString();
+            }
+
+            var vrf = data["url"]?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(vrf))
+            {
+                return vrf!;
+            }
+
             return string.Empty;
-
-        var data = JsonNode.Parse(response)!;
-
-        if (action is "vizcloud" or "mcloud")
-            return data["data"]!.ToString();
-
-        var vrf = data["url"]?.ToString();
-
-        if (!string.IsNullOrWhiteSpace(vrf))
-            return vrf!;
-
-        return string.Empty;
+        }
     }
 }

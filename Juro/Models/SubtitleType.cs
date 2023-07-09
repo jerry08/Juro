@@ -1,8 +1,9 @@
-﻿namespace Juro.Models;
-
-public enum SubtitleType
+﻿namespace Juro.Models
 {
-    VTT,
-    ASS,
-    SRT
+    public enum SubtitleType
+    {
+        VTT,
+        ASS,
+        SRT
+    }
 }

@@ -1,8 +1,9 @@
-﻿namespace Juro.Providers.Aniskip;
-
-public class AniSkipInterval
+﻿namespace Juro.Providers.Aniskip
 {
-    public double StartTime { get; set; }
+    public class AniSkipInterval
+    {
+        public double StartTime { get; set; }
 
-    public double EndTime { get; set; }
+        public double EndTime { get; set; }
+    }
 }

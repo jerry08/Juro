@@ -1,25 +1,26 @@
 ﻿using System.Collections.Generic;
 
-namespace Juro.Models;
-
-public class FileUrl
+namespace Juro.Models
 {
-    public string Url { get; set; } = default!;
-
-    public Dictionary<string, string> Headers { get; set; } = new();
-
-    public FileUrl()
+    public class FileUrl
     {
-    }
+        public string Url { get; set; } = default!;
 
-    public FileUrl(string url)
-    {
-        Url = url;
-    }
+        public Dictionary<string, string> Headers { get; set; } = new();
 
-    public FileUrl(string url, Dictionary<string, string> headers)
-    {
-        Url = url;
-        Headers = headers;
+        public FileUrl()
+        {
+        }
+
+        public FileUrl(string url)
+        {
+            Url = url;
+        }
+
+        public FileUrl(string url, Dictionary<string, string> headers)
+        {
+            Url = url;
+            Headers = headers;
+        }
     }
 }

@@ -1,9 +1,10 @@
-﻿namespace Juro.Models.Videos;
-
-public enum VideoType
+﻿namespace Juro.Models.Videos
 {
-    Container,
-    M3u8,
-    Hls,
-    Dash
+    public enum VideoType
+    {
+        Container,
+        M3u8,
+        Hls,
+        Dash
+    }
 }

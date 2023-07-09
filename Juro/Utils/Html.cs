@@ -1,13 +1,14 @@
 ﻿using HtmlAgilityPack;
 
-namespace Juro.Utils;
-
-internal static class Html
+namespace Juro.Utils
 {
-    public static HtmlDocument Parse(string source)
+    internal static class Html
     {
-        var document = new HtmlDocument();
-        document.LoadHtml(HtmlEntity.DeEntitize(source));
-        return document;
+        public static HtmlDocument Parse(string source)
+        {
+            var document = new HtmlDocument();
+            document.LoadHtml(HtmlEntity.DeEntitize(source));
+            return document;
+        }
     }
 }

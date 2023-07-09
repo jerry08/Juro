@@ -1,8 +1,9 @@
-﻿namespace Juro.Models.Manga.Mangadex;
-
-public class MangadexDescription
+﻿namespace Juro.Models.Manga.Mangadex
 {
-    public string? Language { get; set; }
+    public class MangadexDescription
+    {
+        public string? Language { get; set; }
 
-    public string? Description { get; set; }
+        public string? Description { get; set; }
+    }
 }

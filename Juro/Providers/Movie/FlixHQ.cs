@@ -6,255 +6,295 @@ using System.Net.Http;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 using Juro.Extractors;
 using Juro.Models.Movie;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 
-namespace Juro.Providers.Movie;
-
-public class FlixHQ : MovieParser
+namespace Juro.Providers.Movie
 {
-    private readonly HttpClient _http;
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public override string Name { get; set; } = "FlixHQ";
-
-    public override string BaseUrl => "https://flixhq.to";
-
-    public override string Logo => "https://img.flixhq.to/xxrz/400x400/100/ab/5f/ab5f0e1996cc5b71919e10e910ad593e/ab5f0e1996cc5b71919e10e910ad593e.png";
-
-    /// <summary>
-    /// Initializes an instance of <see cref="FlixHQ"/>.
-    /// </summary>
-    public FlixHQ(IHttpClientFactory httpClientFactory)
+    public class FlixHQ : MovieParser
     {
-        _http = httpClientFactory.CreateClient();
-        _httpClientFactory = httpClientFactory;
-    }
+        private readonly HttpClient _http;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-    /// <summary>
-    /// Initializes an instance of <see cref="FlixHQ"/>.
-    /// </summary>
-    public FlixHQ(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        public override string Name { get; set; } = "FlixHQ";
 
-    /// <summary>
-    /// Initializes an instance of <see cref="FlixHQ"/>.
-    /// </summary>
-    public FlixHQ() : this(Http.ClientProvider)
-    {
-    }
+        public override string BaseUrl => "https://flixhq.to";
 
-    public override Task<List<MovieResult>> SearchAsync(
-        string query,
-        CancellationToken cancellationToken = default)
-    {
-        return SearchAsync(query, 1, cancellationToken);
-    }
+        public override string Logo =>
+            "https://img.flixhq.to/xxrz/400x400/100/ab/5f/ab5f0e1996cc5b71919e10e910ad593e/ab5f0e1996cc5b71919e10e910ad593e.png";
 
-    public async Task<List<MovieResult>> SearchAsync(
-        string query,
-        int page = 1,
-        CancellationToken cancellationToken = default!)
-    {
-        //query = Regex.Replace(query, @"/[\W_]+/g", "-");
-        query = query.Replace(" ", "-");
-
-        var response = await _http.ExecuteAsync($"{BaseUrl}/search/{query}?page={page}", cancellationToken);
-
-        var document = Html.Parse(response);
-
-        var nodes = document.DocumentNode.SelectNodes(".//div[@class='film_list-wrap']/div[@class='flw-item']").ToList();
-
-        var movies = new List<MovieResult>();
-        foreach (var node in nodes)
+        /// <summary>
+        /// Initializes an instance of <see cref="FlixHQ"/>.
+        /// </summary>
+        public FlixHQ(IHttpClientFactory httpClientFactory)
         {
-            var releasedDate = document.DocumentNode.SelectSingleNode(".//div[@class='film-detail']/div[@class='fd-infor']/span[1]")?.InnerText;
-
-            movies.Add(new()
-            {
-                Id = node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value.Substring(1) ?? string.Empty,
-                Title = node.SelectSingleNode(".//div[@class='film-detail']/h2/a")?.Attributes["title"]?.Value,
-                Url = BaseUrl + (node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value),
-                Image = node.SelectSingleNode(".//div[@class='film-poster']/img")?.Attributes["data-src"]?.Value,
-                ReleasedDate = releasedDate,
-                Type = document.DocumentNode.SelectSingleNode(".//div[@class='film-detail']/div[@class='fd-infor']/span[contains(@class, 'float-right')]")?.InnerText?.ToLower() == "movie"
-                    ? TvType.Movie : TvType.TvSeries
-            });
+            _http = httpClientFactory.CreateClient();
+            _httpClientFactory = httpClientFactory;
         }
 
-        return movies;
-    }
-
-    public override async Task<MovieInfo> GetMediaInfoAsync(
-        string mediaId,
-        CancellationToken cancellationToken = default!)
-    {
-        if (string.IsNullOrWhiteSpace(mediaId))
-            return new();
-
-        if (!mediaId.StartsWith(BaseUrl))
-            mediaId = $"{BaseUrl}/{mediaId}";
-
-        var movieInfo = new MovieInfo()
+        /// <summary>
+        /// Initializes an instance of <see cref="FlixHQ"/>.
+        /// </summary>
+        public FlixHQ(Func<HttpClient> httpClientProvider)
+            : this(new HttpClientFactory(httpClientProvider))
         {
-            Id = new Stack<string>(mediaId.Split(new[] { "to/" }, StringSplitOptions.None)).Pop(),
-        };
+        }
 
-        var response = await _http.ExecuteAsync(mediaId, cancellationToken);
-        response = WebUtility.HtmlDecode(response);
-
-        var document = Html.Parse(response);
-
-        var uid = document.DocumentNode.SelectSingleNode(".//div[contains(@class, 'watch_block')]")!.Attributes["data-id"]!.Value;
-        movieInfo.Title = document.DocumentNode.Descendants().FirstOrDefault(x => x?.HasClass("heading-name") == true)?.InnerText;
-        movieInfo.Image = document.DocumentNode.SelectSingleNode(".//div[contains(@class, 'm_i-d-poster')]/div/img")?.Attributes["src"]?.Value;
-        movieInfo.Description = document.DocumentNode.SelectSingleNode(".//div[@class='description']")?.InnerText?.Trim();
-        movieInfo.Type = movieInfo.Id.ToLower().Split('/')[0] == "tv" ? TvType.TvSeries : TvType.Movie;
-        movieInfo.ReleasedDate = document.DocumentNode.SelectNodes(".//div[@class='row-line']")?[2]?.InnerText?.Replace("Released: ", "")?.Trim();
-        movieInfo.Genres = document.DocumentNode.SelectNodes(".//div[@class='row-line'][2]/a").SelectMany(x => x.InnerText.Split(new[] { "&" }, StringSplitOptions.None))
-            .Select(x => x.Trim()).ToList();
-        movieInfo.Casts = document.DocumentNode.SelectNodes(".//div[@class='row-line'][5]/a")
-            .Select(x => x.InnerText.Trim()).ToList();
-        movieInfo.Tags = document.DocumentNode.SelectNodes(".//div[@class='row-line'][6]/h2")
-            .Select(x => x.InnerText.Trim()).ToList();
-        movieInfo.Production = document.DocumentNode.SelectSingleNode(".//div[@class='row-line'][4]/a[2]")?.InnerText?.Trim();
-        movieInfo.Country = document.DocumentNode.SelectSingleNode(".//div[@class='row-line'][1]/a[2]")?.InnerText?.Trim();
-        movieInfo.Duration = document.DocumentNode.SelectSingleNode(".//span[contains(@class, 'item')][3]")?.InnerText?.Trim();
-        movieInfo.Rating = document.DocumentNode.SelectSingleNode(".//span[contains(@class, 'item')][2]")?.InnerText?.Trim();
-
-        if (movieInfo.Type == TvType.TvSeries)
+        /// <summary>
+        /// Initializes an instance of <see cref="FlixHQ"/>.
+        /// </summary>
+        public FlixHQ() : this(Http.ClientProvider)
         {
-            var ajaxReqUrl = GetAjaxReqUrl(uid, "tv", true);
-            response = await _http.ExecuteAsync(ajaxReqUrl, cancellationToken);
+        }
 
-            document = new();
-            document.LoadHtml(response);
+        public override Task<List<MovieResult>> SearchAsync(
+            string query,
+            CancellationToken cancellationToken = default)
+        {
+            return SearchAsync(query, 1, cancellationToken);
+        }
 
-            var seasonsIds = document.DocumentNode.SelectNodes(".//div[contains(@class, 'dropdown-menu')]/a")!.Select(x => x.Attributes["data-id"]!.Value).ToList();
+        public async Task<List<MovieResult>> SearchAsync(
+            string query,
+            int page = 1,
+            CancellationToken cancellationToken = default!)
+        {
+            //query = Regex.Replace(query, @"/[\W_]+/g", "-");
+            query = query.Replace(" ", "-");
 
-            movieInfo.Episodes = new();
+            var response = await _http.ExecuteAsync($"{BaseUrl}/search/{query}?page={page}", cancellationToken);
 
-            var season = 1;
+            var document = Html.Parse(response);
 
-            foreach (var id in seasonsIds)
+            var nodes = document.DocumentNode.SelectNodes(".//div[@class='film_list-wrap']/div[@class='flw-item']")
+                .ToList();
+
+            var movies = new List<MovieResult>();
+            foreach (var node in nodes)
             {
-                ajaxReqUrl = GetAjaxReqUrl(id, "season");
-                response = await _http.ExecuteAsync(ajaxReqUrl, cancellationToken);
-                response = WebUtility.HtmlDecode(response);
+                var releasedDate = document.DocumentNode
+                    .SelectSingleNode(".//div[@class='film-detail']/div[@class='fd-infor']/span[1]")?.InnerText;
 
-                document = new();
+                movies.Add(new MovieResult
+                {
+                    Id = node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value
+                        .Substring(1) ?? string.Empty,
+                    Title = node.SelectSingleNode(".//div[@class='film-detail']/h2/a")?.Attributes["title"]?.Value,
+                    Url = BaseUrl + node.SelectSingleNode(".//div[@class='film-poster']/a")?.Attributes["href"]?.Value,
+                    Image = node.SelectSingleNode(".//div[@class='film-poster']/img")?.Attributes["data-src"]?.Value,
+                    ReleasedDate = releasedDate,
+                    Type = document.DocumentNode
+                        .SelectSingleNode(
+                            ".//div[@class='film-detail']/div[@class='fd-infor']/span[contains(@class, 'float-right')]")
+                        ?.InnerText?.ToLower() == "movie"
+                        ? TvType.Movie
+                        : TvType.TvSeries
+                });
+            }
+
+            return movies;
+        }
+
+        public override async Task<MovieInfo> GetMediaInfoAsync(
+            string mediaId,
+            CancellationToken cancellationToken = default!)
+        {
+            if (string.IsNullOrWhiteSpace(mediaId))
+            {
+                return new MovieInfo();
+            }
+
+            if (!mediaId.StartsWith(BaseUrl))
+            {
+                mediaId = $"{BaseUrl}/{mediaId}";
+            }
+
+            var movieInfo = new MovieInfo()
+            {
+                Id = new Stack<string>(mediaId.Split(new[] { "to/" }, StringSplitOptions.None)).Pop()
+            };
+
+            var response = await _http.ExecuteAsync(mediaId, cancellationToken);
+            response = WebUtility.HtmlDecode(response);
+
+            var document = Html.Parse(response);
+
+            var uid =
+                document.DocumentNode.SelectSingleNode(".//div[contains(@class, 'watch_block')]")!
+                    .Attributes["data-id"]!.Value;
+            movieInfo.Title = document.DocumentNode.Descendants()
+                .FirstOrDefault(x => x?.HasClass("heading-name") == true)?.InnerText;
+            movieInfo.Image = document.DocumentNode.SelectSingleNode(".//div[contains(@class, 'm_i-d-poster')]/div/img")
+                ?.Attributes["src"]?.Value;
+            movieInfo.Description = document.DocumentNode.SelectSingleNode(".//div[@class='description']")?.InnerText
+                ?.Trim();
+            movieInfo.Type = movieInfo.Id.ToLower().Split('/')[0] == "tv" ? TvType.TvSeries : TvType.Movie;
+            movieInfo.ReleasedDate = document.DocumentNode.SelectNodes(".//div[@class='row-line']")?[2]?.InnerText
+                ?.Replace("Released: ", "")?.Trim();
+            movieInfo.Genres = document.DocumentNode.SelectNodes(".//div[@class='row-line'][2]/a")
+                .SelectMany(x => x.InnerText.Split(new[] { "&" }, StringSplitOptions.None))
+                .Select(x => x.Trim()).ToList();
+            movieInfo.Casts = document.DocumentNode.SelectNodes(".//div[@class='row-line'][5]/a")
+                .Select(x => x.InnerText.Trim()).ToList();
+            movieInfo.Tags = document.DocumentNode.SelectNodes(".//div[@class='row-line'][6]/h2")
+                .Select(x => x.InnerText.Trim()).ToList();
+            movieInfo.Production = document.DocumentNode.SelectSingleNode(".//div[@class='row-line'][4]/a[2]")
+                ?.InnerText?.Trim();
+            movieInfo.Country = document.DocumentNode.SelectSingleNode(".//div[@class='row-line'][1]/a[2]")?.InnerText
+                ?.Trim();
+            movieInfo.Duration = document.DocumentNode.SelectSingleNode(".//span[contains(@class, 'item')][3]")
+                ?.InnerText?.Trim();
+            movieInfo.Rating = document.DocumentNode.SelectSingleNode(".//span[contains(@class, 'item')][2]")?.InnerText
+                ?.Trim();
+
+            if (movieInfo.Type == TvType.TvSeries)
+            {
+                var ajaxReqUrl = GetAjaxReqUrl(uid, "tv", true);
+                response = await _http.ExecuteAsync(ajaxReqUrl, cancellationToken);
+
+                document = new HtmlDocument();
                 document.LoadHtml(response);
 
-                var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
+                var seasonsIds = document.DocumentNode.SelectNodes(".//div[contains(@class, 'dropdown-menu')]/a")!
+                    .Select(x => x.Attributes["data-id"]!.Value).ToList();
 
-                for (var i = 0; i < nodes.Count; i++)
+                movieInfo.Episodes = new List<Episode>();
+
+                var season = 1;
+
+                foreach (var id in seasonsIds)
                 {
-                    movieInfo.Episodes.Add(new()
+                    ajaxReqUrl = GetAjaxReqUrl(id, "season");
+                    response = await _http.ExecuteAsync(ajaxReqUrl, cancellationToken);
+                    response = WebUtility.HtmlDecode(response);
+
+                    document = new HtmlDocument();
+                    document.LoadHtml(response);
+
+                    var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
+
+                    for (var i = 0; i < nodes.Count; i++)
                     {
-                        Id = nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1],
-                        Title = nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1],
-                        Number = Convert.ToInt32(nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.Split(':')[0].Substring(3).Trim()),
-                        Season = season,
-                        Url = $"{BaseUrl}/ajax/v2/episode/servers/{nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1]}"
-                    });
-                }
+                        movieInfo.Episodes.Add(new Episode
+                        {
+                            Id = nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1],
+                            Title = nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1],
+                            Number = Convert.ToInt32(
+                                nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.Split(':')[0].Substring(3)
+                                    .Trim()),
+                            Season = season,
+                            Url =
+                                $"{BaseUrl}/ajax/v2/episode/servers/{nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1]}"
+                        });
+                    }
 
-                season++;
+                    season++;
+                }
             }
-        }
-        else
-        {
-            movieInfo.Episodes = new()
+            else
             {
-                new()
+                movieInfo.Episodes = new List<Episode>
                 {
-                    Id = uid,
-                    Title = movieInfo.Title + " Movie",
-                    Url = $"{BaseUrl}/ajax/movie/episodes/{uid}"
-                }
-            };
+                    new Episode
+                    {
+                        Id = uid,
+                        Title = movieInfo.Title + " Movie",
+                        Url = $"{BaseUrl}/ajax/movie/episodes/{uid}"
+                    }
+                };
+            }
+
+            return movieInfo;
         }
 
-        return movieInfo;
-    }
-
-    private string GetAjaxReqUrl(string id, string type, bool isSeasons = false)
-    {
-        return $"{BaseUrl}/ajax/{(type == "movie" ? type : $"v2/{type}")}/{(isSeasons ? "seasons" : "episodes")}/{id}";
-    }
-
-    public override async Task<List<EpisodeServer>> GetEpisodeServersAsync(
-        string episodeId,
-        string mediaId,
-        CancellationToken cancellationToken = default!)
-    {
-        if (!episodeId.StartsWith(BaseUrl + "/ajax") && !mediaId.Contains("movie"))
-            episodeId = $"{BaseUrl}/ajax/v2/episode/servers/{episodeId}";
-        else episodeId = $"{BaseUrl}/ajax/movie/episodes/{episodeId}";
-
-        var servers = new List<EpisodeServer>();
-
-        var response = await _http.ExecuteAsync(episodeId, cancellationToken);
-
-        var document = Html.Parse(response);
-
-        var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
-
-        for (var i = 0; i < nodes.Count; i++)
+        private string GetAjaxReqUrl(string id, string type, bool isSeasons = false)
         {
-            servers.Add(new()
-            {
-                Name = mediaId.Contains("movie")
-                    ? nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.ToLower()
-                    : nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.Substring(6).Trim().ToLower(),
-                Url = $"{BaseUrl}/{mediaId}.{(!mediaId.Contains("movie") ? nodes[i].SelectSingleNode(".//a").Attributes["data-id"].Value : nodes[i].SelectSingleNode(".//a").Attributes["data-linkid"].Value)}"
-                    .Replace(!mediaId.Contains("movie") ? "/tv/" : "/movie/", !mediaId.Contains("movie") ? "/watch-tv/" : "/watch-movie/")
-            });
+            return
+                $"{BaseUrl}/ajax/{(type == "movie" ? type : $"v2/{type}")}/{(isSeasons ? "seasons" : "episodes")}/{id}";
         }
 
-        return servers;
-    }
-
-    public override async Task<List<VideoSource>> GetEpisodeSourcesAsync(
-        string episodeId,
-        string mediaId,
-        StreamingServers server = StreamingServers.UpCloud,
-        CancellationToken cancellationToken = default!)
-    {
-        var serverUrl = episodeId;
-
-        if (episodeId.StartsWith("http"))
+        public override async Task<List<EpisodeServer>> GetEpisodeServersAsync(
+            string episodeId,
+            string mediaId,
+            CancellationToken cancellationToken = default!)
         {
-            return server switch
+            if (!episodeId.StartsWith(BaseUrl + "/ajax") && !mediaId.Contains("movie"))
             {
-                StreamingServers.MixDrop => new(),
-                StreamingServers.UpCloud => await new VidCloudExtractor(_httpClientFactory)
-                    .ExtractAsync(serverUrl, cancellationToken),
-                StreamingServers.VidCloud => new(),
-                _ => await new VidCloudExtractor(_httpClientFactory)
-                    .ExtractAsync(serverUrl, cancellationToken),
-            };
+                episodeId = $"{BaseUrl}/ajax/v2/episode/servers/{episodeId}";
+            }
+            else
+            {
+                episodeId = $"{BaseUrl}/ajax/movie/episodes/{episodeId}";
+            }
+
+            var servers = new List<EpisodeServer>();
+
+            var response = await _http.ExecuteAsync(episodeId, cancellationToken);
+
+            var document = Html.Parse(response);
+
+            var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
+
+            for (var i = 0; i < nodes.Count; i++)
+            {
+                servers.Add(new EpisodeServer
+                {
+                    Name = mediaId.Contains("movie")
+                        ? nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.ToLower()
+                        : nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.Substring(6).Trim().ToLower(),
+                    Url =
+                        $"{BaseUrl}/{mediaId}.{(!mediaId.Contains("movie") ? nodes[i].SelectSingleNode(".//a").Attributes["data-id"].Value : nodes[i].SelectSingleNode(".//a").Attributes["data-linkid"].Value)}"
+                            .Replace(!mediaId.Contains("movie") ? "/tv/" : "/movie/",
+                                !mediaId.Contains("movie") ? "/watch-tv/" : "/watch-movie/")
+                });
+            }
+
+            return servers;
         }
 
-        var servers = await GetEpisodeServersAsync(episodeId, mediaId, cancellationToken);
+        public override async Task<List<VideoSource>> GetEpisodeSourcesAsync(
+            string episodeId,
+            string mediaId,
+            StreamingServers server = StreamingServers.UpCloud,
+            CancellationToken cancellationToken = default!)
+        {
+            var serverUrl = episodeId;
 
-        var serverIndex = servers.FindIndex(x => x.Name.ToLower() == Enum.GetName(typeof(StreamingServers), server)!.ToLower());
+            if (episodeId.StartsWith("http"))
+            {
+                return server switch
+                {
+                    StreamingServers.MixDrop => new List<VideoSource>(),
+                    StreamingServers.UpCloud => await new VidCloudExtractor(_httpClientFactory)
+                        .ExtractAsync(serverUrl, cancellationToken),
+                    StreamingServers.VidCloud => new List<VideoSource>(),
+                    _ => await new VidCloudExtractor(_httpClientFactory)
+                        .ExtractAsync(serverUrl, cancellationToken)
+                };
+            }
 
-        if (serverIndex == -1)
-            throw new Exception($"Server {server} not found");
+            var servers = await GetEpisodeServersAsync(episodeId, mediaId, cancellationToken);
 
-        //server = (StreamingServers)Enum.Parse(typeof(StreamingServers), episodeServer.Name);
+            var serverIndex = servers.FindIndex(x =>
+                x.Name.ToLower() == Enum.GetName(typeof(StreamingServers), server)!.ToLower());
 
-        var url = $"{BaseUrl}/ajax/get_link/{servers[serverIndex].Url.Split('.').LastOrDefault()}";
-        var response = await _http.ExecuteAsync(url, cancellationToken);
+            if (serverIndex == -1)
+            {
+                throw new Exception($"Server {server} not found");
+            }
 
-        serverUrl = JsonNode.Parse(response)!["link"]!.ToString();
+            //server = (StreamingServers)Enum.Parse(typeof(StreamingServers), episodeServer.Name);
 
-        return await GetEpisodeSourcesAsync(serverUrl, mediaId, server, cancellationToken);
+            var url = $"{BaseUrl}/ajax/get_link/{servers[serverIndex].Url.Split('.').LastOrDefault()}";
+            var response = await _http.ExecuteAsync(url, cancellationToken);
+
+            serverUrl = JsonNode.Parse(response)!["link"]!.ToString();
+
+            return await GetEpisodeSourcesAsync(serverUrl, mediaId, server, cancellationToken);
+        }
     }
 }
