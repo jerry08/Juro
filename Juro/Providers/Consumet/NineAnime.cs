@@ -46,7 +46,7 @@ namespace Juro.Providers.Consumet
             var http = _httpClientFactory.CreateClient();
 
             var response = await http.ExecuteAsync(
-                $"https://api.consumet.org/anime/9anime/helper?query={query}&action={action}",
+                $"https://9anime.eltik.net/vrf?query={query}&action={action}&apikey=chayce",
                 cancellationToken
             );
 

@@ -71,7 +71,7 @@ namespace Juro.Providers.Anime
             );
 
             //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-            var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
+            var url = $"{BaseUrl}/ajax/anime/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
             //url = $"{url}&sort=${filters.sort}&{vrf}&page={page}";
             //url = $"{url}&{vrf}";
 
@@ -83,8 +83,17 @@ namespace Juro.Providers.Anime
                 },
                 cancellationToken
             );
+            string? html = null;
+            if (!string.IsNullOrWhiteSpace(response))
+            {
+                var data = JsonNode.Parse(response)!;
 
-            return ParseAnimeSearchResponse(response);
+                html = data["result"]?["html"]?.ToString();
+            }
+            if (string.IsNullOrWhiteSpace(html))
+                return new();
+            
+            return ParseAnimeSearchResponse(html);
         }
 
         /// <inheritdoc cref="SearchAsync"/>
@@ -163,6 +172,7 @@ namespace Juro.Providers.Anime
 
         private List<IAnimeInfo> ParseAnimeSearchResponse(string? response)
         {
+            Console.WriteLine(response);
             var list = new List<IAnimeInfo>();
 
             if (string.IsNullOrWhiteSpace(response))
