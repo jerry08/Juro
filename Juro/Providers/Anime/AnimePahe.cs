@@ -29,10 +29,12 @@ namespace Juro.Providers.Anime
         public string Name => "AnimePahe";
 
         public string Language => "en";
-
+        
         public bool IsDubAvailableSeparately => false;
 
         public string BaseUrl => "https://animepahe.com";
+
+        private bool UseId { get; set; } = false;
 
         /// <summary>
         /// Initializes an instance of <see cref="AnimePahe"/>.
@@ -57,6 +59,17 @@ namespace Juro.Providers.Anime
         public AnimePahe() : this(Http.ClientProvider)
         {
         }
+        
+        /// <summary>
+        /// Initializes an instance of <see cref="AnimePahe"/>.
+        /// Using Session will return the actual id of animePahe instead of the session id.
+        /// This will prevent other methods other than search to work!
+        /// </summary>
+        public AnimePahe(bool useId) : this(Http.ClientProvider)
+        {
+            UseId = useId;
+        }
+
 
         /// <inheritdoc />
         public async ValueTask<List<IAnimeInfo>> SearchAsync(
@@ -83,7 +96,7 @@ namespace Juro.Providers.Anime
 
             return data.AsArray().Select(x => (IAnimeInfo)new AnimePaheInfo()
             {
-                Id = x!["session"]!.ToString(),
+                Id = UseId ? x!["id"]!.ToString() : x!["session"]!.ToString(),
                 Title = x["title"]!.ToString(),
                 Type = x["type"]!.ToString(),
                 Episodes = int.TryParse(x["episodes"]?.ToString(), out var episodes) ? episodes : 0,
