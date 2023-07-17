@@ -62,6 +62,13 @@ public class AnimePahe : IAnimeProvider
     public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default)
+        => await SearchAsync(query, false, cancellationToken);
+
+    /// <inheritdoc cref="SearchAsync" />
+    public async ValueTask<List<IAnimeInfo>> SearchAsync(
+        string query,
+        bool useId,
+        CancellationToken cancellationToken = default)
     {
         var animes = new List<IAnimeInfo>();
 
@@ -79,7 +86,7 @@ public class AnimePahe : IAnimeProvider
 
         return data.AsArray().Select(x => (IAnimeInfo)new AnimePaheInfo()
         {
-            Id = x!["session"]!.ToString(),
+            Id = useId ? x!["id"]!.ToString() : x!["session"]!.ToString(),
             Title = x["title"]!.ToString(),
             Type = x["type"]!.ToString(),
             Episodes = int.TryParse(x["episodes"]?.ToString(), out var episodes) ? episodes : 0,
@@ -89,7 +96,6 @@ public class AnimePahe : IAnimeProvider
             Score = int.TryParse(x["score"]?.ToString(), out var score) ? score : 0,
             Image = x["poster"]!.ToString(),
             Site = AnimeSites.AnimePahe,
-
         }).ToList();
     }
 
@@ -201,7 +207,7 @@ public class AnimePahe : IAnimeProvider
 
         var data = JsonNode.Parse(response);
 
-        Func<JsonNode?, Episode> epsSelector = (JsonNode? el) =>
+        Episode epsSelector(JsonNode? el)
         {
             var link = $"{BaseUrl}/play/{id}/{el!["session"]}";
 
@@ -217,7 +223,7 @@ public class AnimePahe : IAnimeProvider
                 Link = link,
                 Duration = (float)TimeSpan.Parse(el["duration"]!.ToString()).TotalMilliseconds
             };
-        };
+        }
 
         list.AddRange(data!["data"]!.AsArray().Select(epsSelector));
 

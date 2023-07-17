@@ -7,13 +7,13 @@ using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using Juro.Clients;
 using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
+using Juro.Utils.Tasks;
 
 namespace Juro.Providers.Anime;
 
@@ -24,7 +24,6 @@ public class NineAnime : IAnimeProvider
 {
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ConsumetClient _consumet;
 
     public string Name => "9anime";
 
@@ -41,7 +40,6 @@ public class NineAnime : IAnimeProvider
     {
         _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
-        _consumet = new(httpClientFactory);
     }
 
     /// <summary>
@@ -64,14 +62,11 @@ public class NineAnime : IAnimeProvider
         string query,
         CancellationToken cancellationToken = default)
     {
-        var vrf = await _consumet.NineAnime.ExecuteActionAsync(
-            Uri.EscapeDataString(query),
-            "searchVrf",
-            cancellationToken
-        );
+        var vrf = await EncodeVrfAsync(Uri.EscapeDataString(query), cancellationToken);
 
         //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-        var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
+        //var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
+        var url = $"{BaseUrl}/ajax/anime/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
         //url = $"{url}&sort=${filters.sort}&{vrf}&page={page}";
         //url = $"{url}&{vrf}";
 
@@ -165,6 +160,10 @@ public class NineAnime : IAnimeProvider
 
         if (string.IsNullOrWhiteSpace(response))
             return list;
+
+        var data = JsonNode.Parse(response!)!;
+
+        response = data["result"]?["html"]?.ToString();
 
         var document = Html.Parse(response!);
         var nodes = document.DocumentNode.SelectNodes("//a[contains(@class, 'item')]");
@@ -272,17 +271,13 @@ public class NineAnime : IAnimeProvider
         var dataId = document.DocumentNode
             .SelectNodes(".//div[@data-id]")!.FirstOrDefault()!.Attributes["data-id"].Value;
 
-        var vrf = await _consumet.NineAnime.ExecuteActionAsync(
-            dataId,
-            "vrf",
-            cancellationToken
-        );
+        var vrf = await EncodeVrfAsync(dataId, cancellationToken);
 
         var response2 = await _http.ExecuteAsync(
             $"{BaseUrl}/ajax/episode/list/{dataId}?vrf={vrf}",
             new Dictionary<string, string>()
             {
-                ["url"] = $"{BaseUrl}{id}"
+                ["url"] = BaseUrl + id
             },
             cancellationToken
         );
@@ -314,11 +309,7 @@ public class NineAnime : IAnimeProvider
         string episodeId,
         CancellationToken cancellationToken = default)
     {
-        var vrf = await _consumet.NineAnime.ExecuteActionAsync(
-            episodeId,
-            "vrf",
-            cancellationToken
-        );
+        var vrf = await EncodeVrfAsync(episodeId, cancellationToken);
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}/ajax/server/list/{episodeId}?vrf={vrf}",
@@ -331,26 +322,55 @@ public class NineAnime : IAnimeProvider
 
         var list = new List<VideoServer>();
 
-        foreach (var node in document.DocumentNode.SelectNodes(".//div[@class='type']/ul/li"))
-        {
-            var serverId = node.Attributes["data-link-id"].Value;
+        var nodes = document.DocumentNode.SelectNodes(".//div[@class='type']/ul/li")?.ToList();
+        if (nodes is null)
+            return list;
 
-            list.Add(new()
-            {
-                Name = node.InnerText,
-                Embed = new(serverId)
-            });
-        }
+        var functions = Enumerable.Range(0, nodes.Count).Select(i =>
+            (Func<Task<VideoServer>>)(async () => await GetVideoServerAsync(nodes[i])
+        ));
+
+        list.AddRange(await TaskEx.Run(functions, 10));
 
         return list;
+    }
+
+    private async ValueTask<VideoServer> GetVideoServerAsync(
+        HtmlNode node,
+        CancellationToken cancellationToken = default)
+    {
+        var serverId = node.Attributes["data-link-id"].Value;
+
+        var vrf2 = await EncodeVrfAsync(serverId, cancellationToken);
+
+        var response3 = await _http.ExecuteAsync(
+            $"{BaseUrl}/ajax/server/{serverId}?vrf={vrf2}",
+            cancellationToken
+        );
+
+        var encodedStreamUrl = JsonNode.Parse(response3)?["result"]?["url"]?.ToString();
+
+        var realLink = await DecodeVrfAsync(encodedStreamUrl!, cancellationToken);
+
+        return new()
+        {
+            Name = node.InnerText,
+            Embed = new(realLink)
+            {
+                Headers = new()
+                {
+                    ["Referer"] = BaseUrl
+                }
+            }
+        };
     }
 
     public IVideoExtractor? GetVideoExtractor(VideoServer server)
     {
         return server.Name.ToLower() switch
         {
-            "vidstream" => new VizCloudExtractor(_httpClientFactory, "vizcloud"),
-            "mycloud" => new VizCloudExtractor(_httpClientFactory, "mcloud"),
+            "vidstream" => new NineAnimeExtractor(_httpClientFactory, "VidStream"),
+            "mycloud" => new NineAnimeExtractor(_httpClientFactory, "MyCloud"),
             "filemoon" => new FilemoonExtractor(_httpClientFactory),
             "streamtape" => new StreamTapeExtractor(_httpClientFactory),
             "mp4upload" => new Mp4uploadExtractor(_httpClientFactory),
@@ -363,25 +383,6 @@ public class NineAnime : IAnimeProvider
         VideoServer server,
         CancellationToken cancellationToken = default)
     {
-        var vrf = await _consumet.NineAnime.ExecuteActionAsync(
-            server.Embed.Url,
-            "rawVrf",
-            cancellationToken
-        );
-
-        var response = await _http.ExecuteAsync(
-            $"{BaseUrl}/ajax/server/{server.Embed.Url}?vrf={vrf}",
-            cancellationToken
-        );
-
-        var encryptedUrl = JsonNode.Parse(response)!["result"]!["url"]!.ToString();
-
-        server.Embed.Url = await _consumet.NineAnime.ExecuteActionAsync(
-            encryptedUrl,
-            "decrypt",
-            cancellationToken
-        );
-
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
             return new();
 
@@ -390,5 +391,59 @@ public class NineAnime : IAnimeProvider
             return new();
 
         return await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
+    }
+
+    /// <summary>
+    /// Encodes a string by making an http request to <see href="https://9anime.eltik.net"/>.
+    /// </summary>
+    /// <param name="query">The string to encode.</param>
+    /// <returns>An encoded string.</returns>
+    public async ValueTask<string> EncodeVrfAsync(
+        string query,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.ExecuteAsync(
+            $"https://9anime.eltik.net/vrf?query={query}&apikey=chayce",
+            cancellationToken
+        );
+
+        if (string.IsNullOrWhiteSpace(response))
+            return string.Empty;
+
+        var data = JsonNode.Parse(response)!;
+
+        var vrf = data["url"]?.ToString();
+
+        if (!string.IsNullOrWhiteSpace(vrf))
+            return vrf!;
+
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Decodes a string by making an http request to <see href="https://9anime.eltik.net"/>.
+    /// </summary>
+    /// <param name="query">The string to decode.</param>
+    /// <returns>A decoded string.</returns>
+    public async ValueTask<string> DecodeVrfAsync(
+        string query,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _http.ExecuteAsync(
+            $"https://9anime.eltik.net/decrypt?query={query}&apikey=chayce",
+            cancellationToken
+        );
+
+        if (string.IsNullOrWhiteSpace(response))
+            return string.Empty;
+
+        var data = JsonNode.Parse(response)!;
+
+        var vrf = data["url"]?.ToString();
+
+        if (!string.IsNullOrWhiteSpace(vrf))
+            return vrf!;
+
+        return string.Empty;
     }
 }
