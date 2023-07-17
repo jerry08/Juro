@@ -11,7 +11,7 @@ using Juro.Utils.Extensions;
 namespace Juro.Extractors;
 
 /// <summary>
-/// Extractor for Dood.
+/// Extractor for FPlayer.
 /// </summary>
 public class FPlayerExtractor : IVideoExtractor
 {
