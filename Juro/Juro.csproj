@@ -26,9 +26,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.49" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.50" />
     <PackageReference Include="Nager.PublicSuffix" Version="2.4.0" />
-    <PackageReference Include="System.Text.Json" Version="7.0.2" Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'" />
+    <PackageReference Include="System.Text.Json" Version="7.0.3" Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'" />
   </ItemGroup>
 
