@@ -108,9 +108,7 @@ public class NineAnime : IAnimeProvider
             $"{BaseUrl}/filter?sort=recently_updated&page={page}",
             cancellationToken
         );
-        var jDoc = JsonDocument.Parse(response);
-        var root = jDoc.RootElement;
-        var html = root.GetProperty("result").GetProperty("html").GetString();
+
         return ParseAnimeResponse(response);
     }
 
@@ -327,7 +325,8 @@ public class NineAnime : IAnimeProvider
             return list;
 
         var functions = Enumerable.Range(0, nodes.Count).Select(i =>
-            (Func<Task<VideoServer>>)(async () => await GetVideoServerAsync(nodes[i])
+            (Func<Task<VideoServer>>)(async ()
+                => await GetVideoServerAsync(nodes[i], cancellationToken)
         ));
 
         list.AddRange(await TaskEx.Run(functions, 10));
