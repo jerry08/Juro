@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Httpz;
 using Juro.Clients;
 using Juro.Providers.Anime;
+using Juro.Providers.Anime.Indonesian;
 using Juro.Providers.Aniskip;
 using Juro.Providers.Manga;
 
@@ -28,13 +29,17 @@ internal class Program
 
         var allProviders = client.GetAllProviders();
 
-        var provider = new Zoro();
+        var provider = new Aniwatch();
 
-        var animes = await provider.SearchAsync("spy x family");
+        var test = await provider.GetPopularAsync();
+
+        //var test = await provider.SearchByGenreAsync("action");
+        //var animes = await provider.SearchAsync("spy x family");
+        var animes = await provider.SearchAsync("anohana");
         var animeInfo = await provider.GetAnimeInfoAsync(animes[0].Id);
         var episodes = await provider.GetEpisodesAsync(animes[0].Id);
         var videoServers = await provider.GetVideoServersAsync(episodes[0].Id);
-        var videos = await provider.GetVideosAsync(videoServers[3]);
+        var videos = await provider.GetVideosAsync(videoServers[0]);
 
         var filePath = @"D:\Downloads\svs.mp4";
 

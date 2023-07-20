@@ -11,9 +11,9 @@ public enum AnimeSites
     GogoAnime,
 
     /// <summary>
-    /// Parses anime and information from Zoro.
+    /// Parses anime and information from Aniwatch.
     /// </summary>
-    Zoro,
+    Aniwatch,
 
     /// <summary>
     /// Parses anime and information from AnimePahe.

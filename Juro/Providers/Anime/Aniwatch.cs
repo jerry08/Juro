@@ -6,54 +6,56 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using HtmlAgilityPack;
 using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
 using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
+using Juro.Utils.Tasks;
 using Nager.PublicSuffix;
 
 namespace Juro.Providers.Anime;
 
 /// <summary>
-/// Client for interacting with Zoro.
+/// Client for interacting with Aniwatch.
 /// </summary>
-public class Zoro : IAnimeProvider
+public class Aniwatch : IAnimeProvider
 {
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public string Name => "Zoro";
+    public string Name => "Aniwatch";
 
     public string Language => "en";
 
     public bool IsDubAvailableSeparately => true;
 
-    public string BaseUrl => "https://zoro.to";
-    public string AjaxUrl => "https://zoro.to/ajax";
+    public string BaseUrl => "https://aniwatch.to/";
+    public string AjaxUrl => "https://aniwatch.to//ajax";
 
     /// <summary>
-    /// Initializes an instance of <see cref="Zoro"/>.
+    /// Initializes an instance of <see cref="Aniwatch"/>.
     /// </summary>
-    public Zoro(IHttpClientFactory httpClientFactory)
+    public Aniwatch(IHttpClientFactory httpClientFactory)
     {
         _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="Zoro"/>.
+    /// Initializes an instance of <see cref="Aniwatch"/>.
     /// </summary>
-    public Zoro(Func<HttpClient> httpClientProvider)
+    public Aniwatch(Func<HttpClient> httpClientProvider)
         : this(new HttpClientFactory(httpClientProvider))
     {
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="Zoro"/>.
+    /// Initializes an instance of <see cref="Aniwatch"/>.
     /// </summary>
-    public Zoro() : this(Http.ClientProvider)
+    public Aniwatch() : this(Http.ClientProvider)
     {
     }
 
@@ -68,9 +70,10 @@ public class Zoro : IAnimeProvider
             $"{AjaxUrl}/search/suggest?keyword={query}",
             cancellationToken
         );
-        var jDoc = JsonDocument.Parse(response);
-        var root = jDoc.RootElement;
-        var html = root.GetProperty("html").GetString()!;
+
+        var jsonDocument = JsonDocument.Parse(response);
+        var html = jsonDocument.RootElement.GetProperty("html").GetString()!;
+
         return ParseAnimeSearchResponse(html);
     }
 
@@ -155,7 +158,7 @@ public class Zoro : IAnimeProvider
             animes.Add(new AnimeInfo()
             {
                 Id = category,
-                Site = AnimeSites.Zoro,
+                Site = AnimeSites.Aniwatch,
                 Image = img,
                 Title = title,
                 Category = category,
@@ -184,7 +187,7 @@ public class Zoro : IAnimeProvider
             select new AnimeInfo()
             {
                 Id = href,
-                Site = AnimeSites.Zoro,
+                Site = AnimeSites.Aniwatch,
                 Image = imgUrl,
                 Title = title,
                 Category = href,
@@ -213,7 +216,7 @@ public class Zoro : IAnimeProvider
         var anime = new AnimeInfo()
         {
             Id = id,
-            Site = AnimeSites.Zoro
+            Site = AnimeSites.Aniwatch
         };
 
         if (string.IsNullOrWhiteSpace(response))
@@ -341,40 +344,54 @@ public class Zoro : IAnimeProvider
         var nodes = doc.DocumentNode.SelectNodes(".//div[contains(@class, 'server-item')]")
             .ToList();
 
-        var videoServers = new List<VideoServer>();
+        var list = new List<VideoServer>();
 
-        for (var i = 0; i < nodes.Count; i++)
+        var functions = Enumerable.Range(0, nodes.Count).Select(i =>
+            (Func<Task<VideoServer?>>)(async ()
+                => await GetVideoServerAsync(nodes[i], subDub, cancellationToken)
+        ));
+
+        var results = (await TaskEx.Run(functions, 10))
+            .Where(x => x is not null)
+            .Select(x => x!);
+
+        list.AddRange(results);
+
+        return list;
+    }
+
+    private async ValueTask<VideoServer?> GetVideoServerAsync(
+        HtmlNode node,
+        SubDub subDub,
+        CancellationToken cancellationToken = default)
+    {
+        var dataId = node.Attributes["data-id"].Value;
+        var dataType = node.Attributes["data-type"].Value.ToLower().Trim();
+        var serverName = $"({dataType.ToUpper()}) {node.InnerText.Trim()}";
+
+        if (subDub != SubDub.All)
         {
-            dataId = nodes[i].Attributes["data-id"].Value;
-            var dataType = nodes[i].Attributes["data-type"].Value.ToLower().Trim();
-            var serverName = $"({dataType.ToUpper()}) {nodes[i].InnerText.Trim()}";
+            if (dataType == "dub" && subDub != SubDub.Dub)
+                return null;
 
-            if (subDub != SubDub.All)
-            {
-                if (dataType == "dub" && subDub != SubDub.Dub)
-                    continue;
-
-                if (dataType == "sub" && subDub != SubDub.Sub)
-                    continue;
-            }
-
-            url = $"https://zoro.to/ajax/v2/episode/sources?id={dataId}";
-            response = await _http.ExecuteAsync(url, cancellationToken);
-
-            data = JsonNode.Parse(response)!;
-            //var type = data["type"]!.ToString();
-            //var server = data["server"]!.ToString();
-
-            var link = data["link"]!.ToString();
-            var embedHeaders = new Dictionary<string, string>()
-            {
-                { "Referer", BaseUrl + "/" }
-            };
-
-            videoServers.Add(new VideoServer(serverName, new FileUrl(link, embedHeaders)));
+            if (dataType == "sub" && subDub != SubDub.Sub)
+                return null;
         }
 
-        return videoServers;
+        var url = $"https://aniwatch.to/ajax/v2/episode/sources?id={dataId}";
+        var response = await _http.ExecuteAsync(url, cancellationToken);
+
+        var data = JsonNode.Parse(response)!;
+        //var type = data["type"]!.ToString();
+        //var server = data["server"]!.ToString();
+
+        var link = data["link"]!.ToString();
+        var embedHeaders = new Dictionary<string, string>()
+        {
+            { "Referer", BaseUrl + "/" }
+        };
+
+        return new VideoServer(serverName, new FileUrl(link, embedHeaders));
     }
 
     public IVideoExtractor? GetVideoExtractor(VideoServer server)
