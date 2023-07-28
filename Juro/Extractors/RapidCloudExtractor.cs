@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,10 +21,7 @@ namespace Juro.Extractors;
 /// </summary>
 public class RapidCloudExtractor : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    private readonly string _fallbackKey = "c1d17096f2ca11b7";
-    private readonly string _host = "https://rapid-cloud.co";
+    private readonly HttpClient _http;
 
     /// <inheritdoc />
     public string ServerName => "RapidCloud";
@@ -29,7 +31,7 @@ public class RapidCloudExtractor : IVideoExtractor
     /// </summary>
     public RapidCloudExtractor(IHttpClientFactory httpClientFactory)
     {
-        _httpClientFactory = httpClientFactory;
+        _http = httpClientFactory.CreateClient();
     }
 
     /// <summary>
@@ -52,12 +54,16 @@ public class RapidCloudExtractor : IVideoExtractor
         string url,
         CancellationToken cancellationToken = default)
     {
-        var http = _httpClientFactory.CreateClient();
-
         var id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
 
-        var response = await http.ExecuteAsync(
-            $"{_host}/ajax/embed-6/getSources?id={id}",
+        var host = new Uri(url).Host;
+
+        var decryptKey = await DecryptKeyAsync(cancellationToken);
+        if (decryptKey.Count == 0)
+            return new();
+
+        var response = await _http.ExecuteAsync(
+            $"https://{host}/ajax/embed-6-v2/getSources?id={id}",
             cancellationToken
         );
 
@@ -65,14 +71,6 @@ public class RapidCloudExtractor : IVideoExtractor
         {
             { "X-Requested-With", "XMLHttpRequest" }
         };
-
-        var decryptKey = await http.ExecuteAsync(
-            "https://raw.githubusercontent.com/enimax-anime/key/e6/key.txt",
-            cancellationToken
-        );
-
-        if (string.IsNullOrWhiteSpace(decryptKey))
-            decryptKey = _fallbackKey;
 
         var data = JsonNode.Parse(response);
 
@@ -85,7 +83,23 @@ public class RapidCloudExtractor : IVideoExtractor
         {
             try
             {
-                sources = AesHelper.Decrypt(sources!, decryptKey);
+                sources = $" {sources} ";
+
+                var sourcesArray = sources!.Select(x => x.ToString()).ToList();
+                var key = "";
+                foreach (var index in decryptKey)
+                {
+                    for (var i = (index[0] + 1); i < (index[1] + 1); i++)
+                    {
+                        key += sourcesArray[i];
+                        sourcesArray[i] = "";
+                    }
+                }
+
+                sources = string.Concat(sourcesArray);
+                sources = sources.Trim();
+
+                sources = Decrypt(sources, key);
             }
             catch
             {
@@ -126,5 +140,70 @@ public class RapidCloudExtractor : IVideoExtractor
                 Subtitles = subtitles
             }
         };
+    }
+
+    private async ValueTask<List<List<int>>> DecryptKeyAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _http.ExecuteAsync(
+            "https://raw.githubusercontent.com/enimax-anime/key/e0/key.txt",
+            cancellationToken
+        );
+
+        if (string.IsNullOrEmpty(response))
+            return new();
+
+        return JsonSerializer.Deserialize<List<List<int>>>(response) ?? new();
+    }
+
+    private static byte[] Md5(byte[] inputBytes)
+        => MD5.Create().ComputeHash(inputBytes);
+
+    public static byte[] GenerateKey(byte[] salt, byte[] secret)
+    {
+        var key = Md5(secret.Concat(salt).ToArray());
+        var currentKey = key;
+        while (currentKey.Length < 48)
+        {
+            key = Md5(key.Concat(secret).Concat(salt).ToArray());
+            currentKey = currentKey.Concat(key).ToArray();
+        }
+        return currentKey;
+    }
+
+    private static string Decrypt(string input, string key)
+        => DecryptSourceUrl(
+            GenerateKey(
+                input.DecodeBase64ToBytes().CopyOfRange(8, 16),
+                Encoding.UTF8.GetBytes(key)
+            ),
+            input);
+
+    private static string DecryptSourceUrl(byte[] decryptionKey, string sourceUrl)
+    {
+        var cipherData = sourceUrl.DecodeBase64ToBytes();
+        var encrypted = cipherData.CopyOfRange(16, cipherData.Length);
+
+        var keyBytes = decryptionKey.CopyOfRange(0, 32);
+        var ivBytes = decryptionKey.CopyOfRange(32, decryptionKey.Length);
+
+        var aes = Aes.Create();
+        aes.BlockSize = 128;
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
+
+        // Create a MemoryStream
+        var ms = new MemoryStream(encrypted, 0, encrypted.Length);
+
+        // Create a CryptoStream that decrypts the data
+        var cs = new CryptoStream(
+            ms,
+            aes.CreateDecryptor(keyBytes, ivBytes),
+            CryptoStreamMode.Read
+        );
+
+        // Read the Crypto Stream
+        var sr = new StreamReader(cs, Encoding.ASCII);
+
+        return sr.ReadToEnd();
     }
 }
