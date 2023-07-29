@@ -73,7 +73,7 @@ public class GogoCDNExtractor : IVideoExtractor
             var scripts = document.DocumentNode.Descendants()
                 .Where(x => x.Name == "script").ToList();
 
-            var cryptoScript = scripts.FirstOrDefault(x => x.Attributes["data-name"]?.Value == "episode")!;
+            var cryptoScript = scripts.Find(x => x.Attributes["data-name"]?.Value == "episode")!;
 
             //var dataValue = scripts.Where(x => x.Attributes["data-name"]?.Value == "crypto")
             //  .FirstOrDefault().Attributes["data-value"].Value;
@@ -168,13 +168,16 @@ public class GogoCDNExtractor : IVideoExtractor
         return list;
     }
 
-    private Tuple<string, string, string> KeysAndIv()
-    {
-        return new Tuple<string, string, string>
-            ("37911490979715163134003223491201", "54674138327930866480207815084989", "3134003223491201");
-    }
+    private static Tuple<string, string, string> KeysAndIv()
+        => new("37911490979715163134003223491201",
+            "54674138327930866480207815084989",
+            "3134003223491201");
 
-    private static string CryptoHandler(string dataValue, string key, string iv, bool encrypt = true)
+    private static string CryptoHandler(
+        string dataValue,
+        string key,
+        string iv,
+        bool encrypt = true)
     {
         //var key = Encoding.UTF8.GetBytes("63976882873559819639988080820907");
         //var iv = Encoding.UTF8.GetBytes("4770478969418267");
@@ -182,9 +185,11 @@ public class GogoCDNExtractor : IVideoExtractor
         var keyBytes = Encoding.UTF8.GetBytes(key);
         var ivBytes = Encoding.UTF8.GetBytes(iv);
 
-        var cryptoProvider = new RijndaelManaged();
-        cryptoProvider.Mode = CipherMode.CBC;
-        cryptoProvider.Padding = PaddingMode.PKCS7;
+        var cryptoProvider = new RijndaelManaged
+        {
+            Mode = CipherMode.CBC,
+            Padding = PaddingMode.PKCS7
+        };
 
         if (encrypt)
         {
@@ -198,9 +203,11 @@ public class GogoCDNExtractor : IVideoExtractor
             var ms = new MemoryStream();
 
             // Create Crypto Stream that encrypts a stream
-            var cs = new CryptoStream(ms,
+            var cs = new CryptoStream(
+                ms,
                 cryptoProvider.CreateEncryptor(keyBytes, ivBytes),
-                CryptoStreamMode.Write);
+                CryptoStreamMode.Write
+            );
 
             // Write content into MemoryStream
             cs.Write(bytIn, 0, bytIn.Length);

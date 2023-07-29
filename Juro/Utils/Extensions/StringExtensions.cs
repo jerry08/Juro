@@ -179,6 +179,9 @@ internal static class StringExtensions
     public static string DecodeBase64(this string value)
         => Encoding.UTF8.GetString(Convert.FromBase64String(value));
 
+    public static byte[] DecodeBase64ToBytes(this string value)
+        => Convert.FromBase64String(value);
+
     private static readonly Regex _whitespace = new(@"\s+");
 
     public static string ReplaceWhitespaces(this string input, string replacement)
