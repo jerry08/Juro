@@ -387,8 +387,10 @@ public class Gogoanime : IAnimeProvider
         return episodes;
     }
 
-    private string HttpsIfy(string text)
-        => string.Join("", text.Take(2)) == "//" ? $"https:{text}" : text;
+    private static string HttpsIfy(string text)
+        => string.Join("", text.Take(2)) == "//"
+            ? $"https:{text}"
+            : text;
 
     /// <inheritdoc />
     public async ValueTask<List<VideoServer>> GetVideoServersAsync(
@@ -404,26 +406,25 @@ public class Gogoanime : IAnimeProvider
         if (string.IsNullOrWhiteSpace(response))
             return new();
 
-        var doc = Html.Parse(response);
+        var document = Html.Parse(response);
 
         //Exception for fire force season 2 episode 1
         if (response.Contains(">404</h1>"))
             response = await _http.ExecuteAsync(episodeUrl + "-1", cancellationToken);
 
-        var videoServers = new List<VideoServer>();
+        var list = new List<VideoServer>();
 
-        var servers = doc.DocumentNode
-            .SelectNodes(".//div[@class='anime_muti_link']/ul/li").ToList();
+        var servers = document.DocumentNode
+            .SelectNodes(".//div[@class='anime_muti_link']/ul/li");
         for (var i = 0; i < servers.Count; i++)
         {
             var name = servers[i].SelectSingleNode("a").InnerText.Replace("Choose this server", "").Trim();
             var url = HttpsIfy(servers[i].SelectSingleNode("a").Attributes["data-video"].Value);
-            var embed = new FileUrl(url);
 
-            videoServers.Add(new VideoServer(name, embed));
+            list.Add(new VideoServer(name, new FileUrl(url)));
         }
 
-        return videoServers.OrderBy(x => x.Name).ToList();
+        return list;
     }
 
     public IVideoExtractor? GetVideoExtractor(VideoServer server)
@@ -431,27 +432,21 @@ public class Gogoanime : IAnimeProvider
         var domainParser = new DomainParser(new WebTldRuleProvider());
         var domainInfo = domainParser.Parse(server.Embed.Url);
 
-        if (domainInfo.Domain.Contains("gogo")
-            || domainInfo.Domain.Contains("goload")
-            || domainInfo.Domain.Contains("playgo")
-            || domainInfo.Domain.Contains("anihdplay")
-            || domainInfo.Domain.Contains("taku"))
+        if (domainInfo.Domain.Contains("taku"))
         {
             return new GogoCDNExtractor(_httpClientFactory);
         }
-        else if (domainInfo.Domain.Contains("sb")
-            || domainInfo.Domain.Contains("sss"))
+        else if (domainInfo.Domain.Contains("sb"))
         {
             return new StreamSBProExtractor(_httpClientFactory);
-        }
-        else if (domainInfo.Domain.Contains("fplayer")
-            || domainInfo.Domain.Contains("fembed"))
-        {
-            return new FPlayerExtractor(_httpClientFactory);
         }
         else if (domainInfo.Domain.Contains("dood"))
         {
             return new DoodExtractor(_httpClientFactory);
+        }
+        else if (domainInfo.Domain.Contains("mp4"))
+        {
+            return new Mp4uploadExtractor(_httpClientFactory);
         }
 
         return null;
