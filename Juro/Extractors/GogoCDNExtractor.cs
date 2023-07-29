@@ -71,7 +71,7 @@ public class GogoCDNExtractor : IVideoExtractor
         if (string.IsNullOrWhiteSpace(dataValue))
             return list;
 
-        var decrypted = CryptoHandler(dataValue, keys.Item1, keys.Item3, false).Replace("\t", "");
+        var decrypted = CryptoHandler(dataValue!, keys.Item1, keys.Item3, false).Replace("\t", "");
         var id = decrypted.FindBetween("", "&");
         var end = decrypted.SubstringAfter(id);
 

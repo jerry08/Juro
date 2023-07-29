@@ -65,7 +65,7 @@ public class Mp4uploadExtractor : IVideoExtractor
             ?.InnerText.SubstringAfter("src: \"").SubstringBefore("\"");
         if (!string.IsNullOrWhiteSpace(link))
         {
-            var host = link.SubstringAfter("https://").SubstringBefore("/");
+            var host = link!.SubstringAfter("https://").SubstringBefore("/");
             headers.Add("host", host);
 
             return new List<VideoSource>
@@ -73,7 +73,7 @@ public class Mp4uploadExtractor : IVideoExtractor
                 new()
                 {
                     Format = VideoType.Container,
-                    VideoUrl = link,
+                    VideoUrl = link!,
                     Resolution = "Default Quality",
                     Headers = headers
                 }
