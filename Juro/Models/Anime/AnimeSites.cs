@@ -33,5 +33,10 @@ public enum AnimeSites
     /// <summary>
     /// Parses anime and information from OtakuDesu.
     /// </summary>
-    OtakuDesu
+    OtakuDesu,
+
+    /// <summary>
+    /// Parses anime and information from Kaido.
+    /// </summary>
+    Kaido
 }

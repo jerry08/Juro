@@ -26,14 +26,17 @@ public class Aniwatch : IAnimeProvider
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public string Name => "Aniwatch";
+    public virtual string Name => "Aniwatch";
 
     public string Language => "en";
 
     public bool IsDubAvailableSeparately => true;
 
-    public string BaseUrl => "https://aniwatch.to/";
-    public string AjaxUrl => "https://aniwatch.to//ajax";
+    public virtual string BaseUrl => "https://aniwatch.to";
+
+    public virtual string AjaxUrl => $"{BaseUrl}/ajax/v2";
+
+    protected virtual AnimeSites AnimeSite => AnimeSites.Aniwatch;
 
     /// <summary>
     /// Initializes an instance of <see cref="Aniwatch"/>.
@@ -64,17 +67,12 @@ public class Aniwatch : IAnimeProvider
         string query,
         CancellationToken cancellationToken = default)
     {
-        query = query.Replace(" ", "+");
-
         var response = await _http.ExecuteAsync(
-            $"{AjaxUrl}/search/suggest?keyword={query}",
+            $"{BaseUrl}/search?keyword={Uri.EscapeDataString(query)}",
             cancellationToken
         );
 
-        var jsonDocument = JsonDocument.Parse(response);
-        var html = jsonDocument.RootElement.GetProperty("html").GetString()!;
-
-        return ParseAnimeSearchResponse(html);
+        return ParseAnimeResponse(response);
     }
 
     /// <inheritdoc cref="SearchAsync"/>
@@ -158,44 +156,13 @@ public class Aniwatch : IAnimeProvider
             animes.Add(new AnimeInfo()
             {
                 Id = category,
-                Site = AnimeSites.Aniwatch,
+                Site = AnimeSite,
                 Image = img,
                 Title = title,
                 Category = category,
                 Link = BaseUrl + category
             });
         }
-
-        return animes;
-    }
-    private List<IAnimeInfo> ParseAnimeSearchResponse(string? response)
-    {
-        var animes = new List<IAnimeInfo>();
-
-        if (string.IsNullOrWhiteSpace(response))
-            return animes;
-
-        var document = Html.Parse(response!);
-
-        animes.AddRange(
-            from a in document.DocumentNode.Descendants("a").Where(e => !e.Attributes["class"].Value.Contains("nav-bottom"))
-            let href = a.GetAttributeValue("href", "")
-            let title = a.Descendants("h3").FirstOrDefault()?.InnerText?.Trim()!
-            let imgUrl = a.Descendants("img").FirstOrDefault()?.GetAttributeValue("src", "")!
-            let releaseDate = a.Descendants("span").FirstOrDefault()?.InnerText?.Trim()
-            let type = a.Descendants("i").ElementAtOrDefault(0)?.NextSibling?.InnerText?.Trim()
-            select new AnimeInfo()
-            {
-                Id = href,
-                Site = AnimeSites.Aniwatch,
-                Image = imgUrl,
-                Title = title,
-                Category = href,
-                Link = BaseUrl + href,
-                Released = releaseDate,
-                Type = type,
-            }
-        );
 
         return animes;
     }
@@ -206,7 +173,7 @@ public class Aniwatch : IAnimeProvider
         CancellationToken cancellationToken = default)
     {
         var dataId = id.Split('-').Last().Split('?')[0];
-        var url = $"{BaseUrl}/ajax/v2/episode/list/{dataId}";
+        var url = $"{AjaxUrl}/episode/list/{dataId}";
 
         //Get anime details
         var response = await _http.ExecuteAsync(BaseUrl + id, cancellationToken);
@@ -216,7 +183,7 @@ public class Aniwatch : IAnimeProvider
         var anime = new AnimeInfo()
         {
             Id = id,
-            Site = AnimeSites.Aniwatch
+            Site = AnimeSite
         };
 
         if (string.IsNullOrWhiteSpace(response))
@@ -285,9 +252,9 @@ public class Aniwatch : IAnimeProvider
         CancellationToken cancellationToken = default)
     {
         var dataId = id.Split('-').Last().Split('?')[0];
-        var url = $"{BaseUrl}/ajax/v2/episode/list/{dataId}";
+        var url = $"{AjaxUrl}/episode/list/{dataId}";
 
-        //Get anime episodes
+        // Get anime episodes
         var json = await _http.ExecuteAsync(url, cancellationToken);
         var jObj = JsonNode.Parse(json)!;
         var response = jObj["html"]!.ToString();
@@ -331,7 +298,7 @@ public class Aniwatch : IAnimeProvider
     {
         var dataId = episodeId.Split(new[] { "ep=" }, StringSplitOptions.None).Last();
 
-        var url = $"{BaseUrl}/ajax/v2/episode/servers?episodeId={dataId}";
+        var url = $"{AjaxUrl}/episode/servers?episodeId={dataId}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
@@ -378,7 +345,7 @@ public class Aniwatch : IAnimeProvider
                 return null;
         }
 
-        var url = $"https://aniwatch.to/ajax/v2/episode/sources?id={dataId}";
+        var url = $"{AjaxUrl}/episode/sources?id={dataId}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         var data = JsonNode.Parse(response)!;
@@ -399,7 +366,7 @@ public class Aniwatch : IAnimeProvider
         var domainParser = new DomainParser(new WebTldRuleProvider());
         var domainInfo = domainParser.Parse(server.Embed.Url);
 
-        if (domainInfo.Domain.Contains("rapid"))
+        if (domainInfo.Domain.Contains("rapid") || domainInfo.Domain.Contains("megacloud"))
         {
             return new RapidCloudExtractor(_httpClientFactory);
         }
