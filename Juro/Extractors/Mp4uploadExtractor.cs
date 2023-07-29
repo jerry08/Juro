@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,6 +56,29 @@ public class Mp4uploadExtractor : IVideoExtractor
         };
 
         var response = await http.ExecuteAsync(url, headers, cancellationToken);
+
+        var document = Html.Parse(response);
+
+        var link = document.DocumentNode.Descendants()
+            .Where(x => x.Name == "script")
+            .FirstOrDefault(x => x.InnerText.Contains("src: "))
+            ?.InnerText.SubstringAfter("src: \"").SubstringBefore("\"");
+        if (!string.IsNullOrWhiteSpace(link))
+        {
+            var host = link.SubstringAfter("https://").SubstringBefore("/");
+            headers.Add("host", host);
+
+            return new List<VideoSource>
+            {
+                new()
+                {
+                    Format = VideoType.Container,
+                    VideoUrl = link,
+                    Resolution = "Default Quality",
+                    Headers = headers
+                }
+            };
+        }
 
         var packed = response.SubstringAfter("eval(function(p,a,c,k,e,d)")
             .Split(new[] { "</script>" }, StringSplitOptions.None)[0];

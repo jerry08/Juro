@@ -60,110 +60,84 @@ public class GogoCDNExtractor : IVideoExtractor
 
         var response = await http.ExecuteAsync(url, cancellationToken);
 
-        if (url.Contains("streaming.php"))
-        {
-            var document = Html.Parse(response);
+        var keys = KeysAndIv();
 
-            //var script = doc.DocumentNode
-            //    .SelectSingleNode("script[data-name='crypto'");
+        var document = Html.Parse(response);
 
-            //var tt = doc.DocumentNode.Descendants("script")
-            //    .Where(x => x.Name == "script").ToList();
+        var dataValue = document.DocumentNode.Descendants()
+            .Where(x => x.Name == "script")
+            .FirstOrDefault(x => x.Attributes["data-name"]?.Value == "episode")
+            ?.Attributes["data-value"]?.Value;
+        if (string.IsNullOrWhiteSpace(dataValue))
+            return list;
 
-            var scripts = document.DocumentNode.Descendants()
-                .Where(x => x.Name == "script").ToList();
+        var decrypted = CryptoHandler(dataValue, keys.Item1, keys.Item3, false).Replace("\t", "");
+        var id = decrypted.FindBetween("", "&");
+        var end = decrypted.SubstringAfter(id);
 
-            var cryptoScript = scripts.Find(x => x.Attributes["data-name"]?.Value == "episode")!;
+        var link = $"https://{host}/encrypt-ajax.php?id={CryptoHandler(id, keys.Item1, keys.Item3, true)}{end}&alias={id}";
 
-            //var dataValue = scripts.Where(x => x.Attributes["data-name"]?.Value == "crypto")
-            //  .FirstOrDefault().Attributes["data-value"].Value;
-
-            var dataValue = cryptoScript.Attributes["data-value"].Value;
-
-            var keys = KeysAndIv();
-
-            var decrypted = CryptoHandler(dataValue, keys.Item1, keys.Item3, false).Replace("\t", "");
-            var id = decrypted.FindBetween("", "&");
-            var end = decrypted.SubstringAfter(id);
-
-            var link = $"https://{host}/encrypt-ajax.php?id={CryptoHandler(id, keys.Item1, keys.Item3, true)}{end}&alias={id}";
-
-            var encHtmlData = await http.ExecuteAsync(link,
-                new Dictionary<string, string>()
-                {
-                    { "X-Requested-With", "XMLHttpRequest" },
-                    //{ "Referer", host },
-                }, cancellationToken);
-
-            if (string.IsNullOrWhiteSpace(encHtmlData))
-                return list;
-
-            var jsonObj = JsonNode.Parse(encHtmlData)!;
-            var jumbledJson = CryptoHandler(jsonObj["data"]!.ToString(), keys.Item2, keys.Item3, false);
-            jumbledJson = jumbledJson.Replace(@"o""<P{#meme"":""", @"e"":[{""file"":""");
-
-            var source = JsonNode.Parse(jumbledJson)!["source"]!.ToString();
-            var array = JsonNode.Parse(source)!.AsArray();
-
-            var sourceBk = JsonNode.Parse(jumbledJson)!["source_bk"]!.ToString();
-            var arrayBk = JsonNode.Parse(sourceBk)!.AsArray();
-
-            void AddSources(JsonArray array)
+        var encHtmlData = await http.ExecuteAsync(
+            link,
+            new Dictionary<string, string>()
             {
-                for (var i = 0; i < array.Count; i++)
-                {
-                    var label = array[i]!["label"]!.ToString();
-                    var fileURL = array[i]!["file"]!.ToString().Trim('"');
-                    var type = array[i]?["type"]?.ToString().ToLower();
+                { "X-Requested-With", "XMLHttpRequest" },
+                //{ "Referer", host },
+            },
+            cancellationToken);
 
-                    if (type == "hls" || type == "auto")
+        if (string.IsNullOrWhiteSpace(encHtmlData))
+            return list;
+
+        var jsonObj = JsonNode.Parse(encHtmlData)!;
+        var jumbledJson = CryptoHandler(jsonObj["data"]!.ToString(), keys.Item2, keys.Item3, false);
+        jumbledJson = jumbledJson.Replace(@"o""<P{#meme"":""", @"e"":[{""file"":""");
+
+        var source = JsonNode.Parse(jumbledJson)!["source"]!.ToString();
+        var array = JsonNode.Parse(source)!.AsArray();
+
+        var sourceBk = JsonNode.Parse(jumbledJson)!["source_bk"]!.ToString();
+        var arrayBk = JsonNode.Parse(sourceBk)!.AsArray();
+
+        void AddSources(JsonArray array, bool backup)
+        {
+            for (var i = 0; i < array.Count; i++)
+            {
+                var label = array[i]!["label"]!.ToString();
+                var fileURL = array[i]!["file"]!.ToString().Trim('"');
+                var type = array[i]?["type"]?.ToString().ToLower();
+
+                if (type == "hls" || type == "auto")
+                {
+                    list.Add(new()
                     {
-                        list.Add(new()
+                        Format = VideoType.M3u8,
+                        VideoUrl = fileURL,
+                        Resolution = "Multi Quality" + (backup ? " (Backup)" : ""),
+                        Headers = new()
                         {
-                            Format = VideoType.M3u8,
-                            VideoUrl = fileURL,
-                            Resolution = "Multi Quality",
-                            Headers = new()
-                            {
-                                { "Referer", url },
-                            }
-                        });
-                    }
-                    else
+                            ["Referer"] = url,
+                        }
+                    });
+                }
+                else
+                {
+                    list.Add(new()
                     {
-                        list.Add(new()
+                        Format = VideoType.Container,
+                        VideoUrl = fileURL,
+                        Resolution = label,
+                        Headers = new()
                         {
-                            Format = VideoType.Container,
-                            VideoUrl = fileURL,
-                            Resolution = label,
-                            Headers = new()
-                            {
-                                { "Referer", url },
-                            }
-                        });
-                    }
+                            ["Referer"] = url,
+                        }
+                    });
                 }
             }
+        }
 
-            AddSources(array);
-            AddSources(arrayBk);
-        }
-        else if (url.Contains("embedplus"))
-        {
-            var file = response.FindBetween("sources:[{file: '", "',");
-            if (!string.IsNullOrWhiteSpace(file))
-            {
-                list.Add(new()
-                {
-                    Format = VideoType.M3u8,
-                    VideoUrl = file,
-                    Headers = new()
-                    {
-                        { "Referer", url },
-                    }
-                });
-            }
-        }
+        AddSources(array, false);
+        AddSources(arrayBk, true);
 
         return list;
     }
@@ -185,11 +159,9 @@ public class GogoCDNExtractor : IVideoExtractor
         var keyBytes = Encoding.UTF8.GetBytes(key);
         var ivBytes = Encoding.UTF8.GetBytes(iv);
 
-        var cryptoProvider = new RijndaelManaged
-        {
-            Mode = CipherMode.CBC,
-            Padding = PaddingMode.PKCS7
-        };
+        var aes = Aes.Create();
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
 
         if (encrypt)
         {
@@ -205,7 +177,7 @@ public class GogoCDNExtractor : IVideoExtractor
             // Create Crypto Stream that encrypts a stream
             var cs = new CryptoStream(
                 ms,
-                cryptoProvider.CreateEncryptor(keyBytes, ivBytes),
+                aes.CreateEncryptor(keyBytes, ivBytes),
                 CryptoStreamMode.Write
             );
 
@@ -225,9 +197,11 @@ public class GogoCDNExtractor : IVideoExtractor
             var ms = new MemoryStream(bytIn, 0, bytIn.Length);
 
             // Create a CryptoStream that decrypts the data
-            var cs = new CryptoStream(ms,
-                cryptoProvider.CreateDecryptor(keyBytes, ivBytes),
-                CryptoStreamMode.Read);
+            var cs = new CryptoStream(
+                ms,
+                aes.CreateDecryptor(keyBytes, ivBytes),
+                CryptoStreamMode.Read
+            );
 
             // Read the Crypto Stream
             var sr = new StreamReader(cs);
