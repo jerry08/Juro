@@ -18,34 +18,34 @@ using Juro.Utils.Tasks;
 namespace Juro.Providers.Anime;
 
 /// <summary>
-/// Client for interacting with 9anime.
+/// Client for interacting with Aniwave.
 /// </summary>
-public class NineAnime : IAnimeProvider
+public class Aniwave : IAnimeProvider
 {
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
-    public string Name => "9anime";
+    public string Name => "Aniwave";
 
     public string Language => "en";
 
     public bool IsDubAvailableSeparately => false;
 
-    public string BaseUrl => "https://9anime.to";
+    public string BaseUrl => "https://aniwave.to";
 
     /// <summary>
-    /// Initializes an instance of <see cref="NineAnime"/>.
+    /// Initializes an instance of <see cref="Aniwave"/>.
     /// </summary>
-    public NineAnime(IHttpClientFactory httpClientFactory)
+    public Aniwave(IHttpClientFactory httpClientFactory)
     {
         _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="NineAnime"/>.
+    /// Initializes an instance of <see cref="Aniwave"/>.
     /// </summary>
-    public NineAnime(Func<HttpClient> httpClientProvider)
+    public Aniwave(Func<HttpClient> httpClientProvider)
         : this(new HttpClientFactory(httpClientProvider))
     {
     }
@@ -53,7 +53,7 @@ public class NineAnime : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="Gogoanime"/>.
     /// </summary>
-    public NineAnime() : this(Http.ClientProvider)
+    public Aniwave() : this(Http.ClientProvider)
     {
     }
 
@@ -62,7 +62,7 @@ public class NineAnime : IAnimeProvider
         string query,
         CancellationToken cancellationToken = default)
     {
-        var vrf = await EncodeVrfAsync(Uri.EscapeDataString(query), cancellationToken);
+        //var vrf = await EncodeVrfAsync(Uri.EscapeDataString(query), cancellationToken);
 
         //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
         //var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
@@ -127,7 +127,7 @@ public class NineAnime : IAnimeProvider
         {
             var animeInfo = new AnimeInfo()
             {
-                Site = AnimeSites.NineAnime
+                Site = AnimeSites.Aniwave
             };
 
             //animeInfo.Id = node.SelectSingleNode(
@@ -170,7 +170,7 @@ public class NineAnime : IAnimeProvider
         {
             var animeInfo = new AnimeInfo()
             {
-                Site = AnimeSites.NineAnime
+                Site = AnimeSites.Aniwave
             };
 
             animeInfo.Id = node.GetAttributeValue("href", "");
@@ -205,7 +205,7 @@ public class NineAnime : IAnimeProvider
         var anime = new AnimeInfo()
         {
             Id = id,
-            Site = AnimeSites.NineAnime,
+            Site = AnimeSites.Aniwave,
             Title = document.DocumentNode
                 .SelectSingleNode(".//h1[contains(@class, 'title')]").InnerText,
             Image = document.DocumentNode
@@ -368,8 +368,8 @@ public class NineAnime : IAnimeProvider
     {
         return server.Name.ToLower() switch
         {
-            "vidstream" => new NineAnimeExtractor(_httpClientFactory, "VidStream"),
-            "mycloud" => new NineAnimeExtractor(_httpClientFactory, "MyCloud"),
+            "vidstream" => new AniwaveExtractor(_httpClientFactory, "VidStream"),
+            "mycloud" => new AniwaveExtractor(_httpClientFactory, "MyCloud"),
             "filemoon" => new FilemoonExtractor(_httpClientFactory),
             "streamtape" => new StreamTapeExtractor(_httpClientFactory),
             "mp4upload" => new Mp4uploadExtractor(_httpClientFactory),

@@ -12,21 +12,21 @@ using Juro.Utils.Extensions;
 namespace Juro.Extractors;
 
 /// <summary>
-/// Extractor for 9anime.
+/// Extractor for Aniwave.
 /// </summary>
-public class NineAnimeExtractor : IVideoExtractor
+public class AniwaveExtractor : IVideoExtractor
 {
     private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
-    /// Name of the video server for 9anime. It can either be "Mcloud" or "Vizcloud"
+    /// Name of the video server for Aniwave. It can either be "Mcloud" or "Vizcloud"
     /// </summary>
     public string ServerName { get; }
 
     /// <summary>
-    /// Initializes an instance of <see cref="NineAnimeExtractor"/>.
+    /// Initializes an instance of <see cref="AniwaveExtractor"/>.
     /// </summary>
-    public NineAnimeExtractor(IHttpClientFactory httpClientFactory, string serverName)
+    public AniwaveExtractor(IHttpClientFactory httpClientFactory, string serverName)
     {
         _httpClientFactory = httpClientFactory;
 
@@ -34,17 +34,17 @@ public class NineAnimeExtractor : IVideoExtractor
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="NineAnimeExtractor"/>.
+    /// Initializes an instance of <see cref="AniwaveExtractor"/>.
     /// </summary>
-    public NineAnimeExtractor(Func<HttpClient> httpClientProvider, string serverName)
+    public AniwaveExtractor(Func<HttpClient> httpClientProvider, string serverName)
         : this(new HttpClientFactory(httpClientProvider), serverName)
     {
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="NineAnimeExtractor"/>.
+    /// Initializes an instance of <see cref="AniwaveExtractor"/>.
     /// </summary>
-    public NineAnimeExtractor(string serverName) : this(Http.ClientProvider, serverName)
+    public AniwaveExtractor(string serverName) : this(Http.ClientProvider, serverName)
     {
     }
 

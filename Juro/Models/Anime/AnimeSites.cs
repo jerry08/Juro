@@ -21,9 +21,9 @@ public enum AnimeSites
     AnimePahe,
 
     /// <summary>
-    /// Parses anime and information from 9anime.
+    /// Parses anime and information from Aniwave.
     /// </summary>
-    NineAnime,
+    Aniwave,
 
     /// <summary>
     /// Parses anime and information from Aniflix.
