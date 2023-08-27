@@ -53,7 +53,8 @@ public class AWishExtractor : IVideoExtractor
 
         var response = await http.ExecuteAsync(url, cancellationToken);
 
-        var mediaUrl = new Regex("file:\"([^\"]+)\"\\}").Match(response)
+        //var mediaUrl = new Regex("file:\"([^\"]+)\"\\}").Match(response)
+        var mediaUrl = new Regex("file:\"([^\"]+)\"").Match(response)
             .Groups.OfType<Group>()
             .ToList()[1]
             .Value;
