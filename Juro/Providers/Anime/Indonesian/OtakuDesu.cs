@@ -14,7 +14,6 @@ using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 using Juro.Utils.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace Juro.Providers.Anime.Indonesian;
 

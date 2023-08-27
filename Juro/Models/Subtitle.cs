@@ -37,4 +37,7 @@ public class Subtitle
         Headers = headers;
         Type = type;
     }
+
+    /// <inheritdoc />
+    public override string ToString() => Language;
 }
