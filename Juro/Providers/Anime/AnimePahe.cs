@@ -32,7 +32,7 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
 
     public bool IsDubAvailableSeparately => false;
 
-    public string BaseUrl => "https://animepahe.com";
+    public string BaseUrl => "https://animepahe.ru";
 
     /// <summary>
     /// Initializes an instance of <see cref="AnimePahe"/>.
