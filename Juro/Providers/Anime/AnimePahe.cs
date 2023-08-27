@@ -19,7 +19,7 @@ namespace Juro.Providers.Anime;
 /// <summary>
 /// Client for interacting with AnimePahe.
 /// </summary>
-public class AnimePahe : IAnimeProvider
+public class AnimePahe : AnimeBaseProvider, IAnimeProvider
 {
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -37,7 +37,7 @@ public class AnimePahe : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="AnimePahe"/>.
     /// </summary>
-    public AnimePahe(IHttpClientFactory httpClientFactory)
+    public AnimePahe(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
     {
         _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
@@ -267,38 +267,37 @@ public class AnimePahe : IAnimeProvider
 
         var document = Html.Parse(response);
 
-        return document.GetElementbyId("pickDownload").SelectNodes(".//a")
-            .Select(el =>
+        return document.GetElementbyId("pickDownload").SelectNodes(".//a").Select(el =>
+        {
+            //var match = _videoServerRegex.Match(el.InnerText);
+            //var matches = _videoServerRegex.Matches(el.InnerText).OfType<Match>().ToList();
+            var match = _videoServerRegex.Match(el.InnerText);
+            var groups = match.Groups.OfType<Group>();
+
+            var subgroup = groups.ElementAtOrDefault(1)?.Value;
+            var quality = groups.ElementAtOrDefault(2)?.Value;
+            var mb = groups.ElementAtOrDefault(3)?.Value;
+            var audio = groups.ElementAtOrDefault(4)?.Value;
+
+            var audioName = !string.IsNullOrWhiteSpace(audio) ? $"{audio} " : "";
+
+            return new VideoServer
             {
-                //var match = _videoServerRegex.Match(el.InnerText);
-                //var matches = _videoServerRegex.Matches(el.InnerText).OfType<Match>().ToList();
-                var match = _videoServerRegex.Match(el.InnerText);
-                var groups = match.Groups.OfType<Group>();
-
-                var subgroup = groups.ElementAtOrDefault(1)?.Value;
-                var quality = groups.ElementAtOrDefault(2)?.Value;
-                var mb = groups.ElementAtOrDefault(3)?.Value;
-                var audio = groups.ElementAtOrDefault(4)?.Value;
-
-                var audioName = !string.IsNullOrWhiteSpace(audio) ? $"{audio} " : "";
-
-                return new VideoServer
+                Name = $"{subgroup} {audioName}- {quality}p",
+                Embed = new FileUrl()
                 {
-                    Name = $"{subgroup} {audioName}- {quality}p",
-                    Embed = new FileUrl()
+                    Url = el.Attributes["href"]!.Value,
+                    Headers = new()
                     {
-                        Url = el.Attributes["href"]!.Value,
-                        Headers = new()
-                        {
-                            { "Referer", BaseUrl }
-                        }
+                        { "Referer", BaseUrl }
                     }
-                };
-            }).ToList();
+                }
+            };
+        }).ToList();
     }
 
     /// <inheritdoc />
-    public async ValueTask<List<VideoSource>> GetVideosAsync(
+    public override async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
         CancellationToken cancellationToken = default)
     {

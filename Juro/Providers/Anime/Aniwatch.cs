@@ -2,29 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
-using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 using Juro.Utils.Tasks;
-using Nager.PublicSuffix;
 
 namespace Juro.Providers.Anime;
 
 /// <summary>
 /// Client for interacting with Aniwatch.
 /// </summary>
-public class Aniwatch : IAnimeProvider
+public class Aniwatch : AnimeBaseProvider, IAnimeProvider
 {
     private readonly HttpClient _http;
-    private readonly IHttpClientFactory _httpClientFactory;
 
     public virtual string Name => "Aniwatch";
 
@@ -41,10 +36,9 @@ public class Aniwatch : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="Aniwatch"/>.
     /// </summary>
-    public Aniwatch(IHttpClientFactory httpClientFactory)
+    public Aniwatch(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
     {
         _http = httpClientFactory.CreateClient();
-        _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
@@ -359,41 +353,5 @@ public class Aniwatch : IAnimeProvider
         };
 
         return new VideoServer(serverName, new FileUrl(link, embedHeaders));
-    }
-
-    public IVideoExtractor? GetVideoExtractor(VideoServer server)
-    {
-        var domainParser = new DomainParser(new WebTldRuleProvider());
-        var domainInfo = domainParser.Parse(server.Embed.Url);
-
-        if (domainInfo.Domain.Contains("rapid") || domainInfo.Domain.Contains("megacloud"))
-        {
-            return new RapidCloudExtractor(_httpClientFactory);
-        }
-        else if (domainInfo.Domain.Contains("sb"))
-        {
-            return new StreamSBExtractor(_httpClientFactory);
-        }
-        else if (domainInfo.Domain.Contains("streamta"))
-        {
-            return new StreamTapeExtractor(_httpClientFactory);
-        }
-
-        return null;
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<List<VideoSource>> GetVideosAsync(
-        VideoServer server,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
-            return new();
-
-        var extractor = GetVideoExtractor(server);
-        if (extractor is null)
-            return new();
-
-        return await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
     }
 }

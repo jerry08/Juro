@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +9,6 @@ using HtmlAgilityPack;
 using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
-using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
 using Juro.Utils.Tasks;
@@ -20,7 +18,7 @@ namespace Juro.Providers.Anime;
 /// <summary>
 /// Client for interacting with Aniwave.
 /// </summary>
-public class Aniwave : IAnimeProvider
+public class Aniwave : AnimeBaseProvider, IAnimeProvider
 {
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -36,7 +34,7 @@ public class Aniwave : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="Aniwave"/>.
     /// </summary>
-    public Aniwave(IHttpClientFactory httpClientFactory)
+    public Aniwave(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
     {
         _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
@@ -364,7 +362,7 @@ public class Aniwave : IAnimeProvider
         };
     }
 
-    public IVideoExtractor? GetVideoExtractor(VideoServer server)
+    public override IVideoExtractor? GetVideoExtractor(VideoServer server)
     {
         return server.Name.ToLower() switch
         {
@@ -375,21 +373,6 @@ public class Aniwave : IAnimeProvider
             "mp4upload" => new Mp4uploadExtractor(_httpClientFactory),
             _ => null
         };
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<List<VideoSource>> GetVideosAsync(
-        VideoServer server,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
-            return new();
-
-        var extractor = GetVideoExtractor(server);
-        if (extractor is null)
-            return new();
-
-        return await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
     }
 
     /// <summary>

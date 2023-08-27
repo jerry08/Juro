@@ -6,23 +6,19 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Juro.Extractors;
 using Juro.Models;
 using Juro.Models.Anime;
-using Juro.Models.Videos;
 using Juro.Utils;
 using Juro.Utils.Extensions;
-using Nager.PublicSuffix;
 
 namespace Juro.Providers.Anime;
 
 /// <summary>
 /// Client for interacting with gogoanime.
 /// </summary>
-public class Gogoanime : IAnimeProvider
+public class Gogoanime : AnimeBaseProvider, IAnimeProvider
 {
     private readonly HttpClient _http;
-    private readonly IHttpClientFactory _httpClientFactory;
 
     public string Name => "Gogo";
 
@@ -37,10 +33,9 @@ public class Gogoanime : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="Gogoanime"/>.
     /// </summary>
-    public Gogoanime(IHttpClientFactory httpClientFactory)
+    public Gogoanime(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
     {
         _http = httpClientFactory.CreateClient();
-        _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
@@ -425,46 +420,6 @@ public class Gogoanime : IAnimeProvider
         }
 
         return list;
-    }
-
-    public IVideoExtractor? GetVideoExtractor(VideoServer server)
-    {
-        var domainParser = new DomainParser(new WebTldRuleProvider());
-        var domainInfo = domainParser.Parse(server.Embed.Url);
-
-        if (domainInfo.Domain.Contains("taku"))
-        {
-            return new GogoCDNExtractor(_httpClientFactory);
-        }
-        else if (domainInfo.Domain.Contains("sb"))
-        {
-            return new StreamSBProExtractor(_httpClientFactory);
-        }
-        else if (domainInfo.Domain.Contains("dood"))
-        {
-            return new DoodExtractor(_httpClientFactory);
-        }
-        else if (domainInfo.Domain.Contains("mp4"))
-        {
-            return new Mp4uploadExtractor(_httpClientFactory);
-        }
-
-        return null;
-    }
-
-    /// <inheritdoc />
-    public async ValueTask<List<VideoSource>> GetVideosAsync(
-        VideoServer server,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
-            return new();
-
-        var extractor = GetVideoExtractor(server);
-        if (extractor is null)
-            return new();
-
-        return await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
     }
 
     public async ValueTask<List<Genre>> GetGenresAsync(CancellationToken cancellationToken)
