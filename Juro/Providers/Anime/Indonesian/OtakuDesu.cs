@@ -501,23 +501,10 @@ public class OtakuDesu : IAnimeProvider
         }
         else if (url.Contains("mp4upload"))
         {
-            var response = await _http.ExecuteAsync(url, cancellationToken);
+            var result = await new Mp4uploadExtractor(_httpClientFactory)
+                .ExtractAsync(url, cancellationToken);
 
-            var document3 = Html.Parse(response);
-
-            var script2 = document3.DocumentNode.Descendants()
-                .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("player.src") == true)
-                !.InnerText.RemoveWhitespaces();
-
-            var realLink = script2.SubstringAfter(@"src:""").SubstringBefore(@"""");
-
-            list.Add(new VideoSource()
-            {
-                Format = VideoType.Container,
-                Resolution = quality,
-                Title = $"Mp4upload - {quality}",
-                VideoUrl = realLink
-            });
+            list.AddRange(result);
         }
 
         return list;
