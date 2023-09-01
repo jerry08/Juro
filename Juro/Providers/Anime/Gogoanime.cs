@@ -249,6 +249,12 @@ public class Gogoanime : AnimeBaseProvider, IAnimeProvider
             url = $"{BaseUrl}/category{id}";
         }
 
+        // Exceptions
+        if (id.Contains("/jujutsu-kaisen-2nd-season"))
+        {
+            url = url.Replace("jujutsu-kaisen-2nd-season", "jujutsu-kaisen-tv-2nd-season");
+        }
+
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
