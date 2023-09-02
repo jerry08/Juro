@@ -225,6 +225,12 @@ public class Gogoanime : AnimeBaseProvider, IAnimeProvider
     {
         await LoadUrlsAsync(cancellationToken);
 
+        // Exceptions
+        if (id.Contains("/jujutsu-kaisen-2nd-season"))
+        {
+            id = id.Replace("jujutsu-kaisen-2nd-season", "jujutsu-kaisen-tv-2nd-season");
+        }
+
         var url = BaseUrl + id;
 
         var anime = new AnimeInfo() { Id = id };
@@ -247,12 +253,6 @@ public class Gogoanime : AnimeBaseProvider, IAnimeProvider
         if (!id.StartsWith("/category"))
         {
             url = $"{BaseUrl}/category{id}";
-        }
-
-        // Exceptions
-        if (id.Contains("/jujutsu-kaisen-2nd-season"))
-        {
-            url = url.Replace("jujutsu-kaisen-2nd-season", "jujutsu-kaisen-tv-2nd-season");
         }
 
         var response = await _http.ExecuteAsync(url, cancellationToken);
@@ -326,6 +326,12 @@ public class Gogoanime : AnimeBaseProvider, IAnimeProvider
         string id,
         CancellationToken cancellationToken = default)
     {
+        // Exceptions
+        if (id.Contains("/jujutsu-kaisen-2nd-season"))
+        {
+            id = id.Replace("jujutsu-kaisen-2nd-season", "jujutsu-kaisen-tv-2nd-season");
+        }
+
         await LoadUrlsAsync(cancellationToken);
 
         var episodes = new List<Episode>();
