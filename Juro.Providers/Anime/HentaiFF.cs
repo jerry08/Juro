@@ -23,6 +23,8 @@ public class HentaiFF : IAnimeProvider
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
+    public virtual string Key => Name;
+
     public virtual string Name => "HentaiFF";
 
     public string Language => "en";

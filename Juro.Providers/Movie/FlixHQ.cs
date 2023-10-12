@@ -22,6 +22,8 @@ public class FlixHQ : MovieBaseProvider
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
+    public string Key => Name;
+
     public string Name { get; set; } = "FlixHQ";
 
     public string BaseUrl => "https://flixhq.to";

@@ -23,6 +23,8 @@ public class OtakuDesu : IAnimeProvider
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
+    public string Key => Name;
+
     /// <inheritdoc />
     public string Name => "OtakuDesu";
 

@@ -19,6 +19,8 @@ public class MangaKakalot : IMangaProvider
 {
     private readonly HttpClient _http;
 
+    public string Key => Name;
+
     public string Name { get; set; } = "MangaKakalot";
 
     public string Language => "en";

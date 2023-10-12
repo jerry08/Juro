@@ -8,7 +8,7 @@ namespace Juro.Core.Providers;
 /// <summary>
 /// Interface for basic operations related to a manga provider.
 /// </summary>
-public interface IMangaProvider : ISourceProvider
+public interface IMangaProvider : ISourceProvider, IKey
 {
     /// <summary>
     /// Base url of the provider.

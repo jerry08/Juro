@@ -8,6 +8,8 @@ namespace Juro.Providers.Anime;
 
 public class Kaido : Aniwatch
 {
+    public override string Key => Name;
+
     public override string Name => "Kaido";
 
     public override string BaseUrl => "https://kaido.to";

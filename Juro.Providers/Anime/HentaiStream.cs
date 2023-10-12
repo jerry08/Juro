@@ -10,6 +10,8 @@ namespace Juro.Providers.Anime;
 /// </summary>
 public class HentaiStream : HentaiFF
 {
+    public override string Key => Name;
+
     public override string Name => "Hentai Stream";
 
     public override string BaseUrl => "https://hentaistream.moe";

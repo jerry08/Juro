@@ -28,6 +28,8 @@ public class Gogoanime
 {
     private readonly HttpClient _http;
 
+    public string Key => Name;
+
     public string Name => "Gogo";
 
     public string Language => "en";

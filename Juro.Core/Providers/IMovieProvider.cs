@@ -9,7 +9,7 @@ namespace Juro.Core.Providers;
 /// <summary>
 /// Interface for basic operations related to a movie provider.
 /// </summary>
-public interface IMovieProvider : ISourceProvider, IVideoExtractorProvider
+public interface IMovieProvider : ISourceProvider, IVideoExtractorProvider, IKey
 {
     /// <summary>
     /// Search for movies.

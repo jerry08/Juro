@@ -9,7 +9,7 @@ namespace Juro.Core.Providers;
 /// <summary>
 /// Interface for basic operations related to an anime provider.
 /// </summary>
-public interface IAnimeProvider : ISourceProvider, IVideoExtractorProvider
+public interface IAnimeProvider : ISourceProvider, IVideoExtractorProvider, IKey
 {
     /// <summary>
     /// If dub is available separately for the provider.

@@ -25,6 +25,8 @@ public class Aniwave : AnimeBaseProvider, IAnimeProvider, IPopularProvider, ILas
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
+    public string Key => Name;
+
     public string Name => "Aniwave";
 
     public string Language => "en";

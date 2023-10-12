@@ -19,6 +19,8 @@ public class MangaKatana : IMangaProvider
 {
     private readonly HttpClient _http;
 
+    public string Key => Name;
+
     /// <inheritdoc />
     public string Name { get; set; } = "MangaKatana";
 

@@ -16,6 +16,8 @@ public class Aniflix : IAnimeProvider
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
+    public string Key => Name;
+
     public string Name => "Aniflix";
 
     public string Language => "de";

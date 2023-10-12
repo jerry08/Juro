@@ -29,6 +29,8 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
 
     private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
 
+    public string Key => Name;
+
     public string Name => "AnimePahe";
 
     public string Language => "en";

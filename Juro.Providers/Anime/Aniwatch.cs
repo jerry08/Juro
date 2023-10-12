@@ -29,6 +29,8 @@ public class Aniwatch
 {
     private readonly HttpClient _http;
 
+    public virtual string Key => Name;
+
     public virtual string Name => "Aniwatch";
 
     public string Language => "en";

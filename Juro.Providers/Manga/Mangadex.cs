@@ -22,6 +22,8 @@ public class Mangadex : IMangaProvider
     private readonly HttpClient _http;
     private readonly string _apiUrl = "https://api.mangadex.org";
 
+    public string Key => Name;
+
     public string Name { get; set; } = "Mangadex";
 
     public string Language => "en";
