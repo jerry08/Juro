@@ -18,10 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.53" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="all" />
-    <PackageReference Include="System.Text.Json" Version="7.0.3" Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'" />
   </ItemGroup>
 
   <!-- .NET Framework -->
