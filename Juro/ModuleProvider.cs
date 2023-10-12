@@ -2,19 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Reflection;
-using System.Threading.Tasks;
 using Juro.Core;
 using Juro.Core.Attributes;
-using Juro.Core.Utils;
 
 namespace Juro;
 
 public class ModuleProvider
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
     internal static ModuleProvider Instance => new();
 
     /// <summary>
@@ -26,24 +21,11 @@ public class ModuleProvider
     /// <summary>
     /// Initializes an instance of <see cref="ModuleProvider"/>.
     /// </summary>
-    public ModuleProvider(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
+    public ModuleProvider() { }
 
-    /// <summary>
-    /// Initializes an instance of <see cref="ModuleProvider"/>.
-    /// </summary>
-    public ModuleProvider(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider)) { }
+    public IClientConfig? GetClientConfig(Module module) => GetClientConfig(module.FilePath);
 
-    /// <summary>
-    /// Initializes an instance of <see cref="ModuleProvider"/>.
-    /// </summary>
-    public ModuleProvider()
-        : this(Http.ClientProvider) { }
-
-    private IClientConfig? GetClientConfig(string filePath)
+    public IClientConfig? GetClientConfig(string filePath)
     {
         try
         {
@@ -58,7 +40,7 @@ public class ModuleProvider
                         x.GetInterfaces().Contains(typeof(IClientConfig))
                         && x.GetConstructor(Type.EmptyTypes) is not null
                 )
-                .Select(x => (IClientConfig)Activator.CreateInstance(x, new object[] { })!)
+                .Select(x => (IClientConfig?)Activator.CreateInstance(x, new object[] { }))
                 .FirstOrDefault();
         }
         catch
@@ -67,21 +49,32 @@ public class ModuleProvider
         }
     }
 
-    /*public List<Module> GetModules(string dirPath)
+    public List<IClientConfig> GetClientConfigs()
     {
-        var list = new List<Module>();
+        var list = new List<IClientConfig>();
 
-        var filePaths = Directory
-            .EnumerateFiles(dirPath, "*.dll", SearchOption.AllDirectories);
-
-        foreach (var filePath in filePaths)
+        try
         {
-            //var assemblyInfo = AssemblyName.GetAssemblyName(filePath);
-            var test = Assembly.GetExecutingAssembly().GetReferencedAssemblies();
+            foreach (var assembly in GetAssemblies())
+            {
+                var config = assembly
+                    .GetTypes()
+                    .Where(
+                        x =>
+                            x.GetInterfaces().Contains(typeof(IClientConfig))
+                            && x.GetConstructor(Type.EmptyTypes) is not null
+                    )
+                    .Select(x => (IClientConfig?)Activator.CreateInstance(x, new object[] { }))
+                    .FirstOrDefault();
+
+                if (config is not null)
+                    list.Add(config);
+            }
         }
+        catch { }
 
         return list;
-    }*/
+    }
 
     public List<Assembly> GetAssemblies() =>
         AppDomain.CurrentDomain
@@ -107,18 +100,14 @@ public class ModuleProvider
 
     public void Load(string dirPath)
     {
-        //var tt = AssemblyEx.GetReferencedAssemblies().ToList();
-        //
-        //var test1 = AppDomain.CurrentDomain.GetAssemblies();
-
-        var filePaths = Directory.EnumerateFiles(dirPath, SearchPattern, SearchOption.AllDirectories);
+        var filePaths = Directory.EnumerateFiles(
+            dirPath,
+            SearchPattern,
+            SearchOption.AllDirectories
+        );
 
         foreach (var filePath in filePaths)
             LoadFile(filePath);
-
-        //var tt2 = AssemblyEx.GetReferencedAssemblies().ToList();
-        //
-        //var test3 = AppDomain.CurrentDomain.GetAssemblies();
     }
 
     public bool LoadFile(string filePath)
@@ -134,18 +123,5 @@ public class ModuleProvider
         {
             return false;
         }
-    }
-
-    public async Task LoadFileAsync(string filePath)
-    {
-        if (!File.Exists(filePath))
-            await DownloadAsync(filePath);
-
-        var assembly = Assembly.Load(File.ReadAllBytes(filePath));
-    }
-
-    public async Task DownloadAsync(string filePath)
-    {
-        await Task.Delay(1);
     }
 }

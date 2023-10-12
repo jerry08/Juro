@@ -1,6 +1,6 @@
 ﻿namespace Juro.Core;
 
-internal interface IClientConfig
+public interface IClientConfig
 {
     string RepositoryUrl { get; }
 }

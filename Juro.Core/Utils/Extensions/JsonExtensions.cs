@@ -1,29 +1,27 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text.Json.Nodes;
 
 namespace Juro.Core.Utils.Extensions;
 
-public class JsonExtensions
+public static class JsonExtensions
 {
-    public static bool IsValidJson(string strInput)
+    public static bool IsValidJson(string value)
     {
-        if (string.IsNullOrWhiteSpace(strInput))
+        if (string.IsNullOrWhiteSpace(value))
             return false;
-        strInput = strInput.Trim();
-        if (strInput.StartsWith("{") && strInput.EndsWith("}") || //For object
-            strInput.StartsWith("[") && strInput.EndsWith("]")) //For array
+        value = value.Trim();
+        if ((value.StartsWith("{") && value.EndsWith("}")) || //For object
+            (value.StartsWith("[") && value.EndsWith("]"))) //For array
         {
             try
             {
-                var obj = JsonNode.Parse(strInput);
+                var obj = JsonNode.Parse(value);
                 return obj is not null;
             }
             catch (Exception ex) //some other exception
             {
-#if DEBUG
-                Console.WriteLine(ex.ToString());
-                System.Diagnostics.Debug.WriteLine(ex.ToString());
-#endif
+                Debug.WriteLine(ex.ToString());
                 return false;
             }
         }

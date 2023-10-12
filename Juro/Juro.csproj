@@ -7,7 +7,7 @@
 
   <PropertyGroup>
     <Description>
-      Core modules for source providers.
+      Client for source providers.
     </Description>
     <PackageIcon>favicon.png</PackageIcon>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
