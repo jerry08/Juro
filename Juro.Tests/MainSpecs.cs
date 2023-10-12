@@ -8,7 +8,7 @@ namespace Juro.Tests;
 public class MainSpecs
 {
     [Fact]
-    public void All_providers_has_a_unique_key()
+    public void Each_provider_has_a_unique_key()
     {
         // Arrange
         var client = new AnimeClient();
