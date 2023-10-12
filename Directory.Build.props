@@ -1,12 +1,13 @@
 <Project>
 
   <PropertyGroup>
-    <Version>1.1.13</Version>
-    <Company>Jerro</Company>
+    <Version>1.2.0</Version>
+    <Company>Berry</Company>
     <Copyright>Copyright (C) Jerry Berry</Copyright>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <IsPackable>false</IsPackable>
     <NoWarn>CA1304,RCS1155</NoWarn>
   </PropertyGroup>
@@ -18,20 +19,20 @@
 
   <PropertyGroup>
     <Authors>$(Company)</Authors>
-    <PackageTags>manga movie parser scraping crawler flixhq mangadex mangakakalot</PackageTags>
+    <PackageTags>anime video manga movie parser scraping crawler gogo zoro kaido flixhq mangadex mangakakalot</PackageTags>
     <PackageProjectUrl>https://github.com/jerry08/Juro</PackageProjectUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <!--<PackageIcon>favicon.png</PackageIcon>-->
-    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+    <!--<PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>favicon.png</PackageIcon>-->
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <None Include="../README.md" Pack="true" PackagePath="" Visible="false" />
-    <!--<None Include="../favicon.png" Pack="true" PackagePath="" Visible="false" />-->
-  </ItemGroup>
+    <None Include="../favicon.png" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>-->
 
 </Project>

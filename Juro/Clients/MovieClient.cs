@@ -1,32 +1,31 @@
 ﻿using System;
 using System.Net.Http;
-using Juro.Providers.Movie;
-using Juro.Utils;
+using Juro.Core;
+using Juro.Core.Providers;
+using Juro.Core.Utils;
 
 namespace Juro.Clients;
 
 /// <summary>
-/// Client for interacting with various movie providers.
+/// Client for managining all available movie providers.
 /// </summary>
-public class MovieClient
+public class MovieClient : ClientBase<IMovieProvider>
 {
     /// <summary>
-    /// Operations related to FlixHQ.
+    /// Initializes an instance of <see cref="MovieClient"/>.
     /// </summary>
-    public FlixHQ FlixHQ { get; }
+    public MovieClient(IHttpClientFactory httpClientFactory)
+        : base(httpClientFactory) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="MovieClient"/>.
     /// </summary>
     public MovieClient(Func<HttpClient> httpClientProvider)
-    {
-        FlixHQ = new(httpClientProvider);
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="MovieClient"/>.
     /// </summary>
-    public MovieClient() : this(Http.ClientProvider)
-    {
-    }
+    public MovieClient()
+        : this(Http.ClientProvider) { }
 }
