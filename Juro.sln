@@ -24,6 +24,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Juro.Extractors", "Juro.Ext
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Juro.Demo.Cli2", "Juro.Demo.Cli2\Juro.Demo.Cli2.csproj", "{2F685207-F9D4-42DB-A7EC-4E67AA723A30}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Juro.Tests", "Juro.Tests\Juro.Tests.csproj", "{0E9707F7-1D67-44A9-B5FC-B195FC02EDCE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{2F685207-F9D4-42DB-A7EC-4E67AA723A30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F685207-F9D4-42DB-A7EC-4E67AA723A30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F685207-F9D4-42DB-A7EC-4E67AA723A30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E9707F7-1D67-44A9-B5FC-B195FC02EDCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E9707F7-1D67-44A9-B5FC-B195FC02EDCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E9707F7-1D67-44A9-B5FC-B195FC02EDCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E9707F7-1D67-44A9-B5FC-B195FC02EDCE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
