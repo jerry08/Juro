@@ -8,9 +8,9 @@ using Juro.Core.Attributes;
 
 namespace Juro;
 
-public class ModuleProvider
+public class Locator
 {
-    internal static ModuleProvider Instance => new();
+    internal static Locator Instance => new();
 
     /// <summary>
     /// Search for files/modules with a pattern.
@@ -19,12 +19,18 @@ public class ModuleProvider
     public string SearchPattern { get; set; } = "*.dll";
 
     /// <summary>
-    /// Initializes an instance of <see cref="ModuleProvider"/>.
+    /// Initializes an instance of <see cref="Locator"/>.
     /// </summary>
-    public ModuleProvider() { }
+    public Locator() { }
 
     public IClientConfig? GetClientConfig(Module module) => GetClientConfig(module.FilePath);
 
+    /// <summary>
+    /// Gets an instance of the first class in the assembly that implements
+    /// the interface <see cref="IClientConfig"/>.
+    /// </summary>
+    /// <param name="filePath">The file path to the assembly (dll) that contains
+    /// the interface <see cref="IClientConfig"/>.</param>
     public IClientConfig? GetClientConfig(string filePath)
     {
         try

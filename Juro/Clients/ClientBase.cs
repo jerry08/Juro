@@ -28,7 +28,7 @@ public class ClientBase<IProvider> where IProvider : ISourceProvider
     //        .ToList();
 
     public IList<IProvider> GetProviders(string? language = null)
-        => ModuleProvider.Instance.GetAssemblies().SelectMany(a => a.GetTypes())
+        => Locator.Instance.GetAssemblies().SelectMany(a => a.GetTypes())
             .Where(x => x.GetInterfaces().Contains(typeof(IProvider))
                 && x.GetConstructor(Type.EmptyTypes) is not null)
             .Select(x => (IProvider)Activator.CreateInstance(x, new object[] { _httpClientFactory })!)

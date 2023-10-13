@@ -50,13 +50,19 @@ internal static class Program
 
         //var dirInfo2 = new DirectoryInfo(dirPath2);
 
-        var moduleProvider = new ModuleProvider();
-        moduleProvider.Load(dirPath2);
-        var modules = moduleProvider.GetModules();
+        var locator = new Locator();
+        locator.Load(dirPath2);
+        var modules = locator.GetModules();
+        var configs = locator.GetClientConfigs();
 
         foreach (var module in modules)
         {
             Console.WriteLine($"{module.Name} ({module.Version}) loaded from '${module.FilePath}'");
+        }
+
+        foreach (var config in configs)
+        {
+            Console.WriteLine($"{config.RepositoryUrl}");
         }
 
         // At this point, the list will be populated now that assemblies are loaded
