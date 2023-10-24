@@ -55,6 +55,8 @@ jobs:
         path: "**/*.nupkg"
 
   deploy:
+    runs-on: windows-latest
+
     if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
     permissions:
       actions: read
