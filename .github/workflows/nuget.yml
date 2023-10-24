@@ -23,6 +23,7 @@ jobs:
       run: dotnet build --no-restore
 
   pack:
+    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
     runs-on: windows-latest
     permissions:
       actions: write
@@ -57,7 +58,6 @@ jobs:
   deploy:
     runs-on: windows-latest
 
-    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
     permissions:
       actions: read
 
