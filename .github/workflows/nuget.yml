@@ -20,9 +20,6 @@ jobs:
         id: get_version
         uses: battila7/get-version-action@v2
 
-      - name: Restore dependencies
-        run: dotnet restore
-
       - name: Build
         run: dotnet build -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
 
