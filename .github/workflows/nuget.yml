@@ -16,21 +16,22 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
-      - name: Install .NET MAUI
-        run: dotnet workload install maui
-
       - name: Get version information from tag
         id: get_version
         uses: battila7/get-version-action@v2
 
       - name: Restore dependencies
-        run: dotnet restore Juro.sln
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build Juro.sln -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
+        run: dotnet build -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
 
       - name: Pack
-        run: dotnet pack Juro.sln -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }} --no-build
+        run: >
+          dotnet pack
+          -p:ContinuousIntegrationBuild=true
+          -c Release
+          /p:Version=${{ steps.get_version.outputs.version-without-v }}
 
       - name: Push packages
         run: >
