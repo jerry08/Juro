@@ -18,4 +18,6 @@ public class Episode
     public string? Link { get; set; }
 
     public string? Image { get; set; }
+
+    public float Progress { get; set; }
 }
