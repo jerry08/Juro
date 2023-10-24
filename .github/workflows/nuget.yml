@@ -12,23 +12,23 @@ jobs:
 
     steps:
       - name: Setup .NET
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
 
       - name: Get version information from tag
         id: get_version
         uses: battila7/get-version-action@v2
 
       - name: Restore dependencies
-        run: dotnet restore Juro/
+        run: dotnet restore
 
       - name: Build
-        run: dotnet build Juro/ -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
+        run: dotnet build -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
 
       - name: Pack
         run: >
-          dotnet pack Juro/
+          dotnet pack
           -p:ContinuousIntegrationBuild=true
           -c Release
           /p:Version=${{ steps.get_version.outputs.version-without-v }}
