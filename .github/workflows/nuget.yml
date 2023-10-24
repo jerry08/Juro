@@ -21,14 +21,14 @@ jobs:
         uses: battila7/get-version-action@v2
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore Juro/
 
       - name: Build
-        run: dotnet build -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
+        run: dotnet build Juro/ -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
 
       - name: Pack
         run: >
-          dotnet pack
+          dotnet pack Juro/
           -p:ContinuousIntegrationBuild=true
           -c Release
           /p:Version=${{ steps.get_version.outputs.version-without-v }}
