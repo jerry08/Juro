@@ -12,9 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitattributes = .gitattributes
 		Directory.Build.props = Directory.Build.props
-		.github\workflows\main.yml = .github\workflows\main.yml
-		.github\workflows\nuget.yml = .github\workflows\nuget.yml
 		README.md = README.md
+		.github\workflows\nuget.yml = .github\workflows\nuget.yml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Juro.Core", "Juro.Core\Juro.Core.csproj", "{48BA6487-3D6C-43E0-9533-A4482B284518}"

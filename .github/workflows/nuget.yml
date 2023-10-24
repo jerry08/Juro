@@ -1,42 +1,80 @@
-name: Create a (Pre)release on NuGet
+name: main
 
-on:
-  push:
-    tags:
-    - "v[0-9]+.[0-9]+.[0-9]+"
-    - "v[0-9]+.[0-9]+.[0-9]+-preview[0-9]+"
+on: [push, pull_request]
+
 jobs:
-  release-nuget:
-  
+  build:
+
     runs-on: windows-latest
 
     steps:
-      - name: Setup .NET
+
+    - uses: actions/checkout@v3
+  
+    - name: Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore
+
+  pack:
+    runs-on: windows-latest
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+
+    - uses: actions/checkout@v3
+  
+    - name: Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 7.0.x
+
+    - name: Get version information from tag
+      id: get_version
+      uses: battila7/get-version-action@v2
+
+    - name: Pack
+      run: >
+        dotnet pack
+        -p:ContinuousIntegrationBuild=true
+        -c Release
+        /p:Version=${{ steps.get_version.outputs.version-without-v }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: packages
+        path: "**/*.nupkg"
+
+  deploy:
+    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+    permissions:
+      actions: read
+
+    needs:
+      - pack
+
+    steps:
+      - name: Install .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 7.0.x
 
-      - name: Get version information from tag
-        id: get_version
-        uses: battila7/get-version-action@v2
-
-      - name: Restore dependencies
-        run: dotnet restore Juro.sln
-
-      - name: Build
-        run: dotnet build Juro.sln -c Release /p:Version=${{ steps.get_version.outputs.version-without-v }}
-
-      - name: Pack
-        run: >
-          dotnet pack
-          -p:ContinuousIntegrationBuild=true
-          -c Release
-          /p:Version=${{ steps.get_version.outputs.version-without-v }}
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: packages
 
       - name: Push packages
         run: >
           dotnet nuget push **/*.nupkg
           --source "https://api.nuget.org/v3/index.json"
           --api-key ${{ secrets.NUGET_TOKEN }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.NUGET_TOKEN }}
