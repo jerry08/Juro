@@ -6,7 +6,8 @@ using System.Text.Json.Serialization;
 
 namespace Juro.Core.Converters;
 
-public class JsonStringEnumConverter : JsonConverterFactory
+// Copied from https://github.com/dotnet/runtime/issues/74385#issuecomment-1456725149
+internal class JsonStringEnumConverter : JsonConverterFactory
 {
     public override bool CanConvert(Type typeToConvert)
     {
@@ -20,7 +21,7 @@ public class JsonStringEnumConverter : JsonConverterFactory
     }
 }
 
-public class JsonStringEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
+internal class JsonStringEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
 {
     private readonly Dictionary<TEnum, string> _enumToString = new();
     private readonly Dictionary<string, TEnum> _stringToEnum = new();
