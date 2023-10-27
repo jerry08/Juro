@@ -44,6 +44,11 @@ public class AniskipClient
         if (response is null)
             return null;
 
+        var opt = new JsonSerializerOptions()
+        {
+            PropertyNameCaseInsensitive = true
+        };
+
         var result = JsonSerializer.Deserialize<AniSkipResponse>(
             response,
             new JsonSerializerOptions
