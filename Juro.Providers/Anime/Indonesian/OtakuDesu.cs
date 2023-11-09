@@ -365,6 +365,8 @@ public class OtakuDesu : IAnimeProvider
 
         list.AddRange(downloads.Where(x => x.ExtraNote == server.Name));
 
+        list.ForEach(x => x.VideoServer = server);
+
         if (list.Count > 0)
             return list;
 
@@ -397,6 +399,8 @@ public class OtakuDesu : IAnimeProvider
 
         var results = await TaskEx.Run(functions, 20);
         list.AddRange(results.SelectMany(x => x));
+
+        list.ForEach(x => x.VideoServer = server);
 
         return list;
     }

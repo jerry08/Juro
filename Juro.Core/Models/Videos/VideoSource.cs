@@ -62,4 +62,6 @@ public class VideoSource
     /// Subtitles for videos if available.
     /// </summary>
     public List<Subtitle> Subtitles { get; set; } = new();
+
+    public VideoServer? VideoServer { get; set; }
 }

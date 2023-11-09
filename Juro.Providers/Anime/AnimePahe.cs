@@ -309,7 +309,11 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
             return new();
 
-        return await new KwikExtractor(_httpClientFactory)
+        var videos = await new KwikExtractor(_httpClientFactory)
             .ExtractAsync(server.Embed.Url, cancellationToken);
+
+        videos.ForEach(x => x.VideoServer = server);
+
+        return videos;
     }
 }

@@ -288,6 +288,10 @@ public class HentaiFF : IAnimeProvider
         if (extractor is null)
             return new();
 
-        return await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
+        var videos = await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
+
+        videos.ForEach(x => x.VideoServer = server);
+
+        return videos;
     }
 }
