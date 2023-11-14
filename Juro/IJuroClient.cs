@@ -6,9 +6,17 @@ namespace Juro;
 public interface IJuroClient<IProvider>
     where IProvider : ISourceProvider
 {
+    /// <summary>
+    /// Gets all providers in currenly loaded module.
+    /// </summary>
     IList<IProvider> GetAllProviders();
 
-    IList<IProvider> GetProviders(string? language = null);
+    /// <summary>
+    /// Gets providers in currenly loaded assemblies.
+    /// </summary>
+    /// <param name="filePath">File path to module.</param>
+    /// <param name="language">Language (Culture name) of the provider.</param>
+    IList<IProvider> GetProviders(string? filePath = null, string? language = null);
 }
 
 public interface IJuroClient : IJuroClient<ISourceProvider> { }
