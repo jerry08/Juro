@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using Juro.Core;
 
 namespace Juro;
 
@@ -11,6 +12,8 @@ public class Module
     public string FilePath { get; set; } = default!;
 
     public Version? Version { get; set; }
+
+    public IClientConfig? ClientConfig { get; set; }
 
     public Module() { }
 

@@ -6,7 +6,8 @@ using Juro.Core.Providers;
 
 namespace Juro.Clients;
 
-public class ClientBase<IProvider> where IProvider : ISourceProvider
+public class ClientBase<IProvider> : IJuroClient<IProvider>
+    where IProvider : ISourceProvider
 {
     private readonly IHttpClientFactory _httpClientFactory;
 
