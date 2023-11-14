@@ -10,7 +10,7 @@ namespace Juro;
 
 public class Locator
 {
-    internal static Locator Instance => new();
+    public static Locator Instance => new();
 
     /// <summary>
     /// Search for files/modules with a pattern.
