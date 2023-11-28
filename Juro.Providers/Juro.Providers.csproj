@@ -23,10 +23,7 @@
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>
     </ProjectReference>
-    <ProjectReference Include="..\Juro.Extractors\Juro.Extractors.csproj">
-      <Private>false</Private>
-      <ExcludeAssets>runtime</ExcludeAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\Juro.Extractors\Juro.Extractors.csproj" />
   </ItemGroup>
 
 </Project>

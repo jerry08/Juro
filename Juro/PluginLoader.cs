@@ -194,6 +194,9 @@ public static class PluginLoader
     /// <param name="pluginLocation">The file path of the plugin.</param>
     public static Assembly LoadPlugin(string pluginLocation)
     {
+        if (OperatingSystem.IsAndroid())
+            return Assembly.LoadFrom(pluginLocation);
+
         Debug.WriteLine($"Loading commands from: {pluginLocation}");
         var loadContext = new PluginLoadContext(pluginLocation);
         return loadContext.LoadFromAssemblyName(AssemblyName.GetAssemblyName(pluginLocation));
