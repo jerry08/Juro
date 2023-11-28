@@ -4,13 +4,13 @@ using Juro.Core.Models;
 namespace Juro.Core.Attributes;
 
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
-public sealed class ModuleAssemblyAttribute : Attribute
+public sealed class PluginAssemblyAttribute : Attribute
 {
     public AssemblyPluginType PluginType { get; } = AssemblyPluginType.None;
 
-    public ModuleAssemblyAttribute() { }
+    public PluginAssemblyAttribute() { }
 
-    public ModuleAssemblyAttribute(AssemblyPluginType type)
+    public PluginAssemblyAttribute(AssemblyPluginType type)
     {
         PluginType = type;
     }

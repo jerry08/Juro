@@ -28,7 +28,7 @@ public class ClientBase<IProvider> : IJuroClient<IProvider>
     //        .ToList();
 
     public IList<IProvider> GetProviders(string? filePath = null, string? language = null)
-        => Locator.Instance.GetAssemblies()
+        => PluginLoader.GetAssemblies()
             .Where(x => string.IsNullOrWhiteSpace(filePath)
                 || string.Equals(x.Location, filePath, StringComparison.OrdinalIgnoreCase))
             .SelectMany(a => a.GetTypes())

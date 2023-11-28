@@ -5,7 +5,7 @@ using Juro.Core;
 
 namespace Juro;
 
-public class Module
+public class Plugin
 {
     public string Name { get; set; } = default!;
 
@@ -15,9 +15,9 @@ public class Module
 
     public IClientConfig? ClientConfig { get; set; }
 
-    public Module() { }
+    public Plugin() { }
 
-    public Module(string? name, string filePath)
+    public Plugin(string? name, string filePath)
     {
         Name = name ?? Path.GetFileNameWithoutExtension(filePath);
         FilePath = filePath;

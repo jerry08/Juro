@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Httpz;
 using Juro.Clients;
 using Juro.Providers.Anime;
+using Juro.Providers.Aniskip;
 using Juro.Providers.Manga;
 using Juro.Providers.Movie;
 
@@ -12,6 +13,10 @@ internal static class Program
 {
     static async Task Main()
     {
+        //var aniskipClient = new AniskipClient();
+        //
+        //var timeStamps = await aniskipClient.GetAsync(52991, 1, 1559891 / 1000);
+
         await AnimeDemo();
         await MangaDemo();
         //await MovieDemo();

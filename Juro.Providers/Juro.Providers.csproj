@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1;net461;net6.0;</TargetFrameworks>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
@@ -18,8 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Juro.Core\Juro.Core.csproj" />
-    <ProjectReference Include="..\Juro.Extractors\Juro.Extractors.csproj" />
+    <ProjectReference Include="..\Juro.Core\Juro.Core.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+    <ProjectReference Include="..\Juro.Extractors\Juro.Extractors.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Juro.Clients;
 
@@ -38,8 +38,8 @@ internal static class Program
 
         var client = new AnimeClient();
 
-        // At this point, the list will be empty because no assemblies with classes that
-        // implement `IAnimeProvider` interface providers are loaded
+        // At this point, the list will be empty because no assemblies/plugins
+        // with classes that implement `IAnimeProvider` interface are loaded.
         var providers = client.GetAllProviders();
 
         //var dir1 = Environment.CurrentDirectory;
@@ -50,14 +50,14 @@ internal static class Program
 
         //var dirInfo2 = new DirectoryInfo(dirPath2);
 
-        var locator = new Locator();
-        locator.Load(dirPath2);
-        var modules = locator.GetModules();
-        var configs = locator.GetClientConfigs();
+        var loadedPlugins = PluginLoader.LoadPlugins(dirPath2);
+        var plugins = PluginLoader.GetPlugins();
+        var configs = PluginLoader.GetClientConfigs().ToList();
 
-        foreach (var module in modules)
+        foreach (var plugin in plugins)
         {
-            Console.WriteLine($"{module.Name} ({module.Version}) loaded from '${module.FilePath}'");
+            Console.WriteLine($"{plugin.ClientConfig?.RepositoryUrl}");
+            Console.WriteLine($"{plugin.Name} ({plugin.Version}) loaded from '${plugin.FilePath}'");
         }
 
         foreach (var config in configs)
@@ -68,6 +68,18 @@ internal static class Program
         // At this point, the list will be populated now that assemblies are loaded
         providers = client.GetAllProviders();
 
-        var searchResult = await providers[0].SearchAsync("naruto");
+        var selectedProvider = providers[3];
+
+        Console.WriteLine($"Searching {selectedProvider.Name}...");
+
+        var searchResult = await selectedProvider.SearchAsync("naruto");
+        Console.WriteLine($"Search count: {searchResult.Count}");
+
+        Console.WriteLine("Getting episodes...");
+
+        var episodes = await selectedProvider.GetEpisodesAsync(searchResult[0].Id);
+        Console.WriteLine($"Episodes count: {episodes.Count}");
+
+        Console.Read();
     }
 }
