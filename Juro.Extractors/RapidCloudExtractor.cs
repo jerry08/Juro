@@ -5,8 +5,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
@@ -39,39 +39,86 @@ public class RapidCloudExtractor : IVideoExtractor
     /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
     /// </summary>
     public RapidCloudExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
     /// </summary>
-    public RapidCloudExtractor() : this(Http.ClientProvider)
+    public RapidCloudExtractor()
+        : this(Http.ClientProvider) { }
+
+    private async Task<List<(int Value1, int Value2)>> GetIndexPairsAsync(
+        CancellationToken cancellationToken = default
+    )
     {
+        var script = await _http.ExecuteAsync(
+            $"https://rapid-cloud.co/js/player/prod/e6-player-v2.min.js",
+            cancellationToken
+        );
+
+        var regex = new Regex(
+            "case\\s*0x[0-9a-f]+:(?![^;]*=partKey)\\s*\\w+\\s*=\\s*(\\w+)\\s*,\\s*\\w+\\s*=\\s*(\\w+);"
+        );
+        var matches = regex.Matches(script).OfType<Match>().ToList();
+
+        var list = new List<(int, int)>();
+
+        foreach (var match in matches)
+        {
+            var var1 = match.Groups[1].Value;
+            var var2 = match.Groups[2].Value;
+
+            var regexVar1 = new Regex($",{var1}=((?:0x)?([0-9a-fA-F]+))");
+            var regexVar2 = new Regex($",{var2}=((?:0x)?([0-9a-fA-F]+))");
+
+            var matchVar1 = regexVar1
+                .Match(script)
+                ?.Groups.OfType<Group>()
+                .ElementAtOrDefault(1)
+                ?.Value?.RemovePrefix("0x");
+            var matchVar2 = regexVar2
+                .Match(script)
+                ?.Groups.OfType<Group>()
+                .ElementAtOrDefault(1)
+                ?.Value;
+
+            if (matchVar1 is not null && matchVar2 is not null)
+            {
+                try
+                {
+                    list.Add(new(Convert.ToByte(matchVar1, 16), Convert.ToByte(matchVar2, 16)));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex);
+                }
+            }
+        }
+
+        return list;
     }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
 
         var host = new Uri(url).Host;
 
-        var decryptKey = await DecryptKeyAsync(cancellationToken);
-        if (decryptKey.Count == 0)
+        var indexPairs = await GetIndexPairsAsync(cancellationToken);
+        if (indexPairs.Count == 0)
             return new();
+
+        var headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
 
         var response = await _http.ExecuteAsync(
             $"https://{host}/ajax/embed-6-v2/getSources?id={id}",
+            headers,
             cancellationToken
         );
-
-        var headers = new Dictionary<string, string>()
-        {
-            { "X-Requested-With", "XMLHttpRequest" }
-        };
 
         var data = JsonNode.Parse(response);
 
@@ -84,26 +131,32 @@ public class RapidCloudExtractor : IVideoExtractor
         {
             try
             {
-                sources = $" {sources} ";
-
                 var sourcesArray = sources!.Select(x => x.ToString()).ToList();
-                var key = "";
-                foreach (var index in decryptKey)
+                var extractedKey = "";
+                var currentIndex = 0;
+
+                foreach (var index in indexPairs)
                 {
-                    for (var i = (index[0] + 1); i < (index[1] + 1); i++)
+                    var start = index.Value1 + currentIndex;
+                    var end = start + index.Value2;
+
+                    for (var i = start; i < end; i++)
                     {
-                        key += sourcesArray[i];
+                        extractedKey += sources![i];
                         sourcesArray[i] = "";
                     }
+
+                    currentIndex += index.Value2;
                 }
 
                 sources = string.Concat(sourcesArray);
                 sources = sources.Trim();
 
-                sources = Decrypt(sources, key);
+                sources = Decrypt(sources, extractedKey);
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Error(ex);
                 return new();
             }
         }
@@ -119,9 +172,11 @@ public class RapidCloudExtractor : IVideoExtractor
                 var label = subtitle["label"]?.ToString();
                 var file = subtitle["file"]?.ToString();
 
-                if (kind == "captions"
+                if (
+                    kind == "captions"
                     && !string.IsNullOrEmpty(label)
-                    && !string.IsNullOrEmpty(file))
+                    && !string.IsNullOrEmpty(file)
+                )
                 {
                     subtitles.Add(new(file!, label!));
                 }
@@ -143,23 +198,9 @@ public class RapidCloudExtractor : IVideoExtractor
         };
     }
 
-    private async ValueTask<List<List<int>>> DecryptKeyAsync(CancellationToken cancellationToken = default)
-    {
-        var response = await _http.ExecuteAsync(
-            "https://raw.githubusercontent.com/enimax-anime/key/e0/key.txt",
-            cancellationToken
-        );
+    private static byte[] Md5(byte[] inputBytes) => MD5.Create().ComputeHash(inputBytes);
 
-        if (string.IsNullOrEmpty(response))
-            return new();
-
-        return JsonSerializer.Deserialize<List<List<int>>>(response) ?? new();
-    }
-
-    private static byte[] Md5(byte[] inputBytes)
-        => MD5.Create().ComputeHash(inputBytes);
-
-    public static byte[] GenerateKey(byte[] salt, byte[] secret)
+    private static byte[] GenerateKey(byte[] salt, byte[] secret)
     {
         var key = Md5(secret.Concat(salt).ToArray());
         var currentKey = key;
@@ -171,13 +212,14 @@ public class RapidCloudExtractor : IVideoExtractor
         return currentKey;
     }
 
-    private static string Decrypt(string input, string key)
-        => DecryptSourceUrl(
+    private static string Decrypt(string input, string key) =>
+        DecryptSourceUrl(
             GenerateKey(
                 input.DecodeBase64ToBytes().CopyOfRange(8, 16),
                 Encoding.UTF8.GetBytes(key)
             ),
-            input);
+            input
+        );
 
     private static string DecryptSourceUrl(byte[] decryptionKey, string sourceUrl)
     {

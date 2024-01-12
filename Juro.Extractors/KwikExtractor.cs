@@ -21,7 +21,8 @@ public class KwikExtractor : IVideoExtractor
 
     private readonly string _host = "https://animepahe.com";
 
-    private readonly Regex _redirectRegex = new("<a href=\"(.+?)\" .+?>Redirect me</a>");
+    //private readonly Regex _redirectRegex = new("<a href=\"(.+?)\" .+?>Redirect me</a>");
+    private readonly Regex _redirectRegex = new(@"https://kwik\..+?/.*?/[A-Za-z0-9]+");
     private readonly Regex _paramRegex = new("""\(\"(\w+)\",\d+,\"(\w+)\",(\d+),(\d+),(\d+)\)""");
     private readonly Regex _urlRegex = new("action=\"(.+?)\"");
     private readonly Regex _tokenRegex = new("value=\"(.+?)\"");
@@ -68,7 +69,8 @@ public class KwikExtractor : IVideoExtractor
             cancellationToken
         );
 
-        var kwikLink = _redirectRegex.Match(response).Groups[1].Value;
+        //var kwikLink = _redirectRegex.Match(response).Groups[1].Value;
+        var kwikLink = _redirectRegex.Match(response).Value;
 
         var kwikRes = await http.GetAsync(kwikLink, cancellationToken);
         var text = await kwikRes.Content.ReadAsStringAsync(cancellationToken);
