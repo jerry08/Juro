@@ -28,10 +28,11 @@ public class AnimeBaseProvider : IVideoExtractorProvider
         {
             "filemoon.to" or "filemoon.sx" => new FilemoonExtractor(_httpClientFactory),
             "rapid-cloud.co" => new RapidCloudExtractor(_httpClientFactory),
+            "megacloud.tv" => new MegaCloudExtractor(_httpClientFactory),
             "streamtape.com" => new StreamTapeExtractor(_httpClientFactory),
             "vidstream.pro" => new VidStreamExtractor(_httpClientFactory),
             "mp4upload.com" => new Mp4uploadExtractor(_httpClientFactory),
-            "playtaku.net" or "goone.pro" => new GogoCDNExtractor(_httpClientFactory),
+            "playtaku.net" or "goone.pro" or "embtaku.pro" => new GogoCDNExtractor(_httpClientFactory),
             "alions.pro" => new ALionsExtractor(_httpClientFactory),
             "awish.pro" => new AWishExtractor(_httpClientFactory),
             "dood.wf" => new DoodExtractor(_httpClientFactory),

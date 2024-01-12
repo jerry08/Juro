@@ -18,44 +18,44 @@ using Juro.Extractors;
 namespace Juro.Providers.Anime;
 
 /// <summary>
-/// Client for interacting with Aniwave.
+/// Client for interacting with 9anime.
 /// </summary>
-public class Aniwave : AnimeBaseProvider, IAnimeProvider, IPopularProvider, ILastUpdatedProvider
+public class NineAnime : AnimeBaseProvider, IAnimeProvider, IPopularProvider, ILastUpdatedProvider
 {
     private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
     public string Key => Name;
 
-    public string Name => "Aniwave";
+    public string Name => "NineAnime";
 
     public string Language => "en";
 
     public bool IsDubAvailableSeparately => false;
 
-    public string BaseUrl => "https://aniwave.to";
+    public string BaseUrl => "https://9anime.pe";
 
     /// <summary>
-    /// Initializes an instance of <see cref="Aniwave"/>.
+    /// Initializes an instance of <see cref="NineAnime"/>.
     /// </summary>
-    public Aniwave(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
+    public NineAnime(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
     {
         _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="Aniwave"/>.
+    /// Initializes an instance of <see cref="NineAnime"/>.
     /// </summary>
-    public Aniwave(Func<HttpClient> httpClientProvider)
+    public NineAnime(Func<HttpClient> httpClientProvider)
         : this(new HttpClientFactory(httpClientProvider))
     {
     }
 
     /// <summary>
-    /// Initializes an instance of <see cref="Aniwave"/>.
+    /// Initializes an instance of <see cref="NineAnime"/>.
     /// </summary>
-    public Aniwave() : this(Http.ClientProvider)
+    public NineAnime() : this(Http.ClientProvider)
     {
     }
 
@@ -64,26 +64,12 @@ public class Aniwave : AnimeBaseProvider, IAnimeProvider, IPopularProvider, ILas
         string query,
         CancellationToken cancellationToken = default)
     {
-        //var vrf = await EncodeVrfAsync(Uri.EscapeDataString(query), cancellationToken);
-
-        //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-        //var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-        var url = $"{BaseUrl}/ajax/anime/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-        //url = $"{url}&sort=${filters.sort}&{vrf}&page={page}";
-        //url = $"{url}&{vrf}";
-
         var response = await _http.ExecuteAsync(
-            url,
+            $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}",
             new Dictionary<string, string>()
             {
                 ["Referer"] = BaseUrl
             },
-            //new Dictionary<string, string>()
-            //{
-            //    ["Referer"] = BaseUrl,
-            //    ["Cookie"] = "waf_jschallenge_c40d24eb070195c3=1701458622-2ab75ee0ecf1d26ea40ad78ad986ae2a",
-            //    ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-            //},
             cancellationToken
         );
 

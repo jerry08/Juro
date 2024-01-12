@@ -413,7 +413,7 @@ public class Gogoanime
             }
 
             //var epNumber = Convert.ToSingle(link.Split(new char[] { '-' }).LastOrDefault());
-            var epNumber = Convert.ToSingle(epName.ToLower().Replace("ep", "").Trim());
+            var epNumber = float.Parse(epName.ToLower().Replace("ep", "").Trim());
 
             episodes.Add(
                 new Episode()
