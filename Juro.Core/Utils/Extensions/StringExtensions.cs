@@ -189,4 +189,27 @@ internal static class StringExtensions
 
     public static string RemoveWhitespaces(this string input)
         => input.ReplaceWhitespaces(string.Empty);
+
+    /// <summary>
+    /// If the input string starts with the given prefix, returns a substring
+    /// with the prefix removed. Otherwise, returns the original string.
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="prefix"></param>
+    /// <returns></returns>
+    public static string RemovePrefix(this string input, string prefix)
+    {
+        if (input.StartsWith(prefix))
+            return input.Remove(0, prefix.Length);
+
+        return input;
+    }
+
+    public static string RemovePrefix(this string input, int prefixLen)
+    {
+        if (input.Length < prefixLen)
+            return string.Empty;
+
+        return input.Remove(0, prefixLen);
+    }
 }
