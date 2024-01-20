@@ -76,7 +76,7 @@ public class MangaKakalot : IMangaProvider
                 Id = node.SelectSingleNode(".//div/h3/a")?.Attributes["href"]!.Value.Split('/')[3]!,
                 Title = node.SelectSingleNode(".//div/h3/a")?.InnerText,
                 Image = node.SelectSingleNode(".//a/img")?.Attributes["src"]?.Value,
-                HeaderForImage = new() { { "Referer", BaseUrl } }
+                Headers = new() { { "Referer", BaseUrl } }
             });
         }
 
@@ -91,10 +91,10 @@ public class MangaKakalot : IMangaProvider
         var mangaInfo = new MangaInfo
         {
             Id = mangaId,
-            Title = ""
+            Title = string.Empty
         };
 
-        var url = mangaId.Contains("read") ? BaseUrl : "https://readmanganato.com";
+        var url = mangaId.Contains("read") ? BaseUrl : "https://chapmanganato.com";
         var response = await _http.ExecuteAsync($"{url}/{mangaId}", cancellationToken);
 
         var document = Html.Parse(response);
@@ -106,7 +106,7 @@ public class MangaKakalot : IMangaProvider
                 ?.InnerText.Replace("Alternative :", "").Split(';')?.Select(x => x.Trim()).ToList() ?? new();
             mangaInfo.Description = document.GetElementbyId("noidungm")
                 ?.InnerText?.Replace($"{mangaInfo.Title} summary:", "").Replace(Environment.NewLine, "").Trim();
-            mangaInfo.HeaderForImage = new() { { "Referer", BaseUrl } };
+            mangaInfo.Headers = new() { { "Referer", BaseUrl } };
             mangaInfo.Image = document.DocumentNode.SelectSingleNode(".//div[@class='manga-info-top']/div/img")?.Attributes["src"]?.Value;
             mangaInfo.Genres = document.DocumentNode.SelectNodes(".//div[@class='manga-info-top']/ul/li[7]/a")
                 ?.Select(x => x.InnerText).ToList() ?? new();
@@ -139,7 +139,7 @@ public class MangaKakalot : IMangaProvider
                 ?.InnerText.Replace("Alternative :", "").Split(';')?.Select(x => x.Trim()).ToList() ?? new();
             mangaInfo.Description = document.DocumentNode.SelectSingleNode(".//div[@id='panel-story-info-description']")
                 ?.InnerText?.Replace("Description :", "").Replace(Environment.NewLine, "").Trim();
-            mangaInfo.HeaderForImage = new() { { "Referer", BaseUrl } };
+            mangaInfo.Headers = new() { { "Referer", BaseUrl } };
             mangaInfo.Image = document.DocumentNode.SelectSingleNode(".//div[@class='story-info-left']/span[@class='info-image']/img")?.Attributes["src"]?.Value;
             mangaInfo.Genres = document.DocumentNode.SelectNodes(".//div[@class='story-info-right']/table/tbody/tr[4]/td[@class='table-value']/a")
                 ?.Select(x => x.InnerText).ToList() ?? new();
@@ -158,7 +158,8 @@ public class MangaKakalot : IMangaProvider
             mangaInfo.Chapters = document.DocumentNode.SelectNodes(".//div[@class='container-main-left']/div[@class='panel-story-chapter-list']/ul/li")
                 ?.Select(el => (IMangaChapter)new MangaChapter()
                 {
-                    Id = el.SelectSingleNode(".//a").Attributes["href"].Value.Split(new[] { ".com/" }, StringSplitOptions.None)[1] + "$$READMANGANATO",
+                    //Id = el.SelectSingleNode(".//a").Attributes["href"].Value.Split(new[] { ".com/" }, StringSplitOptions.None)[1] + "$$READMANGANATO",
+                    Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
                     Title = el.SelectSingleNode(".//a").InnerText,
                     Views = el.SelectSingleNode(".//span[@class='chapter-view text-nowrap']")?.InnerText?.Replace(Environment.NewLine, "").Trim(),
                     ReleasedDate = el.SelectSingleNode(".//span[@class='chapter-time text-nowrap']")?.Attributes["title"]?.Value
@@ -173,10 +174,11 @@ public class MangaKakalot : IMangaProvider
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
-        var url = !chapterId.Contains("$$READMANGANATO")
-            ? $"{BaseUrl}/chapter/{chapterId}"
-            : $"https://readmanganato.com/{chapterId.Replace("$$READMANGANATO", "")}";
+        //var url = !chapterId.Contains("$$READMANGANATO")
+        //    ? $"{BaseUrl}/chapter/{chapterId}"
+        //    : $"https://readmanganato.com/{chapterId.Replace("$$READMANGANATO", "")}";
 
+        var url = chapterId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         var document = Html.Parse(response);
@@ -192,7 +194,7 @@ public class MangaKakalot : IMangaProvider
                     .Replace("- MangaNato.com", "")
                     .Replace("- Mangakakalot.com", "")
                     .Trim(),
-                HeaderForImage = new() { { "Referer", BaseUrl } }
+                Headers = new() { { "Referer", BaseUrl } }
             }).ToList();
 
         return pages;

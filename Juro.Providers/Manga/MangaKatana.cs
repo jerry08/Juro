@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
@@ -131,19 +132,19 @@ public class MangaKatana : IMangaProvider
             Id = mangaId
         };
 
-        mangaInfo.Description = document.DocumentNode.SelectSingleNode(".//div[@class='flex flex-col']/div[2]/p")?.InnerText.Trim();
-        mangaInfo.Genres = document.DocumentNode.SelectNodes(".//div[@class='flex flex-col']/div[4]/a")?
+        mangaInfo.Description = document.DocumentNode.SelectSingleNode(".//div[@class='summary']/p")?.InnerText.Trim();
+        mangaInfo.Genres = document.DocumentNode.SelectNodes(".//div[@class='genres']/a")?
             .Select(el => el.InnerText).ToList() ?? new();
 
-        var statusText = document.DocumentNode.SelectSingleNode(".//div[@class='flex flex-col']/div[3]/div[2]/div")?.InnerText.Trim();
+        var statusText = document.DocumentNode.SelectSingleNode(".//ul[@class='meta d-table']/li[4]/div[2]")?.InnerText.Trim();
         mangaInfo.Status = statusText switch
         {
-            "finished" => MediaStatus.Completed,
+            "finished" or "completed" => MediaStatus.Completed,
             "publishing" => MediaStatus.Ongoing,
             _ => MediaStatus.Unknown,
         };
 
-        mangaInfo.Chapters = document.DocumentNode.SelectNodes(".//div[@id='chapters']/div/a")?
+        mangaInfo.Chapters = document.DocumentNode.SelectNodes(".//div[@class='chapters']//div[@class='chapter']/a")?
             .Reverse()?.Select(el => (IMangaChapter)new MangaChapter()
             {
                 Id = el.Attributes["href"].Value,
@@ -158,22 +159,43 @@ public class MangaKatana : IMangaProvider
         string chapterId,
         CancellationToken cancellationToken = default!)
     {
-        var url = BaseUrl + chapterId;
+        // server2 = lin + "?sv=mk";
+        // server3 = lin + "?sv=3";
+
+        var url = chapterId;
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
-        var document = Html.Parse(response);
-
-        var i = 1;
+        //var document = Html.Parse(response);
+        //
+        //var list = new List<IMangaChapterPage>();
+        //
+        //var i = 1;
+        //list.AddRange(
+        //    document.GetElementbyId("imgs").SelectNodes(".//img")
+        //        .Select(el => new MangaChapterPage()
+        //        {
+        //            Image = el.Attributes["data-src"]!.Value,
+        //            Page = i++
+        //        })
+        //);
 
         var list = new List<IMangaChapterPage>();
 
+        //var urlMatches = Regex.Matches(response, @"(https?):\/\/(www\.)?[a-z0-9\.:].*?(?=\s)");
+        var urlMatches = Regex.Matches(response, @"https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*)");
+        var uris = urlMatches.OfType<Match>()
+            .Where(x => Uri.IsWellFormedUriString(x.Value, UriKind.Absolute))
+            .Select(x => new Uri(x.Value))
+            .Where(x => x.Host.ToLower().Contains("i1.mangakatana"))
+            .ToList();
+
+        var i = 1;
         list.AddRange(
-            document.DocumentNode.SelectNodes(".//img[@class='js-page']")
-                .Select(el => new MangaChapterPage()
-                {
-                    Image = el.Attributes["data-src"]!.Value,
-                    Page = i++
-                })
+            uris.Select(x => new MangaChapterPage()
+            {
+                Image = x.OriginalString,
+                Page = i++
+            })
         );
 
         return list;
