@@ -3,7 +3,7 @@ using FluentAssertions;
 using Juro.Clients;
 using Xunit;
 
-namespace Juro.Tests.Providers;
+namespace Juro.Tests.Specs;
 
 public class MainSpecs
 {
