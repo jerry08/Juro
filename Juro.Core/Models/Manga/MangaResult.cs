@@ -10,5 +10,5 @@ public class MangaResult : IMangaResult
 
     public string? Image { get; set; }
 
-    public Dictionary<string, string> HeaderForImage { get; set; } = new();
+    public Dictionary<string, string> Headers { get; set; } = new();
 }

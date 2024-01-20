@@ -14,7 +14,7 @@ public class MangaInfo : IMangaInfo
 
     public string? Image { get; set; }
 
-    public Dictionary<string, string> HeaderForImage { get; set; } = new();
+    public Dictionary<string, string> Headers { get; set; } = new();
 
     public List<string> Genres { get; set; } = new();
 

@@ -14,7 +14,7 @@ public interface IMangaInfo
 
     public string? Image { get; set; }
 
-    public Dictionary<string, string> HeaderForImage { get; set; }
+    public Dictionary<string, string> Headers { get; set; }
 
     public List<string> Genres { get; set; }
 

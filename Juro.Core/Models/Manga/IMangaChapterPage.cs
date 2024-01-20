@@ -10,5 +10,5 @@ public interface IMangaChapterPage
 
     public string? Title { get; set; }
 
-    public Dictionary<string, string> HeaderForImage { get; set; }
+    public Dictionary<string, string> Headers { get; set; }
 }

@@ -10,5 +10,5 @@ public interface IMangaResult
 
     public string? Image { get; set; }
 
-    public Dictionary<string, string> HeaderForImage { get; set; }
+    public Dictionary<string, string> Headers { get; set; }
 }
