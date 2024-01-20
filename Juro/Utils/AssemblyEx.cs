@@ -3,11 +3,22 @@ using System.Reflection;
 
 namespace Juro.Utils;
 
-internal static class AssemblyEx
+public static class AssemblyEx
 {
     public static IEnumerable<Assembly> GetReferencedAssemblies()
     {
         var assembly = Assembly.GetEntryAssembly();
+        if (assembly is null)
+            yield break;
+
+        foreach (var reference in assembly.GetReferencedAssemblies())
+        {
+            yield return Assembly.Load(reference);
+        }
+    }
+
+    public static IEnumerable<Assembly> GetReferencedAssemblies(Assembly? assembly)
+    {
         if (assembly is null)
             yield break;
 

@@ -194,11 +194,23 @@ public static class PluginLoader
     /// <param name="pluginLocation">The file path of the plugin.</param>
     public static Assembly LoadPlugin(string pluginLocation)
     {
-        if (OperatingSystem.IsAndroid())
-            return Assembly.LoadFrom(pluginLocation);
+        //var assembly = Assembly.LoadFrom(pluginLocation);
+        //
+        //var test1 = AppDomain.CurrentDomain.GetAssemblies().ToList();
+        //var test = AssemblyEx.GetReferencedAssemblies(assembly).ToList();
+        //var test2 = AppDomain.CurrentDomain.GetAssemblies().ToList();
+        //var hh = AppDomain.CurrentDomain.GetAssemblies().Select(x => x.ToString()).ToList();
 
-        Debug.WriteLine($"Loading commands from: {pluginLocation}");
-        var loadContext = new PluginLoadContext(pluginLocation);
-        return loadContext.LoadFromAssemblyName(AssemblyName.GetAssemblyName(pluginLocation));
+        if (OperatingSystem.IsWindows())
+        {
+            Debug.WriteLine($"Loading commands from: {pluginLocation}");
+            var loadContext = new PluginLoadContext(pluginLocation);
+            return loadContext.LoadFromAssemblyName(AssemblyName.GetAssemblyName(pluginLocation));
+        }
+        else
+        {
+            //AppDomain.CurrentDomain.Load(pluginLocation);
+            return Assembly.LoadFrom(pluginLocation);
+        }   
     }
 }

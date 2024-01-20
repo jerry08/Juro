@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Httpz;
 using Juro.Clients;
+using Juro.Core.Utils;
 using Juro.Providers.Anime;
 using Juro.Providers.Aniskip;
 using Juro.Providers.Manga;
@@ -13,6 +14,15 @@ internal static class Program
 {
     static async Task Main()
     {
+        var radix = 16;
+        var result1 = Convert.ToByte("4a", radix);
+
+        //Logger.Debug("{0}", "test");
+        //Logger.Debug("", "test1", "test2");
+        //Logger.Debug("test3");
+        //
+        //await Task.Delay(100);
+
         //var aniskipClient = new AniskipClient();
         //
         //var timeStamps = await aniskipClient.GetAsync(52991, 1, 1559891 / 1000);
@@ -36,7 +46,8 @@ internal static class Program
         var allProviders = client.GetAllProviders();
 
         //var provider = new OtakuDesu();
-        var provider = new Gogoanime();
+        var provider = new Kaido();
+        //var provider = new Aniwatch();
 
         //var test = await provider.GetPopularAsync();
 
@@ -47,7 +58,7 @@ internal static class Program
         var animeInfo = await provider.GetAnimeInfoAsync(animes[0].Id);
         var episodes = await provider.GetEpisodesAsync(animes[0].Id);
         var videoServers = await provider.GetVideoServersAsync(episodes[0].Id);
-        var videos = await provider.GetVideosAsync(videoServers[3]);
+        var videos = await provider.GetVideosAsync(videoServers[1]);
 
         var filePath = @"D:\Downloads\svs.mp4";
 
@@ -112,7 +123,7 @@ internal static class Program
         await downloader.DownloadAsync(
             pages[0].Image,
             fileName,
-            headers: pages[0].HeaderForImage
+            headers: pages[0].Headers
         );
     }
 }
