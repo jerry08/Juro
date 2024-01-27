@@ -24,7 +24,6 @@ namespace Juro.Providers.Anime;
 /// </summary>
 public class AnimePahe : AnimeBaseProvider, IAnimeProvider
 {
-    private readonly HttpClient _http;
     private readonly IHttpClientFactory _httpClientFactory;
 
     private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
@@ -44,17 +43,7 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
     /// </summary>
     public AnimePahe(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
     {
-        _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
-
-        BypassDdg();
-    }
-
-    // https://github.com/justfoolingaround/animdl/blob/master/animdl/utils/http_client.py#L68C15-L68C28
-    private void BypassDdg()
-    {
-        _http.DefaultRequestHeaders.Add("Referer", BaseUrl);
-        _http.DefaultRequestHeaders.Add("Cookie", "__ddg2_=YW5pbWRsX3NheXNfaGkNCg.;");
     }
 
     /// <summary>
@@ -86,7 +75,9 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
     {
         var animes = new List<IAnimeInfo>();
 
-        var response = await _http.ExecuteAsync(
+        var http = _httpClientFactory.CreateClient().BypassDdg();
+
+        var response = await http.ExecuteAsync(
             $"{BaseUrl}/api?m=search&q={Uri.EscapeDataString(query)}",
             cancellationToken
         );
@@ -120,7 +111,9 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
     {
         var animes = new List<IAnimeInfo>();
 
-        var response = await _http.ExecuteAsync(
+        var http = _httpClientFactory.CreateClient().BypassDdg();
+
+        var response = await http.ExecuteAsync(
             $"{BaseUrl}/api?m=airing&page={page}",
             cancellationToken
         );
@@ -146,7 +139,9 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
         string id,
         CancellationToken cancellationToken = default)
     {
-        var response = await _http.ExecuteAsync($"{BaseUrl}/anime/{id}", cancellationToken);
+        var http = _httpClientFactory.CreateClient().BypassDdg();
+
+        var response = await http.ExecuteAsync($"{BaseUrl}/anime/{id}", cancellationToken);
 
         var document = Html.Parse(response);
 
@@ -214,7 +209,9 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
     {
         var list = new List<Episode>();
 
-        var response = await _http.ExecuteAsync(
+        var http = _httpClientFactory.CreateClient().BypassDdg();
+
+        var response = await http.ExecuteAsync(
             $"{BaseUrl}/api?m=release&id={id}&sort=episode_asc&page=1",
             cancellationToken
         );
@@ -224,6 +221,7 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
         Episode epsSelector(JsonNode? el)
         {
             var link = $"{BaseUrl}/play/{id}/{el!["session"]}";
+            var epNum = Convert.ToInt32(el["episode"]?.ToString());
 
             return new Episode()
             {
@@ -231,9 +229,10 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
                 //Id = el["id"]!.ToString(),
                 //Id = el["session"]!.ToString(),
                 Id = link,
-                Number = Convert.ToInt32(el["episode"]?.ToString()),
-                Image = el["snapshot"]!.ToString(),
-                Description = el["title"]!.ToString(),
+                Name = $"Episode {epNum}",
+                Number = epNum,
+                Image = el["snapshot"]?.ToString(),
+                Description = el["title"]?.ToString(),
                 Link = link,
                 Duration = (float)TimeSpan.Parse(el["duration"]!.ToString()).TotalMilliseconds
             };
@@ -248,7 +247,7 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
 
         // Start at index of 2 since we've already gotten the first page above.
         var functions = Enumerable.Range(2, lastPage - 1).Select(i =>
-            (Func<Task<string>>)(async () => await _http.ExecuteAsync(
+            (Func<Task<string>>)(async () => await http.ExecuteAsync(
                 $"{BaseUrl}/api?m=release&id={id}&sort=episode_asc&page={i}",
                 cancellationToken
             )));
@@ -271,9 +270,12 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
     {
         //var test = $"{BaseUrl}/play/api?m=links&id={episodeId}";
 
-        var response = await _http.ExecuteAsync(
+        var http = _httpClientFactory.CreateClient().BypassDdg();
+
+        var response = await http.ExecuteAsync(
             //$"{BaseUrl}/api?m=links&id={episodeId}",
-            episodeId, new Dictionary<string, string>()
+            episodeId,
+            new Dictionary<string, string>()
             {
                 { "Referer", BaseUrl }
             },

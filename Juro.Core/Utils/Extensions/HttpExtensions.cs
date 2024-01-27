@@ -13,6 +13,14 @@ namespace Juro.Core.Utils.Extensions;
 
 internal static class HttpExtensions
 {
+    // https://github.com/justfoolingaround/animdl/blob/master/animdl/utils/http_client.py#L68C15-L68C28
+    public static HttpClient BypassDdg(this HttpClient http)
+    {
+        http.DefaultRequestHeaders.Add("User-Agent", Http.ChromeUserAgent());
+        http.DefaultRequestHeaders.Add("Cookie", "__ddg2_=YW5pbWRsX3NheXNfaGkNCg.;");
+        return http;
+    }
+
     public static bool GetAllowAutoRedirect(this HttpClient http)
     {
         var handlerField = http.GetType().BaseType!.GetFields(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(x => x.Name.Contains("handler"))!;
