@@ -46,6 +46,15 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
     {
         _http = httpClientFactory.CreateClient();
         _httpClientFactory = httpClientFactory;
+
+        BypassDdg();
+    }
+
+    // https://github.com/justfoolingaround/animdl/blob/master/animdl/utils/http_client.py#L68C15-L68C28
+    private void BypassDdg()
+    {
+        _http.DefaultRequestHeaders.Add("Referer", BaseUrl);
+        _http.DefaultRequestHeaders.Add("Cookie", "__ddg2_=YW5pbWRsX3NheXNfaGkNCg.;");
     }
 
     /// <summary>
@@ -240,7 +249,8 @@ public class AnimePahe : AnimeBaseProvider, IAnimeProvider
         // Start at index of 2 since we've already gotten the first page above.
         var functions = Enumerable.Range(2, lastPage - 1).Select(i =>
             (Func<Task<string>>)(async () => await _http.ExecuteAsync(
-                $"{BaseUrl}/api?m=release&id={id}&sort=episode_asc&page={i}"
+                $"{BaseUrl}/api?m=release&id={id}&sort=episode_asc&page={i}",
+                cancellationToken
             )));
 
         var results = await TaskEx.Run(functions, 20);
