@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CSharpier.MsBuild" Version="0.27.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Juro.Core\Juro.Core.csproj" />
     <ProjectReference Include="..\Juro.Extractors\Juro.Extractors.csproj" />
   </ItemGroup>
