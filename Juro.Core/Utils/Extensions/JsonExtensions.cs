@@ -13,16 +13,15 @@ public static class JsonExtensions
         value = value.Trim();
         if (
             (value.StartsWith("{") && value.EndsWith("}"))
-            || //For object
-            (value.StartsWith("[") && value.EndsWith("]"))
-        ) //For array
+            || (value.StartsWith("[") && value.EndsWith("]"))
+        )
         {
             try
             {
                 var obj = JsonNode.Parse(value);
                 return obj is not null;
             }
-            catch (Exception ex) //some other exception
+            catch (Exception ex)
             {
                 Debug.WriteLine(ex.ToString());
                 return false;
