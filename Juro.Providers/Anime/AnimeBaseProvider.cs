@@ -9,14 +9,9 @@ using Juro.Extractors;
 
 namespace Juro.Providers.Anime;
 
-public class AnimeBaseProvider : IVideoExtractorProvider
+public class AnimeBaseProvider(IHttpClientFactory httpClientFactory) : IVideoExtractorProvider
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public AnimeBaseProvider(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     public virtual IVideoExtractor? GetVideoExtractor(VideoServer server)
     {
@@ -32,7 +27,10 @@ public class AnimeBaseProvider : IVideoExtractorProvider
             "streamtape.com" => new StreamTapeExtractor(_httpClientFactory),
             "vidstream.pro" => new VidStreamExtractor(_httpClientFactory),
             "mp4upload.com" => new Mp4uploadExtractor(_httpClientFactory),
-            "playtaku.net" or "goone.pro" or "embtaku.pro" => new GogoCDNExtractor(_httpClientFactory),
+            "playtaku.net"
+            or "goone.pro"
+            or "embtaku.pro"
+                => new GogoCDNExtractor(_httpClientFactory),
             "alions.pro" => new ALionsExtractor(_httpClientFactory),
             "awish.pro" => new AWishExtractor(_httpClientFactory),
             "dood.wf" => new DoodExtractor(_httpClientFactory),
@@ -45,14 +43,15 @@ public class AnimeBaseProvider : IVideoExtractorProvider
     /// <inheritdoc />
     public virtual async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
-            return new();
+            return [];
 
         var extractor = GetVideoExtractor(server);
         if (extractor is null)
-            return new();
+            return [];
 
         var videos = await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
 

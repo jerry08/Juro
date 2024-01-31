@@ -24,7 +24,8 @@ public interface IAnimeProvider : ISourceProvider, IVideoExtractorProvider, IKey
     /// <returns>A <see cref="List{T}"/> of <see cref="IAnimeInfo"/>s.</returns>
     ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Gets the anime info by Id.
@@ -34,7 +35,8 @@ public interface IAnimeProvider : ISourceProvider, IVideoExtractorProvider, IKey
     /// <returns>An instance of <see cref="IAnimeInfo"/> for the provider.</returns>
     ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string animeId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Gets episodes for anime.
@@ -44,7 +46,8 @@ public interface IAnimeProvider : ISourceProvider, IVideoExtractorProvider, IKey
     /// <returns>A <see cref="List{T}"/> of <see cref="Episode"/>s.</returns>
     ValueTask<List<Episode>> GetEpisodesAsync(
         string animeId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Gets video servers for episode.
@@ -54,5 +57,6 @@ public interface IAnimeProvider : ISourceProvider, IVideoExtractorProvider, IKey
     /// <returns>A <see cref="List{T}"/> of <see cref="VideoServer"/>s.</returns>
     ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

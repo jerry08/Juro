@@ -17,13 +17,17 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for VidCloud.
 /// </summary>
-public class VidCloudExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="VidCloudExtractor"/>.
+/// </remarks>
+public class VidCloudExtractor(IHttpClientFactory httpClientFactory, bool isAlternative = false)
+    : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     private readonly string _host = "https://dokicloud.one";
     private readonly string _host2 = "https://rabbitstream.net";
-    private readonly bool _isAlternative;
+    private readonly bool _isAlternative = isAlternative;
 
     /// <inheritdoc />
     public string ServerName => "VidCloud";
@@ -31,36 +35,20 @@ public class VidCloudExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="VidCloudExtractor"/>.
     /// </summary>
-    public VidCloudExtractor(
-        IHttpClientFactory httpClientFactory,
-        bool isAlternative = false)
-    {
-        _httpClientFactory = httpClientFactory;
-        _isAlternative = isAlternative;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="VidCloudExtractor"/>.
-    /// </summary>
-    public VidCloudExtractor(
-        Func<HttpClient> httpClientProvider,
-        bool isAlternative = false)
-        : this(new HttpClientFactory(httpClientProvider), isAlternative)
-    {
-    }
+    public VidCloudExtractor(Func<HttpClient> httpClientProvider, bool isAlternative = false)
+        : this(new HttpClientFactory(httpClientProvider), isAlternative) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="VidCloudExtractor"/>.
     /// </summary>
     public VidCloudExtractor(bool isAlternative = false)
-        : this(Http.ClientProvider, isAlternative)
-    {
-    }
+        : this(Http.ClientProvider, isAlternative) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default!)
+        CancellationToken cancellationToken = default!
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -93,27 +81,32 @@ public class VidCloudExtractor : IVideoExtractor
             sourcesJson = decryptor.Decrypt(sourcesJson, key);
         }
 
-        var subtitles = data["tracks"]!.AsArray()
+        var subtitles = data["tracks"]!
+            .AsArray()
             .Where(x => x!["kind"]?.ToString() == "captions")
             .Select(track => new Subtitle()
             {
                 Url = track!["file"]!.ToString(),
                 Language = track["label"]!.ToString()
-            }).ToList();
+            })
+            .ToList();
 
         var sources = JsonNode.Parse(sourcesJson)!.AsArray()!;
 
-        var list = sources.Select(source => new VideoSource()
-        {
-            VideoUrl = source!["file"]!.ToString(),
-            Format = source["file"]!.ToString().Contains(".m3u8")
-                ? VideoType.M3u8 : source["type"]!.ToString().ToLower() switch
-                {
-                    "hls" => VideoType.Hls,
-                    _ => VideoType.Container
-                },
-            Subtitles = subtitles
-        }).ToList();
+        var list = sources
+            .Select(source => new VideoSource()
+            {
+                VideoUrl = source!["file"]!.ToString(),
+                Format = source["file"]!.ToString().Contains(".m3u8")
+                    ? VideoType.M3u8
+                    : source["type"]!.ToString().ToLower() switch
+                    {
+                        "hls" => VideoType.Hls,
+                        _ => VideoType.Container
+                    },
+                Subtitles = subtitles
+            })
+            .ToList();
 
         return list;
     }

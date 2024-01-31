@@ -14,9 +14,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for YourUpload.
 /// </summary>
-public class YourUploadExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="YourUploadExtractor"/>.
+/// </remarks>
+public class YourUploadExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "YourUpload";
@@ -24,36 +27,26 @@ public class YourUploadExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="YourUploadExtractor"/>.
     /// </summary>
-    public YourUploadExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="YourUploadExtractor"/>.
-    /// </summary>
     public YourUploadExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="YourUploadExtractor"/>.
     /// </summary>
-    public YourUploadExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public YourUploadExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
-        => await ExtractAsync(url, null, cancellationToken);
+        CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, null, cancellationToken);
 
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         string? quality = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -66,18 +59,20 @@ public class YourUploadExtractor : IVideoExtractor
 
         var document = Html.Parse(response);
 
-        var baseData = document.DocumentNode.Descendants()
-            .FirstOrDefault(x => x.Name == "script"
-                && x.InnerText?.Contains("jwplayerOptions") == true)?.InnerText;
+        var baseData = document
+            .DocumentNode.Descendants()
+            .FirstOrDefault(x =>
+                x.Name == "script" && x.InnerText?.Contains("jwplayerOptions") == true
+            )
+            ?.InnerText;
 
         if (string.IsNullOrEmpty(baseData))
-            return new();
+            return [];
 
-        var basicUrl = baseData!.RemoveWhitespaces()
-            .SubstringAfter("file:'").SubstringBefore("',");
+        var basicUrl = baseData!.RemoveWhitespaces().SubstringAfter("file:'").SubstringBefore("',");
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 Format = VideoType.Container,
@@ -86,6 +81,6 @@ public class YourUploadExtractor : IVideoExtractor
                 Headers = headers,
                 Title = $"{quality} - {ServerName}"
             }
-        };
+        ];
     }
 }

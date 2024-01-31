@@ -18,10 +18,13 @@ using Juro.Extractors;
 
 namespace Juro.Providers.Anime.Indonesian;
 
-public class OtakuDesu : IAnimeProvider
+/// <summary>
+/// Initializes an instance of <see cref="OtakuDesu"/>.
+/// </summary>
+public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
 {
-    private readonly HttpClient _http;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _http = httpClientFactory.CreateClient();
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     public string Key => Name;
 
@@ -39,31 +42,20 @@ public class OtakuDesu : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="OtakuDesu"/>.
     /// </summary>
-    public OtakuDesu(IHttpClientFactory httpClientFactory)
-    {
-        _http = httpClientFactory.CreateClient();
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="OtakuDesu"/>.
-    /// </summary>
     public OtakuDesu(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="OtakuDesu"/>.
     /// </summary>
-    public OtakuDesu() : this(Http.ClientProvider)
-    {
-    }
+    public OtakuDesu()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}/?s={Uri.EscapeDataString(query)}&post_type=anime",
@@ -81,10 +73,7 @@ public class OtakuDesu : IAnimeProvider
 
         for (var i = 0; i < nodes?.Count; i++)
         {
-            var anime = new OtakuDesuAnimeInfo()
-            {
-                Site = AnimeSites.OtakuDesu
-            };
+            var anime = new OtakuDesuAnimeInfo() { Site = AnimeSites.OtakuDesu };
 
             var nameNode = nodes[i].SelectSingleNode(".//h2/a");
             if (nameNode is not null)
@@ -102,22 +91,19 @@ public class OtakuDesu : IAnimeProvider
             if (imgNode is not null)
                 anime.Image = imgNode.Attributes["src"].Value;
 
-            var genresNode = nodes[i].SelectNodes(".//div[@class='set']")
-                .FirstOrDefault();
+            var genresNode = nodes[i].SelectNodes(".//div[@class='set']").FirstOrDefault();
             if (genresNode is not null)
             {
                 //var genres = genresNode.InnerText?.Split(':').Skip(1).ToArray();
                 var genres = genresNode.InnerText?.Split(':').LastOrDefault()?.Split(',');
-                anime.Genres = genres?.Select(x => new Genre(x.Trim())).ToList() ?? new();
+                anime.Genres = genres?.Select(x => new Genre(x.Trim())).ToList() ?? [];
             }
 
-            var statusNode = nodes[i].SelectNodes(".//div[@class='set']")
-                .ElementAtOrDefault(1);
+            var statusNode = nodes[i].SelectNodes(".//div[@class='set']").ElementAtOrDefault(1);
             if (statusNode is not null)
                 anime.Status = statusNode.InnerText?.Split(':').LastOrDefault()?.Trim();
 
-            var ratingNode = nodes[i].SelectNodes(".//div[@class='set']")
-                .ElementAtOrDefault(2);
+            var ratingNode = nodes[i].SelectNodes(".//div[@class='set']").ElementAtOrDefault(2);
             if (ratingNode is not null)
             {
                 var ratingStr = ratingNode.InnerText?.Split(':').LastOrDefault()?.Trim();
@@ -140,20 +126,19 @@ public class OtakuDesu : IAnimeProvider
     public async ValueTask<List<IAnimeInfo>> SearchByGenreAsync(
         string id,
         int page = 1,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<IAnimeInfo>();
 
-        var genre = Genres.Find(x => x.Url?.ToLower() == id.ToLower()
-            || x.Name?.ToLower() == id.ToLower());
+        var genre = Genres.Find(x =>
+            x.Url?.ToLower() == id.ToLower() || x.Name?.ToLower() == id.ToLower()
+        );
 
         if (genre is null)
             return list;
 
-        var response = await _http.ExecuteAsync(
-            $"{genre.Url}/page/{page}",
-            cancellationToken
-        );
+        var response = await _http.ExecuteAsync($"{genre.Url}/page/{page}", cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
             return list;
@@ -166,33 +151,38 @@ public class OtakuDesu : IAnimeProvider
 
         for (var i = 0; i < nodes.Count; i++)
         {
-            var anime = new OtakuDesuAnimeInfo()
-            {
-                Site = AnimeSites.OtakuDesu
-            };
+            var anime = new OtakuDesuAnimeInfo() { Site = AnimeSites.OtakuDesu };
 
-            anime.Title = nodes[i].SelectSingleNode(".//div[@class='col-anime-title']")
-                ?.InnerText ?? "";
+            anime.Title =
+                nodes[i].SelectSingleNode(".//div[@class='col-anime-title']")?.InnerText ?? "";
 
-            anime.Link = nodes[i].SelectSingleNode(".//div[@class='col-anime-title']/a")
-                ?.Attributes["href"]?.Value ?? "";
+            anime.Link =
+                nodes[i]
+                    .SelectSingleNode(".//div[@class='col-anime-title']/a")
+                    ?.Attributes["href"]
+                    ?.Value ?? "";
 
             anime.Id = anime.Link;
 
-            anime.Studio = nodes[i].SelectSingleNode(".//div[@class='col-anime-studio']")
+            anime.Studio = nodes[i]
+                .SelectSingleNode(".//div[@class='col-anime-studio']")
                 ?.InnerText;
 
-            var ratingStr = nodes[i].SelectSingleNode(".//div[@class='col-anime-rating']")?.InnerText;
+            var ratingStr = nodes[i]
+                .SelectSingleNode(".//div[@class='col-anime-rating']")
+                ?.InnerText;
             if (float.TryParse(ratingStr, out var rating))
                 anime.Rating = rating;
 
-            anime.Image = nodes[i].SelectSingleNode(".//div[@class='col-anime-cover']/img")
-                ?.Attributes["src"]?.Value;
+            anime.Image = nodes[i]
+                .SelectSingleNode(".//div[@class='col-anime-cover']/img")
+                ?.Attributes["src"]
+                ?.Value;
 
-            anime.Summary = nodes[i].SelectSingleNode(".//div[@class='col-synopsis']")
-                ?.InnerText;
+            anime.Summary = nodes[i].SelectSingleNode(".//div[@class='col-synopsis']")?.InnerText;
 
-            anime.Released = nodes[i].SelectSingleNode(".//div[@class='col-anime-date']")
+            anime.Released = nodes[i]
+                .SelectSingleNode(".//div[@class='col-anime-date']")
                 ?.InnerText;
 
             list.Add(anime);
@@ -204,12 +194,10 @@ public class OtakuDesu : IAnimeProvider
     /// <inheritdoc />
     public async ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string animeId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var response = await _http.ExecuteAsync(
-            animeId,
-            cancellationToken
-        );
+        var response = await _http.ExecuteAsync(animeId, cancellationToken);
 
         var animeInfo = new OtakuDesuAnimeInfo();
 
@@ -221,24 +209,52 @@ public class OtakuDesu : IAnimeProvider
         animeInfo.Id = animeId;
         animeInfo.Link = animeId;
 
-        animeInfo.Title = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[1]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
+        animeInfo.Title = string.Concat(
+                document
+                    .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[1]/span")
+                    ?.LastChild?.InnerText?.Split(':')
+                    .Skip(1) ?? Array.Empty<string>()
+            )
+            .Trim();
 
-        animeInfo.Image = document.DocumentNode.SelectSingleNode(".//div[@class='fotoanime']/img")
-            .Attributes["src"]?.Value;
+        animeInfo.Image = document
+            .DocumentNode.SelectSingleNode(".//div[@class='fotoanime']/img")
+            .Attributes["src"]
+            ?.Value;
 
-        animeInfo.Type = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[5]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
+        animeInfo.Type = string.Concat(
+                document
+                    .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[5]/span")
+                    ?.LastChild?.InnerText?.Split(':')
+                    .Skip(1) ?? Array.Empty<string>()
+            )
+            .Trim();
 
-        animeInfo.Status = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[6]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
+        animeInfo.Status = string.Concat(
+                document
+                    .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[6]/span")
+                    ?.LastChild?.InnerText?.Split(':')
+                    .Skip(1) ?? Array.Empty<string>()
+            )
+            .Trim();
 
-        animeInfo.Studio = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[10]/span")
-            ?.LastChild?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>()).Trim();
+        animeInfo.Studio = string.Concat(
+                document
+                    .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[10]/span")
+                    ?.LastChild?.InnerText?.Split(':')
+                    .Skip(1) ?? Array.Empty<string>()
+            )
+            .Trim();
 
-        animeInfo.Genres = string.Concat(document.DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[11]/span")
-            ?.InnerText?.Split(':').Skip(1) ?? Array.Empty<string>())
-            .Split(',').Select(x => new Genre(x.Trim())).ToList();
+        animeInfo.Genres = string.Concat(
+                document
+                    .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[11]/span")
+                    ?.InnerText?.Split(':')
+                    .Skip(1) ?? Array.Empty<string>()
+            )
+            .Split(',')
+            .Select(x => new Genre(x.Trim()))
+            .ToList();
 
         return animeInfo;
     }
@@ -246,7 +262,8 @@ public class OtakuDesu : IAnimeProvider
     /// <inheritdoc />
     public async ValueTask<List<Episode>> GetEpisodesAsync(
         string animeId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<Episode>();
 
@@ -259,9 +276,10 @@ public class OtakuDesu : IAnimeProvider
 
         //var nodes = document.DocumentNode.SelectNodes(".//div[@class='episodelist']//a");
         //var nodes = document.DocumentNode.SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li");
-        var nodes = document.DocumentNode
-            .SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li")
-            .Reverse().ToList();
+        var nodes = document
+            .DocumentNode.SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li")
+            .Reverse()
+            .ToList();
 
         for (var i = 0; i < nodes.Count; i++)
         {
@@ -269,13 +287,15 @@ public class OtakuDesu : IAnimeProvider
 
             var link = node.Attributes["href"].Value;
 
-            list.Add(new()
-            {
-                Id = link,
-                Number = i + 1,
-                Name = node.InnerText,
-                Link = link,
-            });
+            list.Add(
+                new()
+                {
+                    Id = link,
+                    Number = i + 1,
+                    Name = node.InnerText,
+                    Link = link,
+                }
+            );
         }
 
         return list;
@@ -284,17 +304,15 @@ public class OtakuDesu : IAnimeProvider
     /// <inheritdoc />
     public async ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         //return await Task.FromResult(new List<VideoServer>()
         //{
         //    new(episodeId)
         //});
 
-        var list = new List<VideoServer>()
-        {
-            new("Mirror", episodeId)
-        };
+        var list = new List<VideoServer>() { new("Mirror", episodeId) };
 
         var response = await _http.ExecuteAsync(episodeId, cancellationToken);
 
@@ -303,11 +321,13 @@ public class OtakuDesu : IAnimeProvider
 
         var document = Html.Parse(response!);
 
-        list.AddRange(document.DocumentNode
-            .SelectNodes(".//div[@class='download']/ul/li/a")
-            .GroupBy(x => x.InnerText).Select(x => x.FirstOrDefault())
-            .Where(x => x is not null)
-            .Select(x => new VideoServer(x!.InnerText, episodeId))
+        list.AddRange(
+            document
+                .DocumentNode.SelectNodes(".//div[@class='download']/ul/li/a")
+                .GroupBy(x => x.InnerText)
+                .Select(x => x.FirstOrDefault())
+                .Where(x => x is not null)
+                .Select(x => new VideoServer(x!.InnerText, episodeId))
         );
 
         return list;
@@ -318,7 +338,8 @@ public class OtakuDesu : IAnimeProvider
     /// </summary>
     public async ValueTask<List<VideoSource>> GetAllDownloadSourcesAsync(
         string episodeId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<VideoSource>();
 
@@ -330,12 +351,16 @@ public class OtakuDesu : IAnimeProvider
         var document = Html.Parse(response!);
 
         // Download nodes
-        var nodes = document.DocumentNode.SelectNodes(".//div[@class='download']/ul/li/a")
+        var nodes = document
+            .DocumentNode.SelectNodes(".//div[@class='download']/ul/li/a")
             .Select(x => new VideoSource()
             {
                 ExtraNote = x.InnerText, // Video server name
                 Resolution = x.ParentNode.FirstChild.InnerText,
-                Size = float.TryParse(x.ParentNode.LastChild.InnerText?.ToLower().Replace("mb", ""), out var size)
+                Size = float.TryParse(
+                    x.ParentNode.LastChild.InnerText?.ToLower().Replace("mb", ""),
+                    out var size
+                )
                     ? (long)(size * 1024.0 * 1024.0)
                     : 0,
                 VideoUrl = x.Attributes["href"].Value,
@@ -349,7 +374,8 @@ public class OtakuDesu : IAnimeProvider
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<VideoSource>();
 
@@ -371,7 +397,8 @@ public class OtakuDesu : IAnimeProvider
             return list;
 
         // Mirror nodes
-        var script = document.DocumentNode.Descendants()
+        var script = document
+            .DocumentNode.Descendants()
             .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("action:") == true)
             ?.InnerText;
 
@@ -385,15 +412,15 @@ public class OtakuDesu : IAnimeProvider
         if (string.IsNullOrWhiteSpace(nonce))
             return list;
 
-        var videoListNodes = document.DocumentNode
-            .SelectNodes(".//div[@class='mirrorstream']//ul//li//a").ToList();
+        var videoListNodes = document
+            .DocumentNode.SelectNodes(".//div[@class='mirrorstream']//ul//li//a")
+            .ToList();
 
-        var functions = Enumerable.Range(0, videoListNodes.Count)
-            .Select(i => (Func<Task<List<VideoSource>>>)
-                (async () => await GetVideoSourceFromNodeAsync(
-                    videoListNodes[i],
-                    action,
-                    nonce)
+        var functions = Enumerable
+            .Range(0, videoListNodes.Count)
+            .Select(i =>
+                (Func<Task<List<VideoSource>>>)(
+                    async () => await GetVideoSourceFromNodeAsync(videoListNodes[i], action, nonce)
                 )
             );
 
@@ -407,17 +434,18 @@ public class OtakuDesu : IAnimeProvider
 
     private async ValueTask<string?> GetNonceAsync(
         string action,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
-        var formContent = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
-        {
-            new("action", action)
-        });
+        var formContent = new FormUrlEncodedContent(
+            new KeyValuePair<string?, string?>[] { new("action", action) }
+        );
 
         var response = await _http.PostAsync(
             $"{BaseUrl}/wp-admin/admin-ajax.php",
             formContent,
-            cancellationToken);
+            cancellationToken
+        );
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
@@ -428,7 +456,8 @@ public class OtakuDesu : IAnimeProvider
         HtmlNode videoListNode,
         string action,
         string? nonce,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<VideoSource>();
 
@@ -445,19 +474,22 @@ public class OtakuDesu : IAnimeProvider
         var mirror = node["i"]?.ToString();
         var quality = node["q"]?.ToString();
 
-        var formContent = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
-        {
-            new("id", id),
-            new("i", mirror),
-            new("q", quality),
-            new("nonce", nonce),
-            new("action", action),
-        });
+        var formContent = new FormUrlEncodedContent(
+            new KeyValuePair<string?, string?>[]
+            {
+                new("id", id),
+                new("i", mirror),
+                new("q", quality),
+                new("nonce", nonce),
+                new("action", action),
+            }
+        );
 
         var response2 = await _http.PostAsync(
             $"{BaseUrl}/wp-admin/admin-ajax.php",
             formContent,
-            cancellationToken);
+            cancellationToken
+        );
 
         var content = await response2.Content.ReadAsStringAsync(cancellationToken);
 
@@ -465,13 +497,13 @@ public class OtakuDesu : IAnimeProvider
 
         var document2 = Html.Parse(data);
 
-        var url = document2.DocumentNode.SelectSingleNode(".//iframe")
-            .Attributes["src"].Value;
+        var url = document2.DocumentNode.SelectSingleNode(".//iframe").Attributes["src"].Value;
 
         if (url.Contains("yourupload"))
         {
             var id2 = url.Split(new[] { "id=" }, StringSplitOptions.None)
-                .LastOrDefault()?.Split(new[] { "&" }, StringSplitOptions.None)
+                .LastOrDefault()
+                ?.Split(new[] { "&" }, StringSplitOptions.None)
                 .FirstOrDefault();
 
             if (!string.IsNullOrWhiteSpace(id2))
@@ -493,25 +525,34 @@ public class OtakuDesu : IAnimeProvider
 
             var document3 = Html.Parse(response);
 
-            var script2 = document3.DocumentNode.Descendants()
-                .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("sources") == true)
-                !.InnerText.RemoveWhitespaces();
+            var script2 = document3
+                .DocumentNode.Descendants()
+                .FirstOrDefault(x =>
+                    x.Name == "script" && x.InnerText?.Contains("sources") == true
+                )!
+                .InnerText.RemoveWhitespaces();
 
-            var realLink = script2.SubstringAfter("sources:[{")
-                .SubstringAfter("file':'").SubstringBefore("'");
+            var realLink = script2
+                .SubstringAfter("sources:[{")
+                .SubstringAfter("file':'")
+                .SubstringBefore("'");
 
-            list.Add(new VideoSource()
-            {
-                Format = VideoType.Container,
-                Resolution = quality,
-                Title = $"DesuStream - {quality}",
-                VideoUrl = realLink
-            });
+            list.Add(
+                new VideoSource()
+                {
+                    Format = VideoType.Container,
+                    Resolution = quality,
+                    Title = $"DesuStream - {quality}",
+                    VideoUrl = realLink
+                }
+            );
         }
         else if (url.Contains("mp4upload"))
         {
-            var result = await new Mp4uploadExtractor(_httpClientFactory)
-                .ExtractAsync(url, cancellationToken);
+            var result = await new Mp4uploadExtractor(_httpClientFactory).ExtractAsync(
+                url,
+                cancellationToken
+            );
 
             list.AddRange(result);
         }
@@ -519,43 +560,44 @@ public class OtakuDesu : IAnimeProvider
         return list;
     }
 
-    public List<Genre> Genres => new()
-    {
-        new("Action", $"{BaseUrl}/genres/action"),
-        new("Adventure", $"{BaseUrl}/genres/adventure"),
-        new("Comedy", $"{BaseUrl}/genres/comedy"),
-        new("Demons", $"{BaseUrl}/genres/demons"),
-        new("Drama", $"{BaseUrl}/genres/drama"),
-        new("Ecchi", $"{BaseUrl}/genres/ecchi"),
-        new("Fantasy", $"{BaseUrl}/genres/fantasy"),
-        new("Game", $"{BaseUrl}/genres/game"),
-        new("Harem", $"{BaseUrl}/genres/harem"),
-        new("Historical", $"{BaseUrl}/genres/historical"),
-        new("Horror", $"{BaseUrl}/genres/horror"),
-        new("Josei", $"{BaseUrl}/genres/josei"),
-        new("Magic", $"{BaseUrl}/genres/magic"),
-        new("Martial Arts", $"{BaseUrl}/genres/martial-arts"),
-        new("Mecha", $"{BaseUrl}/genres/mecha"),
-        new("Military", $"{BaseUrl}/genres/military"),
-        new("Music", $"{BaseUrl}/genres/music"),
-        new("Mystery", $"{BaseUrl}/genres/mystery"),
-        new("Psychological", $"{BaseUrl}/genres/psychological"),
-        new("Parody", $"{BaseUrl}/genres/parody"),
-        new("Police", $"{BaseUrl}/genres/police"),
-        new("Romance", $"{BaseUrl}/genres/romance"),
-        new("Samurai", $"{BaseUrl}/genres/samurai"),
-        new("School", $"{BaseUrl}/genres/school"),
-        new("Sci-Fi", $"{BaseUrl}/genres/sci-fi"),
-        new("Seinen", $"{BaseUrl}/genres/seinen"),
-        new("Shoujo", $"{BaseUrl}/genres/shoujo"),
-        new("Shoujo Ai", $"{BaseUrl}/genres/shoujo-ai"),
-        new("Shounen", $"{BaseUrl}/genres/shounen"),
-        new("Slice of Life", $"{BaseUrl}/genres/slice-of-life"),
-        new("Sports", $"{BaseUrl}/genres/sports"),
-        new("Space", $"{BaseUrl}/genres/space"),
-        new("Super Power", $"{BaseUrl}/genres/super-power"),
-        new("Supernatural", $"{BaseUrl}/genres/supernatural"),
-        new("Thriller", $"{BaseUrl}/genres/thriller"),
-        new("Vampire", $"{BaseUrl}/genres/vampire")
-    };
+    public List<Genre> Genres =>
+        new()
+        {
+            new("Action", $"{BaseUrl}/genres/action"),
+            new("Adventure", $"{BaseUrl}/genres/adventure"),
+            new("Comedy", $"{BaseUrl}/genres/comedy"),
+            new("Demons", $"{BaseUrl}/genres/demons"),
+            new("Drama", $"{BaseUrl}/genres/drama"),
+            new("Ecchi", $"{BaseUrl}/genres/ecchi"),
+            new("Fantasy", $"{BaseUrl}/genres/fantasy"),
+            new("Game", $"{BaseUrl}/genres/game"),
+            new("Harem", $"{BaseUrl}/genres/harem"),
+            new("Historical", $"{BaseUrl}/genres/historical"),
+            new("Horror", $"{BaseUrl}/genres/horror"),
+            new("Josei", $"{BaseUrl}/genres/josei"),
+            new("Magic", $"{BaseUrl}/genres/magic"),
+            new("Martial Arts", $"{BaseUrl}/genres/martial-arts"),
+            new("Mecha", $"{BaseUrl}/genres/mecha"),
+            new("Military", $"{BaseUrl}/genres/military"),
+            new("Music", $"{BaseUrl}/genres/music"),
+            new("Mystery", $"{BaseUrl}/genres/mystery"),
+            new("Psychological", $"{BaseUrl}/genres/psychological"),
+            new("Parody", $"{BaseUrl}/genres/parody"),
+            new("Police", $"{BaseUrl}/genres/police"),
+            new("Romance", $"{BaseUrl}/genres/romance"),
+            new("Samurai", $"{BaseUrl}/genres/samurai"),
+            new("School", $"{BaseUrl}/genres/school"),
+            new("Sci-Fi", $"{BaseUrl}/genres/sci-fi"),
+            new("Seinen", $"{BaseUrl}/genres/seinen"),
+            new("Shoujo", $"{BaseUrl}/genres/shoujo"),
+            new("Shoujo Ai", $"{BaseUrl}/genres/shoujo-ai"),
+            new("Shounen", $"{BaseUrl}/genres/shounen"),
+            new("Slice of Life", $"{BaseUrl}/genres/slice-of-life"),
+            new("Sports", $"{BaseUrl}/genres/sports"),
+            new("Space", $"{BaseUrl}/genres/space"),
+            new("Super Power", $"{BaseUrl}/genres/super-power"),
+            new("Supernatural", $"{BaseUrl}/genres/supernatural"),
+            new("Thriller", $"{BaseUrl}/genres/thriller"),
+            new("Vampire", $"{BaseUrl}/genres/vampire")
+        };
 }

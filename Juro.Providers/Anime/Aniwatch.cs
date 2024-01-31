@@ -20,14 +20,17 @@ namespace Juro.Providers.Anime;
 /// <summary>
 /// Client for interacting with Aniwatch.
 /// </summary>
-public class Aniwatch
-    : AnimeBaseProvider,
+/// <remarks>
+/// Initializes an instance of <see cref="Aniwatch"/>.
+/// </remarks>
+public class Aniwatch(IHttpClientFactory httpClientFactory)
+    : AnimeBaseProvider(httpClientFactory),
         IAnimeProvider,
         IPopularProvider,
         IAiringProvider,
         IRecentlyAddedProvider
 {
-    private readonly HttpClient _http;
+    private readonly HttpClient _http = httpClientFactory.CreateClient();
 
     public virtual string Key => Name;
 
@@ -42,15 +45,6 @@ public class Aniwatch
     public virtual string AjaxUrl => $"{BaseUrl}/ajax/v2";
 
     protected virtual AnimeSites AnimeSite => AnimeSites.Aniwatch;
-
-    /// <summary>
-    /// Initializes an instance of <see cref="Aniwatch"/>.
-    /// </summary>
-    public Aniwatch(IHttpClientFactory httpClientFactory)
-        : base(httpClientFactory)
-    {
-        _http = httpClientFactory.CreateClient();
-    }
 
     /// <summary>
     /// Initializes an instance of <see cref="Aniwatch"/>.
@@ -133,8 +127,8 @@ public class Aniwatch
 
         var document = Html.Parse(response!);
 
-        var nodes = document.DocumentNode
-            .Descendants()
+        var nodes = document
+            .DocumentNode.Descendants()
             .Where(node => node.HasClass("flw-item"))
             .ToList();
 
@@ -200,19 +194,20 @@ public class Aniwatch
         var document = Html.Parse(response);
 
         anime.Title =
-            document.DocumentNode
-                .SelectSingleNode(".//h2[contains(@class, 'film-name')]")
+            document
+                .DocumentNode.SelectSingleNode(".//h2[contains(@class, 'film-name')]")
                 ?.InnerText ?? "";
 
         anime.Summary =
-            document.DocumentNode
-                .SelectSingleNode(".//div[contains(@class, 'film-description')]")
+            document
+                .DocumentNode.SelectSingleNode(".//div[contains(@class, 'film-description')]")
                 ?.InnerText?.Trim() ?? "";
 
         anime.Image =
-            document.DocumentNode
-                .SelectSingleNode(".//img[contains(@class, 'film-poster-img')]")
-                ?.Attributes["src"]?.Value?.ToString() ?? "";
+            document
+                .DocumentNode.SelectSingleNode(".//img[contains(@class, 'film-poster-img')]")
+                ?.Attributes["src"]
+                ?.Value?.ToString() ?? "";
 
         var itemHeadNodes = document.DocumentNode.SelectNodes(
             ".//div[@class='anisc-info-wrap']/div[@class='anisc-info']//span[@class='item-head']"
@@ -222,44 +217,38 @@ public class Aniwatch
 
         var overviewNode =
             itemHeadNodes
-                .FirstOrDefault(
-                    x =>
-                        !string.IsNullOrWhiteSpace(x.InnerHtml)
-                        && x.InnerHtml.ToLower().Contains("overview")
+                .FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(x.InnerHtml)
+                    && x.InnerHtml.ToLower().Contains("overview")
                 )
                 ?.ParentNode.SelectSingleNode(".//span[@class='name']")
             ?? itemHeadNodes
-                .FirstOrDefault(
-                    x =>
-                        !string.IsNullOrWhiteSpace(x.InnerHtml)
-                        && x.InnerHtml.ToLower().Contains("overview")
+                .FirstOrDefault(x =>
+                    !string.IsNullOrWhiteSpace(x.InnerHtml)
+                    && x.InnerHtml.ToLower().Contains("overview")
                 )
                 ?.ParentNode.SelectSingleNode(".//div[@class='text']");
         if (overviewNode is not null)
             anime.Summary = overviewNode.InnerText.Trim();
 
-        var typeNode = document.DocumentNode
-            .SelectNodes(".//div[@class='film-stats']//span[@class='dot']")
+        var typeNode = document
+            .DocumentNode.SelectNodes(".//div[@class='film-stats']//span[@class='dot']")
             ?.FirstOrDefault()
             ?.NextSibling.NextSibling;
         if (typeNode is not null)
             anime.Type = typeNode.InnerText;
 
         var statusNode = itemHeadNodes
-            .FirstOrDefault(
-                x =>
-                    !string.IsNullOrWhiteSpace(x.InnerHtml)
-                    && x.InnerHtml.ToLower().Contains("status")
+            .FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.InnerHtml) && x.InnerHtml.ToLower().Contains("status")
             )
             ?.ParentNode.SelectSingleNode(".//span[@class='name']");
         if (statusNode is not null)
             anime.Status = statusNode.InnerText;
 
         var genresNode = itemHeadNodes
-            .FirstOrDefault(
-                x =>
-                    !string.IsNullOrWhiteSpace(x.InnerHtml)
-                    && x.InnerHtml.ToLower().Contains("genres")
+            .FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.InnerHtml) && x.InnerHtml.ToLower().Contains("genres")
             )
             ?.ParentNode.SelectNodes(".//a")
             .ToList();
@@ -267,20 +256,17 @@ public class Aniwatch
             anime.Genres.AddRange(genresNode.Select(x => new Genre(x.Attributes["title"].Value)));
 
         var airedNode = itemHeadNodes
-            .FirstOrDefault(
-                x =>
-                    !string.IsNullOrWhiteSpace(x.InnerHtml)
-                    && x.InnerHtml.ToLower().Contains("aired")
+            .FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.InnerHtml) && x.InnerHtml.ToLower().Contains("aired")
             )
             ?.ParentNode.SelectSingleNode(".//span[@class='name']");
         if (airedNode is not null)
             anime.Released = airedNode.InnerText;
 
         var synonymsNode = itemHeadNodes
-            .FirstOrDefault(
-                x =>
-                    !string.IsNullOrWhiteSpace(x.InnerHtml)
-                    && x.InnerHtml.ToLower().Contains("synonyms")
+            .FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.InnerHtml)
+                && x.InnerHtml.ToLower().Contains("synonyms")
             )
             ?.ParentNode.SelectSingleNode(".//span[@class='name']");
         if (synonymsNode is not null)
@@ -305,8 +291,8 @@ public class Aniwatch
 
         var document = Html.Parse(response);
 
-        var nodes = document.DocumentNode
-            .SelectNodes(".//a")
+        var nodes = document
+            .DocumentNode.SelectNodes(".//a")
             .Where(x => x.Attributes["data-page"] == null)
             .ToList();
 
@@ -351,25 +337,24 @@ public class Aniwatch
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
-            return new();
+            return [];
 
         var data = JsonNode.Parse(response)!;
 
         var doc = Html.Parse(data["html"]!.ToString());
 
-        var nodes = doc.DocumentNode
-            .SelectNodes(".//div[contains(@class, 'server-item')]")
+        var nodes = doc
+            .DocumentNode.SelectNodes(".//div[contains(@class, 'server-item')]")
             .ToList();
 
         var list = new List<VideoServer>();
 
         var functions = Enumerable
             .Range(0, nodes.Count)
-            .Select(
-                i =>
-                    (Func<Task<VideoServer?>>)(
-                        async () => await GetVideoServerAsync(nodes[i], subDub, cancellationToken)
-                    )
+            .Select(i =>
+                (Func<Task<VideoServer?>>)(
+                    async () => await GetVideoServerAsync(nodes[i], subDub, cancellationToken)
+                )
             );
 
         var results = (await TaskEx.Run(functions, 10)).Where(x => x is not null).Select(x => x!);

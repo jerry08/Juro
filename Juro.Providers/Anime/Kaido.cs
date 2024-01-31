@@ -6,7 +6,10 @@ using Juro.Core.Utils;
 
 namespace Juro.Providers.Anime;
 
-public class Kaido : Aniwatch
+/// <summary>
+/// Initializes an instance of <see cref="Kaido"/>.
+/// </summary>
+public class Kaido(IHttpClientFactory httpClientFactory) : Aniwatch(httpClientFactory)
 {
     public override string Key => Name;
 
@@ -21,22 +24,12 @@ public class Kaido : Aniwatch
     /// <summary>
     /// Initializes an instance of <see cref="Kaido"/>.
     /// </summary>
-    public Kaido(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
-    {
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="Kaido"/>.
-    /// </summary>
     public Kaido(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="Kaido"/>.
     /// </summary>
-    public Kaido() : this(Http.ClientProvider)
-    {
-    }
+    public Kaido()
+        : this(Http.ClientProvider) { }
 }

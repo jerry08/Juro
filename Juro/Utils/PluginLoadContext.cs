@@ -5,14 +5,9 @@ using System.Runtime.Loader;
 namespace Juro.Utils;
 
 // DotNet Sample: https://github.com/dotnet/samples/blob/main/core/extensions/AppWithPlugin
-internal class PluginLoadContext : AssemblyLoadContext
+internal class PluginLoadContext(string pluginPath) : AssemblyLoadContext
 {
-    private readonly AssemblyDependencyResolver _resolver;
-
-    public PluginLoadContext(string pluginPath)
-    {
-        _resolver = new AssemblyDependencyResolver(pluginPath);
-    }
+    private readonly AssemblyDependencyResolver _resolver = new AssemblyDependencyResolver(pluginPath);
 
     protected override Assembly? Load(AssemblyName assemblyName)
     {

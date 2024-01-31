@@ -31,8 +31,7 @@ internal static class Logger
 
     private static void DiagnosticLog(string format, params object[] parameters)
     {
-        var formatWithHeader =
-            " Juro " + DateTime.Now.ToString("MM-dd H:mm:ss.fff ") + format;
+        var formatWithHeader = " Juro " + DateTime.Now.ToString("MM-dd H:mm:ss.fff ") + format;
 #if DEBUG
         System.Diagnostics.Debug.WriteLine(formatWithHeader, parameters);
         Console.WriteLine(formatWithHeader, parameters);

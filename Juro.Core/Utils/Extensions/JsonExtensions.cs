@@ -11,8 +11,11 @@ public static class JsonExtensions
         if (string.IsNullOrWhiteSpace(value))
             return false;
         value = value.Trim();
-        if ((value.StartsWith("{") && value.EndsWith("}")) || //For object
-            (value.StartsWith("[") && value.EndsWith("]"))) //For array
+        if (
+            (value.StartsWith("{") && value.EndsWith("}"))
+            || //For object
+            (value.StartsWith("[") && value.EndsWith("]"))
+        ) //For array
         {
             try
             {

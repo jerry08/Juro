@@ -6,11 +6,9 @@ public class FileUrl
 {
     public string Url { get; set; } = default!;
 
-    public Dictionary<string, string> Headers { get; set; } = new();
+    public Dictionary<string, string> Headers { get; set; } = [];
 
-    public FileUrl()
-    {
-    }
+    public FileUrl() { }
 
     public FileUrl(string url)
     {

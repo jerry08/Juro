@@ -56,12 +56,12 @@ public class VideoSource
     /// <summary>
     /// Http headers for making requests.
     /// </summary>
-    public Dictionary<string, string> Headers { get; set; } = new();
+    public Dictionary<string, string> Headers { get; set; } = [];
 
     /// <summary>
     /// Subtitles for videos if available.
     /// </summary>
-    public List<Subtitle> Subtitles { get; set; } = new();
+    public List<Subtitle> Subtitles { get; set; } = [];
 
     public VideoServer? VideoServer { get; set; }
 }

@@ -18,5 +18,6 @@ public interface IVideoExtractorProvider
     /// <returns>A <see cref="List{T}"/> of <see cref="VideoSource"/>s.</returns>
     ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

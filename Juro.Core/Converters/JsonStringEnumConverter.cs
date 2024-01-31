@@ -14,18 +14,22 @@ internal class JsonStringEnumConverter : JsonConverterFactory
         return typeToConvert.IsEnum;
     }
 
-    public override JsonConverter? CreateConverter(Type typeToConvert, JsonSerializerOptions options)
+    public override JsonConverter? CreateConverter(
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         var type = typeof(JsonStringEnumConverter<>).MakeGenericType(typeToConvert);
         return (JsonConverter)Activator.CreateInstance(type)!;
     }
 }
 
-internal class JsonStringEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
+internal class JsonStringEnumConverter<TEnum> : JsonConverter<TEnum>
+    where TEnum : struct, Enum
 {
-    private readonly Dictionary<TEnum, string> _enumToString = new();
-    private readonly Dictionary<string, TEnum> _stringToEnum = new();
-    private readonly Dictionary<int, TEnum> _numberToEnum = new();
+    private readonly Dictionary<TEnum, string> _enumToString = [];
+    private readonly Dictionary<string, TEnum> _stringToEnum = [];
+    private readonly Dictionary<int, TEnum> _numberToEnum = [];
 
     public JsonStringEnumConverter()
     {
@@ -33,7 +37,8 @@ internal class JsonStringEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum
         foreach (TEnum value in Enum.GetValues(type))
         {
             var enumMember = type.GetMember(value.ToString())[0];
-            var attr = enumMember.GetCustomAttributes(typeof(JsonPropertyNameAttribute), false)
+            var attr = enumMember
+                .GetCustomAttributes(typeof(JsonPropertyNameAttribute), false)
                 .Cast<JsonPropertyNameAttribute>()
                 .FirstOrDefault();
 
@@ -53,7 +58,11 @@ internal class JsonStringEnumConverter<TEnum> : JsonConverter<TEnum> where TEnum
         }
     }
 
-    public override TEnum Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override TEnum Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
     {
         var type = reader.TokenType;
         if (type == JsonTokenType.String)

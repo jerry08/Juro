@@ -19,7 +19,8 @@ public interface IMovieProvider : ISourceProvider, IVideoExtractorProvider, IKey
     /// <returns>A <see cref="List{T}"/> of <see cref="MovieResult"/>s.</returns>
     ValueTask<List<MovieResult>> SearchAsync(
         string query,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Gets the movie info by Id.
@@ -29,7 +30,8 @@ public interface IMovieProvider : ISourceProvider, IVideoExtractorProvider, IKey
     /// <returns>An instance of <see cref="MovieInfo"/> for the provider.</returns>
     ValueTask<MovieInfo> GetMediaInfoAsync(
         string mediaId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Gets episodes for movie.
@@ -41,5 +43,6 @@ public interface IMovieProvider : ISourceProvider, IVideoExtractorProvider, IKey
     ValueTask<List<VideoServer>> GetEpisodeServersAsync(
         string episodeId,
         string mediaId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

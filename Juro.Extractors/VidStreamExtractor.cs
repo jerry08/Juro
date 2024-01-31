@@ -13,9 +13,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for VidStream.
 /// </summary>
-public class VidStreamExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="VidStreamExtractor"/>.
+/// </remarks>
+public class VidStreamExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "VidStream";
@@ -23,30 +26,20 @@ public class VidStreamExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="VidStreamExtractor"/>.
     /// </summary>
-    public VidStreamExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="VidStreamExtractor"/>.
-    /// </summary>
     public VidStreamExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="VidStreamExtractor"/>.
     /// </summary>
-    public VidStreamExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public VidStreamExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -56,26 +49,35 @@ public class VidStreamExtractor : IVideoExtractor
         {
             var link = response.FindBetween("\"file\": '", "',");
 
-            return new List<VideoSource>
-            {
+            return
+            [
                 new()
                 {
                     Format = VideoType.M3u8,
                     VideoUrl = link,
                     Title = ServerName
                 }
-            };
+            ];
         }
 
         var document = Html.Parse(response);
 
-        var mediaUrl = document.DocumentNode.SelectSingleNode(".//iframe")?.Attributes["src"]?.Value;
+        var mediaUrl = document
+            .DocumentNode.SelectSingleNode(".//iframe")
+            ?.Attributes["src"]
+            ?.Value;
         if (string.IsNullOrWhiteSpace(mediaUrl))
-            return new();
+            return [];
 
         if (mediaUrl!.Contains("filemoon"))
-            return await new FilemoonExtractor(_httpClientFactory).ExtractAsync(mediaUrl, cancellationToken);
+            return await new FilemoonExtractor(_httpClientFactory).ExtractAsync(
+                mediaUrl,
+                cancellationToken
+            );
 
-        return await new GogoCDNExtractor(_httpClientFactory).ExtractAsync(mediaUrl, cancellationToken);
+        return await new GogoCDNExtractor(_httpClientFactory).ExtractAsync(
+            mediaUrl,
+            cancellationToken
+        );
     }
 }

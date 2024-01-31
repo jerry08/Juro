@@ -57,16 +57,15 @@ public static class PluginLoader
         var loadedAssemblies = GetAssemblies();
 
         var assembly =
-            loadedAssemblies.Find(
-                x => string.Equals(x.Location, filePath, StringComparison.OrdinalIgnoreCase)
+            loadedAssemblies.Find(x =>
+                string.Equals(x.Location, filePath, StringComparison.OrdinalIgnoreCase)
             ) ?? LoadPlugin(filePath);
 
         return assembly
             .GetTypes()
-            .Where(
-                x =>
-                    x.GetInterfaces().Contains(typeof(IClientConfig))
-                    && x.GetConstructor(Type.EmptyTypes) is not null
+            .Where(x =>
+                x.GetInterfaces().Contains(typeof(IClientConfig))
+                && x.GetConstructor(Type.EmptyTypes) is not null
             )
             .Select(x => (IClientConfig)Activator.CreateInstance(x, Array.Empty<object>())!)
             .FirstOrDefault()!;
@@ -81,7 +80,7 @@ public static class PluginLoader
         }
         catch
         {
-            return new();
+            return [];
         }
     }
 
@@ -120,8 +119,8 @@ public static class PluginLoader
     /// (<see cref="AppDomain.CurrentDomain"/>).
     /// </summary>
     public static List<Assembly> GetAssemblies() =>
-        AppDomain.CurrentDomain
-            .GetAssemblies()
+        AppDomain
+            .CurrentDomain.GetAssemblies()
             .Where(x => x.GetCustomAttributes(typeof(PluginAssemblyAttribute), false).Length > 0)
             //.Where(
             //    x =>
@@ -140,7 +139,7 @@ public static class PluginLoader
         }
         catch
         {
-            return new();
+            return [];
         }
     }
 
@@ -211,6 +210,6 @@ public static class PluginLoader
         {
             //AppDomain.CurrentDomain.Load(pluginLocation);
             return Assembly.LoadFrom(pluginLocation);
-        }   
+        }
     }
 }

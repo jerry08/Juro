@@ -16,5 +16,6 @@ public interface ILastUpdatedProvider
     /// <returns>A <see cref="List{T}"/> of <see cref="IAnimeInfo"/>s.</returns>
     ValueTask<List<IAnimeInfo>> GetLastUpdatedAsync(
         int page = 1,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

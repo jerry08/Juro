@@ -20,20 +20,15 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for RapidCloud.
 /// </summary>
-public class RapidCloudExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="RapidCloudExtractor"/>.
+/// </remarks>
+public class RapidCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly HttpClient _http = httpClientFactory.CreateClient();
 
     /// <inheritdoc />
     public string ServerName => "RapidCloud";
-
-    /// <summary>
-    /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
-    /// </summary>
-    public RapidCloudExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _http = httpClientFactory.CreateClient();
-    }
 
     /// <summary>
     /// Initializes an instance of <see cref="RapidCloudExtractor"/>.
@@ -110,7 +105,7 @@ public class RapidCloudExtractor : IVideoExtractor
 
         var indexPairs = await GetIndexPairsAsync(cancellationToken);
         if (indexPairs.Count == 0)
-            return new();
+            return [];
 
         var headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
 
@@ -124,7 +119,7 @@ public class RapidCloudExtractor : IVideoExtractor
 
         var sources = data?["sources"]?.ToString();
         if (string.IsNullOrWhiteSpace(sources))
-            return new();
+            return [];
 
         var isEncrypted = (bool)data!["encrypted"]!;
         if (isEncrypted)
@@ -157,7 +152,7 @@ public class RapidCloudExtractor : IVideoExtractor
             catch (Exception ex)
             {
                 Logger.Error(ex);
-                return new();
+                return [];
             }
         }
 
@@ -185,8 +180,8 @@ public class RapidCloudExtractor : IVideoExtractor
 
         var m3u8File = JsonNode.Parse(sources!)![0]!["file"]!.ToString();
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 VideoUrl = m3u8File,
@@ -195,7 +190,7 @@ public class RapidCloudExtractor : IVideoExtractor
                 Resolution = "Multi Quality",
                 Subtitles = subtitles
             }
-        };
+        ];
     }
 
     private static byte[] Md5(byte[] inputBytes) => MD5.Create().ComputeHash(inputBytes);

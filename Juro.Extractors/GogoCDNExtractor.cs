@@ -18,9 +18,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for Gogoanime.
 /// </summary>
-public class GogoCDNExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="GogoCDNExtractor"/>.
+/// </remarks>
+public class GogoCDNExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "Gogo";
@@ -28,30 +31,20 @@ public class GogoCDNExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="GogoCDNExtractor"/>.
     /// </summary>
-    public GogoCDNExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="GogoCDNExtractor"/>.
-    /// </summary>
     public GogoCDNExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="GogoCDNExtractor"/>.
     /// </summary>
-    public GogoCDNExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public GogoCDNExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -65,10 +58,12 @@ public class GogoCDNExtractor : IVideoExtractor
 
         var document = Html.Parse(response);
 
-        var dataValue = document.DocumentNode.Descendants()
+        var dataValue = document
+            .DocumentNode.Descendants()
             .Where(x => x.Name == "script")
             .FirstOrDefault(x => x.Attributes["data-name"]?.Value == "episode")
-            ?.Attributes["data-value"]?.Value;
+            ?.Attributes["data-value"]
+            ?.Value;
         if (string.IsNullOrWhiteSpace(dataValue))
             return list;
 
@@ -76,7 +71,8 @@ public class GogoCDNExtractor : IVideoExtractor
         var id = decrypted.FindBetween("", "&");
         var end = decrypted.SubstringAfter(id);
 
-        var link = $"https://{host}/encrypt-ajax.php?id={CryptoHandler(id, keys.Item1, keys.Item3, true)}{end}&alias={id}";
+        var link =
+            $"https://{host}/encrypt-ajax.php?id={CryptoHandler(id, keys.Item1, keys.Item3, true)}{end}&alias={id}";
 
         var encHtmlData = await http.ExecuteAsync(
             link,
@@ -85,7 +81,8 @@ public class GogoCDNExtractor : IVideoExtractor
                 { "X-Requested-With", "XMLHttpRequest" },
                 //{ "Referer", host },
             },
-            cancellationToken);
+            cancellationToken
+        );
 
         if (string.IsNullOrWhiteSpace(encHtmlData))
             return list;
@@ -110,29 +107,27 @@ public class GogoCDNExtractor : IVideoExtractor
 
                 if (type == "hls" || type == "auto")
                 {
-                    list.Add(new()
-                    {
-                        Format = VideoType.M3u8,
-                        VideoUrl = fileURL,
-                        Resolution = "Multi Quality" + (backup ? " (Backup)" : ""),
-                        Headers = new()
+                    list.Add(
+                        new()
                         {
-                            ["Referer"] = url,
+                            Format = VideoType.M3u8,
+                            VideoUrl = fileURL,
+                            Resolution = "Multi Quality" + (backup ? " (Backup)" : ""),
+                            Headers = new() { ["Referer"] = url, }
                         }
-                    });
+                    );
                 }
                 else
                 {
-                    list.Add(new()
-                    {
-                        Format = VideoType.Container,
-                        VideoUrl = fileURL,
-                        Resolution = label,
-                        Headers = new()
+                    list.Add(
+                        new()
                         {
-                            ["Referer"] = url,
+                            Format = VideoType.Container,
+                            VideoUrl = fileURL,
+                            Resolution = label,
+                            Headers = new() { ["Referer"] = url, }
                         }
-                    });
+                    );
                 }
             }
         }
@@ -143,16 +138,19 @@ public class GogoCDNExtractor : IVideoExtractor
         return list;
     }
 
-    private static Tuple<string, string, string> KeysAndIv()
-        => new("37911490979715163134003223491201",
+    private static Tuple<string, string, string> KeysAndIv() =>
+        new(
+            "37911490979715163134003223491201",
             "54674138327930866480207815084989",
-            "3134003223491201");
+            "3134003223491201"
+        );
 
     private static string CryptoHandler(
         string dataValue,
         string key,
         string iv,
-        bool encrypt = true)
+        bool encrypt = true
+    )
     {
         //var key = Encoding.UTF8.GetBytes("63976882873559819639988080820907");
         //var iv = Encoding.UTF8.GetBytes("4770478969418267");

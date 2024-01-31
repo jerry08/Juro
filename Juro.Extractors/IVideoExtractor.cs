@@ -20,5 +20,6 @@ public interface IVideoExtractor
     /// </summary>
     ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

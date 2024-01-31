@@ -5,33 +5,31 @@ namespace Juro.Core.Utils;
 
 internal static class Http
 {
-    public static Func<HttpClient> ClientProvider => () =>
-    {
-        var handler = new HttpClientHandler
+    public static Func<HttpClient> ClientProvider =>
+        () =>
         {
-            //UseCookies = false
-            //AllowAutoRedirect = true
+            var handler = new HttpClientHandler
+            {
+                //UseCookies = false
+                //AllowAutoRedirect = true
+            };
+
+            //handler.MaxAutomaticRedirections = 2;
+
+            //if (handler.SupportsAutomaticDecompression)
+            //    handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            //handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
+
+            var httpClient = new HttpClient(handler, true);
+
+            if (!httpClient.DefaultRequestHeaders.Contains("User-Agent"))
+            {
+                httpClient.DefaultRequestHeaders.Add("User-Agent", ChromeUserAgent());
+            }
+
+            return httpClient;
         };
-
-        //handler.MaxAutomaticRedirections = 2;
-
-        //if (handler.SupportsAutomaticDecompression)
-        //    handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-        //handler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) => { return true; };
-
-        var httpClient = new HttpClient(handler, true);
-
-        if (!httpClient.DefaultRequestHeaders.Contains("User-Agent"))
-        {
-            httpClient.DefaultRequestHeaders.Add(
-                "User-Agent",
-                ChromeUserAgent()
-            );
-        }
-
-        return httpClient;
-    };
 
     /// <summary>
     /// Generates a random User-Agent from the Chrome browser.
@@ -45,8 +43,8 @@ internal static class Http
         var build = random.Next(2100, 3538);
         var branchBuild = random.Next(170);
 
-        return $"Mozilla/5.0 ({RandomWindowsVersion()}) AppleWebKit/537.36 (KHTML, like Gecko) " +
-            $"Chrome/{major}.0.{build}.{branchBuild} Safari/537.36";
+        return $"Mozilla/5.0 ({RandomWindowsVersion()}) AppleWebKit/537.36 (KHTML, like Gecko) "
+            + $"Chrome/{major}.0.{build}.{branchBuild} Safari/537.36";
     }
 
     private static string RandomWindowsVersion()
@@ -59,15 +57,12 @@ internal static class Http
         // Windows 10 = 45% popularity
         if (val >= 1 && val <= 45)
             windowsVersion += "10.0";
-
         // Windows 7 = 35% popularity
         else if (val > 45 && val <= 80)
             windowsVersion += "6.1";
-
         // Windows 8.1 = 15% popularity
         else if (val > 80 && val <= 95)
             windowsVersion += "6.3";
-
         // Windows 8 = 5% popularity
         else
             windowsVersion += "6.2";

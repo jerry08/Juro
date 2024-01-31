@@ -15,44 +15,36 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for Aniwave.
 /// </summary>
-public class AniwaveExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="AniwaveExtractor"/>.
+/// </remarks>
+public class AniwaveExtractor(IHttpClientFactory httpClientFactory, string serverName)
+    : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <summary>
     /// Name of the video server for Aniwave. It can either be "Mcloud" or "Vizcloud"
     /// </summary>
-    public string ServerName { get; }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="AniwaveExtractor"/>.
-    /// </summary>
-    public AniwaveExtractor(IHttpClientFactory httpClientFactory, string serverName)
-    {
-        _httpClientFactory = httpClientFactory;
-
-        ServerName = serverName;
-    }
+    public string ServerName { get; } = serverName;
 
     /// <summary>
     /// Initializes an instance of <see cref="AniwaveExtractor"/>.
     /// </summary>
     public AniwaveExtractor(Func<HttpClient> httpClientProvider, string serverName)
-        : this(new HttpClientFactory(httpClientProvider), serverName)
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider), serverName) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="AniwaveExtractor"/>.
     /// </summary>
-    public AniwaveExtractor(string serverName) : this(Http.ClientProvider, serverName)
-    {
-    }
+    public AniwaveExtractor(string serverName)
+        : this(Http.ClientProvider, serverName) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -72,26 +64,23 @@ public class AniwaveExtractor : IVideoExtractor
 
         response = await http.ExecuteAsync(
             apiUrl!,
-            new()
-            {
-                ["Referer"] = referer
-            },
-            cancellationToken);
+            new() { ["Referer"] = referer },
+            cancellationToken
+        );
 
         var data = JsonNode.Parse(response)!["data"]!;
 
         var file = data["media"]!["sources"]![0]!["file"]!.ToString();
 
-        list.Add(new()
-        {
-            VideoUrl = file,
-            Headers = new()
+        list.Add(
+            new()
             {
-                ["Referer"] = referer
-            },
-            Format = VideoType.M3u8,
-            Resolution = "Multi Quality",
-        });
+                VideoUrl = file,
+                Headers = new() { ["Referer"] = referer },
+                Format = VideoType.M3u8,
+                Resolution = "Multi Quality",
+            }
+        );
 
         return list;
     }

@@ -18,10 +18,13 @@ namespace Juro.Providers.Anime;
 /// <summary>
 /// Client for interacting with HentaiFF.
 /// </summary>
-public class HentaiFF : IAnimeProvider
+/// <remarks>
+/// Initializes an instance of <see cref="HentaiFF"/>.
+/// </remarks>
+public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
 {
-    private readonly HttpClient _http;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly HttpClient _http = httpClientFactory.CreateClient();
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     public virtual string Key => Name;
 
@@ -36,40 +39,26 @@ public class HentaiFF : IAnimeProvider
     /// <summary>
     /// Initializes an instance of <see cref="HentaiFF"/>.
     /// </summary>
-    public HentaiFF(IHttpClientFactory httpClientFactory)
-    {
-        _http = httpClientFactory.CreateClient();
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="HentaiFF"/>.
-    /// </summary>
     public HentaiFF(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="HentaiFF"/>.
     /// </summary>
-    public HentaiFF() : this(Http.ClientProvider)
-    {
-    }
+    public HentaiFF()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<IAnimeInfo>();
 
         _http.Timeout = TimeSpan.FromSeconds(30);
 
-        var response = await _http.ExecuteAsync(
-            $"{BaseUrl}/?s={query}",
-            cancellationToken
-        );
+        var response = await _http.ExecuteAsync($"{BaseUrl}/?s={query}", cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
             return list;
@@ -77,23 +66,18 @@ public class HentaiFF : IAnimeProvider
         var document = Html.Parse(response);
 
         var nodes = document.DocumentNode
-            //.SelectNodes(".//article[@class='bs']//div[@class='bsx']//a");
-            .SelectNodes(".//article//div[@class='bsx']//a");
+        //.SelectNodes(".//article[@class='bs']//div[@class='bsx']//a");
+        .SelectNodes(".//article//div[@class='bsx']//a");
 
         foreach (var node in nodes)
         {
-            var anime = new AnimeInfo
-            {
-                Id = node.Attributes["href"].Value
-            };
+            var anime = new AnimeInfo { Id = node.Attributes["href"].Value };
 
             anime.Link = anime.Id;
             anime.Title = node.Attributes["title"].Value;
             anime.Image = node.SelectSingleNode(".//img").Attributes["src"].Value;
-            anime.Status = node.SelectSingleNode(".//div[contains(@class, 'status')]")?
-                .InnerText;
-            anime.Type = node.SelectSingleNode(".//div[contains(@class, 'typez')]")?
-                .InnerText;
+            anime.Status = node.SelectSingleNode(".//div[contains(@class, 'status')]")?.InnerText;
+            anime.Type = node.SelectSingleNode(".//div[contains(@class, 'typez')]")?.InnerText;
 
             list.Add(anime);
         }
@@ -104,7 +88,8 @@ public class HentaiFF : IAnimeProvider
     /// <inheritdoc />
     public ValueTask<IAnimeInfo> GetAnimeInfoAsync(
         string id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         throw new NotImplementedException();
     }
@@ -112,7 +97,8 @@ public class HentaiFF : IAnimeProvider
     /// <inheritdoc />
     public async ValueTask<List<Episode>> GetEpisodesAsync(
         string id,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<Episode>();
 
@@ -123,13 +109,13 @@ public class HentaiFF : IAnimeProvider
 
         var document = Html.Parse(response);
 
-        var nodes = document.DocumentNode
-            .SelectNodes(".//div[@class='eplister']//ul//li//a").Reverse();
+        var nodes = document
+            .DocumentNode.SelectNodes(".//div[@class='eplister']//ul//li//a")
+            .Reverse();
 
         foreach (var node in nodes)
         {
-            var split = node.SelectSingleNode(".//div[@class='epl-num']")
-                .InnerText.Split(' ');
+            var split = node.SelectSingleNode(".//div[@class='epl-num']").InnerText.Split(' ');
 
             var episode = new Episode();
 
@@ -147,7 +133,8 @@ public class HentaiFF : IAnimeProvider
     /// <inheritdoc />
     public async ValueTask<List<VideoServer>> GetVideoServersAsync(
         string episodeId,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var list = new List<VideoServer>();
 
@@ -158,8 +145,7 @@ public class HentaiFF : IAnimeProvider
 
         var document = Html.Parse(response);
 
-        var nodes = document.DocumentNode
-            .SelectNodes(".//select[@class='mirror']//option");
+        var nodes = document.DocumentNode.SelectNodes(".//select[@class='mirror']//option");
 
         foreach (var node in nodes)
         {
@@ -169,10 +155,7 @@ public class HentaiFF : IAnimeProvider
             if (string.IsNullOrWhiteSpace(link))
                 continue;
 
-            list.Add(new(node.InnerText, new FileUrl()
-            {
-                Url = link
-            }));
+            list.Add(new(node.InnerText, new FileUrl() { Url = link }));
         }
 
         return list;
@@ -190,20 +173,16 @@ public class HentaiFF : IAnimeProvider
         return null;
     }
 
-    private class CdnViewExtractor : IVideoExtractor
+    private class CdnViewExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
         public string ServerName => string.Empty;
 
-        public CdnViewExtractor(IHttpClientFactory httpClientFactory)
-        {
-            _httpClientFactory = httpClientFactory;
-        }
-
         public async ValueTask<List<VideoSource>> ExtractAsync(
             string url,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             var http = _httpClientFactory.CreateClient();
 
@@ -211,20 +190,18 @@ public class HentaiFF : IAnimeProvider
 
             var document = Html.Parse(response);
 
-            var source = document.DocumentNode
-                .SelectSingleNode(".//div[@class='source']").Attributes["src"].Value;
+            var source = document
+                .DocumentNode.SelectSingleNode(".//div[@class='source']")
+                .Attributes["src"]
+                .Value;
 
             var host = new Uri(url).Host;
             var link = $"https://{host}{source}";
 
-            return new()
-            {
-                new()
-                {
-                    Format = VideoType.M3u8,
-                    VideoUrl = link
-                }
-            };
+            return
+            [
+                new() { Format = VideoType.M3u8, VideoUrl = link }
+            ];
         }
     }
 
@@ -234,7 +211,8 @@ public class HentaiFF : IAnimeProvider
 
         public ValueTask<List<VideoSource>> ExtractAsync(
             string url,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default
+        )
         {
             var base64 = url.SubstringAfter("html#");
             var link = base64.DecodeBase64().SubstringAfter("url=").SubstringBefore(";");
@@ -279,14 +257,15 @@ public class HentaiFF : IAnimeProvider
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
-            return new();
+            return [];
 
         var extractor = GetVideoExtractor(server);
         if (extractor is null)
-            return new();
+            return [];
 
         var videos = await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
 

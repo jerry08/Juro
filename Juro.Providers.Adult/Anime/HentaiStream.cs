@@ -8,7 +8,10 @@ namespace Juro.Providers.Anime;
 /// <summary>
 /// Client for interacting with Hentai Stream.
 /// </summary>
-public class HentaiStream : HentaiFF
+/// <remarks>
+/// Initializes an instance of <see cref="HentaiStream"/>.
+/// </remarks>
+public class HentaiStream(IHttpClientFactory httpClientFactory) : HentaiFF(httpClientFactory)
 {
     public override string Key => Name;
 
@@ -19,22 +22,12 @@ public class HentaiStream : HentaiFF
     /// <summary>
     /// Initializes an instance of <see cref="HentaiStream"/>.
     /// </summary>
-    public HentaiStream(IHttpClientFactory httpClientFactory) : base(httpClientFactory)
-    {
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="HentaiStream"/>.
-    /// </summary>
     public HentaiStream(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="HentaiStream"/>.
     /// </summary>
-    public HentaiStream() : this(Http.ClientProvider)
-    {
-    }
+    public HentaiStream()
+        : this(Http.ClientProvider) { }
 }

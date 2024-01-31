@@ -9,14 +9,9 @@ using Juro.Extractors;
 
 namespace Juro.Providers.Anime;
 
-public class AnimeBaseProvider : IVideoExtractorProvider
+public class AnimeBaseProvider(IHttpClientFactory httpClientFactory) : IVideoExtractorProvider
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public AnimeBaseProvider(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     public virtual IVideoExtractor? GetVideoExtractor(VideoServer server)
     {
@@ -44,14 +39,15 @@ public class AnimeBaseProvider : IVideoExtractorProvider
     /// <inheritdoc />
     public virtual async ValueTask<List<VideoSource>> GetVideosAsync(
         VideoServer server,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         if (!Uri.IsWellFormedUriString(server.Embed.Url, UriKind.Absolute))
-            return new();
+            return [];
 
         var extractor = GetVideoExtractor(server);
         if (extractor is null)
-            return new();
+            return [];
 
         var videos = await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
 

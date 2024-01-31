@@ -10,5 +10,5 @@ public class MangaChapterPage : IMangaChapterPage
 
     public string? Title { get; set; }
 
-    public Dictionary<string, string> Headers { get; set; } = new();
+    public Dictionary<string, string> Headers { get; set; } = [];
 }

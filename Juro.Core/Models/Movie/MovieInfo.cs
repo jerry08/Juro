@@ -16,11 +16,11 @@ public class MovieInfo
 
     public TvType Type { get; set; }
 
-    public List<string> Genres { get; set; } = new();
+    public List<string> Genres { get; set; } = [];
 
-    public List<string> Tags { get; set; } = new();
+    public List<string> Tags { get; set; } = [];
 
-    public List<string> Casts { get; set; } = new();
+    public List<string> Casts { get; set; } = [];
 
     public string? Production { get; set; }
 
@@ -30,5 +30,5 @@ public class MovieInfo
 
     public string? Rating { get; set; }
 
-    public List<Episode> Episodes { get; set; } = new();
+    public List<Episode> Episodes { get; set; } = [];
 }

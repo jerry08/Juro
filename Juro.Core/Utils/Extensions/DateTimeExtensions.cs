@@ -7,8 +7,7 @@ internal static class DateTimeExtensions
 #if NETCOREAPP || NETSTANDARD2_1
     private static readonly DateTime Jan1st1970 = DateTime.UnixEpoch;
 #else
-    private static readonly DateTime Jan1st1970 = new
-        (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime Jan1st1970 = new(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 #endif
 
     public static long CurrentTimeMillis()

@@ -28,7 +28,8 @@ public interface IMangaProvider : ISourceProvider, IKey
     /// <returns>An <see cref="IMangaResult"/> for the provider.</returns>
     ValueTask<List<IMangaResult>> SearchAsync(
         string query,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Gets the manga info by Id.
@@ -38,7 +39,8 @@ public interface IMangaProvider : ISourceProvider, IKey
     /// <returns>An interface of type <see cref="IMangaInfo"/> for the provider.</returns>
     ValueTask<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
-        CancellationToken cancellationToken = default!);
+        CancellationToken cancellationToken = default!
+    );
 
     /// <summary>
     /// Gets chapter pages for manga.
@@ -48,5 +50,6 @@ public interface IMangaProvider : ISourceProvider, IKey
     /// <returns>An interface of type <see cref="IMangaChapterPage"/> for the provider.</returns>
     ValueTask<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
-        CancellationToken cancellationToken = default!);
+        CancellationToken cancellationToken = default!
+    );
 }

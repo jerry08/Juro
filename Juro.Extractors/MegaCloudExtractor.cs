@@ -20,20 +20,15 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for MegaCloud.
 /// </summary>
-public class MegaCloudExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="MegaCloudExtractor"/>.
+/// </remarks>
+public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly HttpClient _http;
+    private readonly HttpClient _http = httpClientFactory.CreateClient();
 
     /// <inheritdoc />
     public string ServerName => "MegaCloud";
-
-    /// <summary>
-    /// Initializes an instance of <see cref="MegaCloudExtractor"/>.
-    /// </summary>
-    public MegaCloudExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _http = httpClientFactory.CreateClient();
-    }
 
     /// <summary>
     /// Initializes an instance of <see cref="MegaCloudExtractor"/>.
@@ -59,7 +54,7 @@ public class MegaCloudExtractor : IVideoExtractor
 
         var decryptKey = await DecryptKeyAsync(cancellationToken);
         if (decryptKey.Count == 0)
-            return new();
+            return [];
 
         var headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
 
@@ -73,7 +68,7 @@ public class MegaCloudExtractor : IVideoExtractor
 
         var sources = data?["sources"]?.ToString();
         if (string.IsNullOrWhiteSpace(sources))
-            return new();
+            return [];
 
         var isEncrypted = (bool)data!["encrypted"]!;
         if (isEncrypted)
@@ -105,7 +100,7 @@ public class MegaCloudExtractor : IVideoExtractor
             }
             catch
             {
-                return new();
+                return [];
             }
         }
 
@@ -133,8 +128,8 @@ public class MegaCloudExtractor : IVideoExtractor
 
         var m3u8File = JsonNode.Parse(sources!)![0]!["file"]!.ToString();
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 VideoUrl = m3u8File,
@@ -143,7 +138,7 @@ public class MegaCloudExtractor : IVideoExtractor
                 Resolution = "Multi Quality",
                 Subtitles = subtitles
             }
-        };
+        ];
     }
 
     public async ValueTask<List<List<int>>> DecryptKeyAsync(
@@ -156,9 +151,9 @@ public class MegaCloudExtractor : IVideoExtractor
         );
 
         if (string.IsNullOrEmpty(response))
-            return new();
+            return [];
 
-        return JsonSerializer.Deserialize<List<List<int>>>(response) ?? new();
+        return JsonSerializer.Deserialize<List<List<int>>>(response) ?? [];
     }
 
     private static byte[] Md5(byte[] inputBytes) => MD5.Create().ComputeHash(inputBytes);

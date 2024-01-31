@@ -3,18 +3,12 @@ using System.Net.Http;
 
 namespace Juro.Core;
 
-internal class HttpClientFactory : IHttpClientFactory
+internal class HttpClientFactory(Func<HttpClient> httpClientFunc) : IHttpClientFactory
 {
-    private readonly Func<HttpClient> _httpClientFunc;
+    private readonly Func<HttpClient> _httpClientFunc = httpClientFunc;
 
-    public HttpClientFactory(Func<HttpClient> httpClientFunc)
-    {
-        _httpClientFunc = httpClientFunc;
-    }
-
-    public HttpClientFactory() : this(() => new())
-    {
-    }
+    public HttpClientFactory()
+        : this(() => new()) { }
 
     public HttpClient CreateClient() => _httpClientFunc();
 }

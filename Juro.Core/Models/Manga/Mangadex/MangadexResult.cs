@@ -4,9 +4,9 @@ namespace Juro.Core.Models.Manga.Mangadex;
 
 public class MangadexResult : MangaResult
 {
-    public List<string> AltTitles { get; set; } = new();
+    public List<string> AltTitles { get; set; } = [];
 
-    public List<MangadexDescription> Descriptions { get; set; } = new();
+    public List<MangadexDescription> Descriptions { get; set; } = [];
 
     public MediaStatus Status { get; set; }
 

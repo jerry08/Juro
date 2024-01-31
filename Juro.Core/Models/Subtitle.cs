@@ -10,16 +10,11 @@ public class Subtitle
 
     public SubtitleType Type { get; set; } = SubtitleType.VTT;
 
-    public Dictionary<string, string> Headers { get; set; } = new();
+    public Dictionary<string, string> Headers { get; set; } = [];
 
-    public Subtitle()
-    {
-    }
+    public Subtitle() { }
 
-    public Subtitle(
-        string url,
-        string language,
-        SubtitleType type = SubtitleType.VTT)
+    public Subtitle(string url, string language, SubtitleType type = SubtitleType.VTT)
     {
         Url = url;
         Language = language;
@@ -30,7 +25,8 @@ public class Subtitle
         string url,
         string language,
         Dictionary<string, string> headers,
-        SubtitleType type = SubtitleType.VTT)
+        SubtitleType type = SubtitleType.VTT
+    )
     {
         Url = url;
         Language = language;

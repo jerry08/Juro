@@ -6,20 +6,85 @@ namespace Juro.Core.Utils.Extensions;
 
 internal static class StringExtensions
 {
-    public static int? ToIntOrNull(this string? value)
-        => int.TryParse(value, out var i) ? i : null;
+    public static int? ToIntOrNull(this string? value) => int.TryParse(value, out var i) ? i : null;
 
     private static readonly int[] _digits = new[]
     {
-        0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-        -1, -1, -1, -1, -1, -1, -1,
-        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-        20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-        30, 31, 32, 33, 34, 35,
-        -1, -1, -1, -1, -1, -1,
-        10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-        20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
-        30, 31, 32, 33, 34, 35
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35
     };
 
     internal static int DigitOf(char c, int radix)
@@ -39,7 +104,8 @@ internal static class StringExtensions
 
         if (result >= radix)
             return -1;
-        else return result;
+        else
+            return result;
     }
 
     public static int? ToIntOrNull(this string? value, int radix)
@@ -60,7 +126,7 @@ internal static class StringExtensions
         {
             // Possible leading sign
             if (length == 1)
-                return null;  // non-digit (possible sign) only, no digits after
+                return null; // non-digit (possible sign) only, no digits after
 
             start = 1;
 
@@ -176,19 +242,18 @@ internal static class StringExtensions
         return string.Empty;
     }
 
-    public static string DecodeBase64(this string value)
-        => Encoding.UTF8.GetString(Convert.FromBase64String(value));
+    public static string DecodeBase64(this string value) =>
+        Encoding.UTF8.GetString(Convert.FromBase64String(value));
 
-    public static byte[] DecodeBase64ToBytes(this string value)
-        => Convert.FromBase64String(value);
+    public static byte[] DecodeBase64ToBytes(this string value) => Convert.FromBase64String(value);
 
     private static readonly Regex _whitespace = new(@"\s+");
 
-    public static string ReplaceWhitespaces(this string input, string replacement)
-        => _whitespace.Replace(input, replacement);
+    public static string ReplaceWhitespaces(this string input, string replacement) =>
+        _whitespace.Replace(input, replacement);
 
-    public static string RemoveWhitespaces(this string input)
-        => input.ReplaceWhitespaces(string.Empty);
+    public static string RemoveWhitespaces(this string input) =>
+        input.ReplaceWhitespaces(string.Empty);
 
     /// <summary>
     /// If the input string starts with the given prefix, returns a substring

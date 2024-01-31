@@ -28,7 +28,13 @@ internal class VidCloudDecryptor
         var encryptedBytesWithSalt = new byte[salt.Length + encryptedBytes.Length + 8];
         Buffer.BlockCopy(Encoding.ASCII.GetBytes("Salted__"), 0, encryptedBytesWithSalt, 0, 8);
         Buffer.BlockCopy(salt, 0, encryptedBytesWithSalt, 8, salt.Length);
-        Buffer.BlockCopy(encryptedBytes, 0, encryptedBytesWithSalt, salt.Length + 8, encryptedBytes.Length);
+        Buffer.BlockCopy(
+            encryptedBytes,
+            0,
+            encryptedBytesWithSalt,
+            salt.Length + 8,
+            encryptedBytes.Length
+        );
         // base64 encode
         return Convert.ToBase64String(encryptedBytesWithSalt);
     }
@@ -41,13 +47,24 @@ internal class VidCloudDecryptor
         var salt = new byte[8];
         var encryptedBytes = new byte[encryptedBytesWithSalt.Length - salt.Length - 8];
         Buffer.BlockCopy(encryptedBytesWithSalt, 8, salt, 0, salt.Length);
-        Buffer.BlockCopy(encryptedBytesWithSalt, salt.Length + 8, encryptedBytes, 0, encryptedBytes.Length);
+        Buffer.BlockCopy(
+            encryptedBytesWithSalt,
+            salt.Length + 8,
+            encryptedBytes,
+            0,
+            encryptedBytes.Length
+        );
         // get key and iv
         DeriveKeyAndIV(passphrase, salt, out var key, out var iv);
         return DecryptStringFromBytesAes(encryptedBytes, key, iv);
     }
 
-    private static void DeriveKeyAndIV(string passphrase, byte[] salt, out byte[] key, out byte[] iv)
+    private static void DeriveKeyAndIV(
+        string passphrase,
+        byte[] salt,
+        out byte[] key,
+        out byte[] iv
+    )
     {
         // generate key and iv
         var concatenatedHashes = new List<byte>(48);

@@ -9,13 +9,11 @@ namespace Juro.Clients;
 /// <summary>
 /// Client for managining all available manga providers.
 /// </summary>
-public class MangaClient : ClientBase<IMangaProvider>
+/// <remarks>
+/// Initializes an instance of <see cref="MangaClient"/>.
+/// </remarks>
+public class MangaClient(IHttpClientFactory httpClientFactory) : ClientBase<IMangaProvider>(httpClientFactory)
 {
-    /// <summary>
-    /// Initializes an instance of <see cref="MangaClient"/>.
-    /// </summary>
-    public MangaClient(IHttpClientFactory httpClientFactory)
-        : base(httpClientFactory) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="MangaClient"/>.

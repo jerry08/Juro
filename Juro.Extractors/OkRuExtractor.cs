@@ -14,9 +14,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for OkRu.
 /// </summary>
-public class OkRuExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="OkRuExtractor"/>.
+/// </remarks>
+public class OkRuExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "OkRu";
@@ -24,30 +27,20 @@ public class OkRuExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="OkRuExtractor"/>.
     /// </summary>
-    public OkRuExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="OkRuExtractor"/>.
-    /// </summary>
     public OkRuExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="OkRuExtractor"/>.
     /// </summary>
-    public OkRuExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public OkRuExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -55,8 +48,8 @@ public class OkRuExtractor : IVideoExtractor
 
         var mediaUrl = new Regex("https://vd\\d+\\.mycdn\\.me/e[^\\\\]+").Match(response);
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 Format = VideoType.M3u8,
@@ -69,6 +62,6 @@ public class OkRuExtractor : IVideoExtractor
                 VideoUrl = mediaUrl.NextMatch().Value,
                 Title = ServerName
             }
-        };
+        ];
     }
 }

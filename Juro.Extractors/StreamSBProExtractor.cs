@@ -15,11 +15,15 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for StreamSB Pro.
 /// </summary>
-public class StreamSBProExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="StreamSBProExtractor"/>.
+/// </remarks>
+public class StreamSBProExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    private readonly string _alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private readonly string _alphabet =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     /// <inheritdoc />
     public string ServerName => "StreamSB Pro";
@@ -27,30 +31,20 @@ public class StreamSBProExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="StreamSBProExtractor"/>.
     /// </summary>
-    public StreamSBProExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="StreamSBProExtractor"/>.
-    /// </summary>
     public StreamSBProExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="StreamSBProExtractor"/>.
     /// </summary>
-    public StreamSBProExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public StreamSBProExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -78,8 +72,8 @@ public class StreamSBProExtractor : IVideoExtractor
         var data = JsonNode.Parse(response);
         var masterUrl = data?["stream_data"]?["file"]?.ToString().Trim('"')!;
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 Format = VideoType.M3u8,
@@ -87,7 +81,7 @@ public class StreamSBProExtractor : IVideoExtractor
                 Headers = headers,
                 Resolution = "Multi Quality"
             }
-        };
+        ];
     }
 
     private string Encode(string id)

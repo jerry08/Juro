@@ -16,5 +16,6 @@ public interface IAiringProvider
     /// <returns>A <see cref="List{T}"/> of <see cref="IAnimeInfo"/>s.</returns>
     ValueTask<List<IAnimeInfo>> GetAiringAsync(
         int page = 1,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

@@ -10,6 +10,7 @@ public enum StreamingServers
     VidCloud,
     StreamTape,
     VizCloud,
+
     // same as vizcloud
     MyCloud,
     Filemoon,

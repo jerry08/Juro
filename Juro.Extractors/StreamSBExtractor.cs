@@ -15,9 +15,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for StreamSB.
 /// </summary>
-public class StreamSBExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="StreamSBExtractor"/>.
+/// </remarks>
+public class StreamSBExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     private readonly char[] hexArray = "0123456789ABCDEF".ToCharArray();
 
@@ -27,30 +30,20 @@ public class StreamSBExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="StreamSBExtractor"/>.
     /// </summary>
-    public StreamSBExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="StreamSBExtractor"/>.
-    /// </summary>
     public StreamSBExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="StreamSBExtractor"/>.
     /// </summary>
-    public StreamSBExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public StreamSBExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -81,8 +74,8 @@ public class StreamSBExtractor : IVideoExtractor
         var data = JsonNode.Parse(response)!;
         var masterUrl = data["stream_data"]?["file"]?.ToString().Trim('"')!;
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 Format = VideoType.M3u8,
@@ -90,7 +83,7 @@ public class StreamSBExtractor : IVideoExtractor
                 Headers = headers,
                 Resolution = "Multi Quality"
             }
-        };
+        ];
     }
 
     private string BytesToHex(byte[] bytes)

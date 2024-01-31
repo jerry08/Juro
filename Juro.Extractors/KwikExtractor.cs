@@ -15,9 +15,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for Kwik.
 /// </summary>
-public class KwikExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="KwikExtractor"/>.
+/// </remarks>
+public class KwikExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     private readonly string _host = "https://animepahe.com";
 
@@ -33,39 +36,26 @@ public class KwikExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="KwikExtractor"/>.
     /// </summary>
-    public KwikExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="KwikExtractor"/>.
-    /// </summary>
     public KwikExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="KwikExtractor"/>.
     /// </summary>
-    public KwikExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public KwikExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
         var response = await http.ExecuteAsync(
             url,
-            new Dictionary<string, string>()
-            {
-                { "Referer", _host }
-            },
+            new Dictionary<string, string>() { { "Referer", _host } },
             cancellationToken
         );
 
@@ -91,21 +81,20 @@ public class KwikExtractor : IVideoExtractor
             { "Cookie", cookies }
         };
 
-        var formContent = new FormUrlEncodedContent(new KeyValuePair<string?, string?>[]
-        {
-            new("_token", token)
-        });
+        var formContent = new FormUrlEncodedContent(
+            new KeyValuePair<string?, string?>[] { new("_token", token) }
+        );
 
         var request = new HttpRequestMessage(HttpMethod.Post, postUrl);
         for (var j = 0; j < headers.Count; j++)
-            request.Headers.TryAddWithoutValidation(headers.ElementAt(j).Key, headers.ElementAt(j).Value);
+            request.Headers.TryAddWithoutValidation(
+                headers.ElementAt(j).Key,
+                headers.ElementAt(j).Value
+            );
 
         if (!request.Headers.Contains("User-Agent"))
         {
-            request.Headers.Add(
-                "User-Agent",
-                Http.ChromeUserAgent()
-            );
+            request.Headers.Add("User-Agent", Http.ChromeUserAgent());
         }
 
         request.Content = formContent;
@@ -124,18 +113,19 @@ public class KwikExtractor : IVideoExtractor
 
         var mp4Url = response2.Headers.Location!.ToString();
 
-        return new()
-        {
+        return
+        [
             new()
             {
                 VideoUrl = mp4Url,
                 Format = VideoType.Container,
                 FileType = "mp4"
             }
-        };
+        ];
     }
 
-    private readonly string _map = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/";
+    private readonly string _map =
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/";
 
     private int GetString(string content, int s1)
     {

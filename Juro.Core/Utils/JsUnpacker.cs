@@ -15,27 +15,24 @@ public static class JsUnpacker
     /// <summary>
     /// Regex to detect packed functions.
     /// </summary>
-    private static readonly Regex _packedRegex = new(
-        "eval[(]function[(]p,a,c,k,e,[r|d]?",
-        RegexOptions.IgnoreCase | RegexOptions.Multiline
-    );
+    private static readonly Regex _packedRegex =
+        new("eval[(]function[(]p,a,c,k,e,[r|d]?", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
     /// <summary>
     /// Regex to get and group the packed javascript.
     /// Needed to get information and unpack the code.
     /// </summary>
-    private static readonly Regex _packedExtractRegex = new(
-        "[}][(]'(.*)', *(\\d+), *(\\d+), *'(.*?)'[.]split[(]'[|]'[)]",
-        RegexOptions.IgnoreCase | RegexOptions.Multiline
-    );
+    private static readonly Regex _packedExtractRegex =
+        new(
+            "[}][(]'(.*)', *(\\d+), *(\\d+), *'(.*?)'[.]split[(]'[|]'[)]",
+            RegexOptions.IgnoreCase | RegexOptions.Multiline
+        );
 
     /// <summary>
     /// Matches function names and variables to de-obfuscate the code.
     /// </summary>
-    private static readonly Regex _unpackReplaceRegex = new(
-        "\\b\\w+\\b",
-        RegexOptions.IgnoreCase | RegexOptions.Multiline
-    );
+    private static readonly Regex _unpackReplaceRegex =
+        new("\\b\\w+\\b", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
     /// <summary>
     /// Check if script is packed.
@@ -80,7 +77,7 @@ public static class JsUnpacker
     public static List<string?> Unpack(string? scriptBlock)
     {
         if (!IsPacked(scriptBlock))
-            return new();
+            return [];
 
         return Unpacking(scriptBlock);
     }
@@ -108,7 +105,7 @@ public static class JsUnpacker
     private static List<string?> Unpacking(string? scriptBlock)
     {
         if (scriptBlock is null)
-            return new();
+            return [];
 
         var matches = _packedExtractRegex.Matches(scriptBlock).OfType<Match>();
 

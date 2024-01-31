@@ -14,9 +14,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for StreamTape.
 /// </summary>
-public class StreamTapeExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="StreamTapeExtractor"/>.
+/// </remarks>
+public class StreamTapeExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     private readonly Regex _linkRegex = new(@"'robotlink'\)\.innerHTML = '(.+?)'\+ \('(.+?)'\)");
 
@@ -26,30 +29,20 @@ public class StreamTapeExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="StreamTapeExtractor"/>.
     /// </summary>
-    public StreamTapeExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="StreamTapeExtractor"/>.
-    /// </summary>
     public StreamTapeExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="StreamTapeExtractor"/>.
     /// </summary>
-    public StreamTapeExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public StreamTapeExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -64,14 +57,14 @@ public class StreamTapeExtractor : IVideoExtractor
 
         var vidUrl = $"https:{reg.Groups[1]!.Value + reg.Groups[2]!.Value.Substring(3)}";
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 Format = VideoType.M3u8,
                 VideoUrl = vidUrl,
                 Resolution = "Multi Quality",
             }
-        };
+        ];
     }
 }

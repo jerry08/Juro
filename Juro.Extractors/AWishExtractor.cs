@@ -15,9 +15,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for AWish.
 /// </summary>
-public class AWishExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="AWishExtractor"/>.
+/// </remarks>
+public class AWishExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "AWish";
@@ -25,49 +28,40 @@ public class AWishExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="AWishExtractor"/>.
     /// </summary>
-    public AWishExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="AWishExtractor"/>.
-    /// </summary>
     public AWishExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="AWishExtractor"/>.
     /// </summary>
-    public AWishExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public AWishExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
         var response = await http.ExecuteAsync(url, cancellationToken);
 
         //var mediaUrl = new Regex("file:\"([^\"]+)\"\\}").Match(response)
-        var mediaUrl = new Regex("file:\"([^\"]+)\"").Match(response)
+        var mediaUrl = new Regex("file:\"([^\"]+)\"")
+            .Match(response)
             .Groups.OfType<Group>()
             .ToList()[1]
             .Value;
 
-        return new List<VideoSource>
-        {
+        return
+        [
             new()
             {
                 Format = VideoType.M3u8,
                 VideoUrl = mediaUrl,
                 Title = ServerName
             }
-        };
+        ];
     }
 }

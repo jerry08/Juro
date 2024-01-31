@@ -9,5 +9,5 @@ public class MangadexInfo : MangaInfo
     /// </summary>
     public int ReleaseDate { get; set; }
 
-    public List<string> Themes { get; set; } = new();
+    public List<string> Themes { get; set; } = [];
 }

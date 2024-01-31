@@ -36,7 +36,9 @@ internal partial class ResizableSemaphore : IDisposable
         if (_isDisposed)
             throw new ObjectDisposedException(GetType().Name);
 
-        var waiter = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var waiter = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
 
         using (_cts.Token.Register(() => waiter.TrySetCanceled(_cts.Token)))
         using (cancellationToken.Register(() => waiter.TrySetCanceled(cancellationToken)))

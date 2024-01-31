@@ -16,5 +16,6 @@ public interface INewSeasonProvider
     /// <returns>A <see cref="List{T}"/> of <see cref="IAnimeInfo"/>s.</returns>
     ValueTask<List<IAnimeInfo>> GetNewSeasonAsync(
         int page = 1,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

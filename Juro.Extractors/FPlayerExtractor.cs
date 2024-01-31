@@ -14,9 +14,12 @@ namespace Juro.Extractors;
 /// <summary>
 /// Extractor for FPlayer.
 /// </summary>
-public class FPlayerExtractor : IVideoExtractor
+/// <remarks>
+/// Initializes an instance of <see cref="FPlayerExtractor"/>.
+/// </remarks>
+public class FPlayerExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc />
     public string ServerName => "FPlayer";
@@ -24,30 +27,20 @@ public class FPlayerExtractor : IVideoExtractor
     /// <summary>
     /// Initializes an instance of <see cref="FPlayerExtractor"/>.
     /// </summary>
-    public FPlayerExtractor(IHttpClientFactory httpClientFactory)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
-
-    /// <summary>
-    /// Initializes an instance of <see cref="FPlayerExtractor"/>.
-    /// </summary>
     public FPlayerExtractor(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="FPlayerExtractor"/>.
     /// </summary>
-    public FPlayerExtractor() : this(Http.ClientProvider)
-    {
-    }
+    public FPlayerExtractor()
+        : this(Http.ClientProvider) { }
 
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default
+    )
     {
         var http = _httpClientFactory.CreateClient();
 
@@ -57,10 +50,7 @@ public class FPlayerExtractor : IVideoExtractor
 
         try
         {
-            var headers = new Dictionary<string, string>()
-            {
-                { "Referer", url }
-            };
+            var headers = new Dictionary<string, string>() { { "Referer", url } };
 
             var json = await http.PostAsync(apiLink, headers, cancellationToken);
             if (!string.IsNullOrWhiteSpace(json))
@@ -68,13 +58,15 @@ public class FPlayerExtractor : IVideoExtractor
                 var data = JsonNode.Parse(JsonNode.Parse(json)!["data"]!.ToString())!.AsArray();
                 for (var i = 0; i < data.Count; i++)
                 {
-                    list.Add(new()
-                    {
-                        VideoUrl = data[i]!["file"]!.ToString(),
-                        Resolution = data[i]!["label"]!.ToString(),
-                        Format = VideoType.Container,
-                        FileType = data[i]!["type"]!.ToString(),
-                    });
+                    list.Add(
+                        new()
+                        {
+                            VideoUrl = data[i]!["file"]!.ToString(),
+                            Resolution = data[i]!["label"]!.ToString(),
+                            Format = VideoType.Container,
+                            FileType = data[i]!["type"]!.ToString(),
+                        }
+                    );
                 }
 
                 return list;

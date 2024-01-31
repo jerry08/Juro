@@ -9,9 +9,7 @@ public class Genre
 
     public string? Url { get; set; }
 
-    public Genre()
-    {
-    }
+    public Genre() { }
 
     public Genre(string name)
     {

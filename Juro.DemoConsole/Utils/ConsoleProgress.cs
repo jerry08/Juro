@@ -4,28 +4,19 @@ using System.Threading;
 
 namespace Juro.DemoConsole.Utils;
 
-internal class ConsoleProgress : IProgress<double>, IDisposable
+internal class ConsoleProgress(TextWriter writer) : IProgress<double>, IDisposable
 {
-    private readonly TextWriter _writer;
-    private readonly int _posX;
-    private readonly int _posY;
+    private readonly TextWriter _writer = writer;
+    private readonly int _posX = Console.CursorLeft;
+    private readonly int _posY = Console.CursorTop;
 
     private int _lastLength;
 
     private Timer? timer;
     private double currentProgress = 0;
 
-    public ConsoleProgress(TextWriter writer)
-    {
-        _writer = writer;
-        _posX = Console.CursorLeft;
-        _posY = Console.CursorTop;
-    }
-
     public ConsoleProgress()
-        : this(Console.Out)
-    {
-    }
+        : this(Console.Out) { }
 
     private void TimerHandler(object? state)
     {

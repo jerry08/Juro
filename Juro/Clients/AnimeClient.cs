@@ -9,15 +9,11 @@ namespace Juro.Clients;
 /// <summary>
 /// Client for managining all available anime providers.
 /// </summary>
-public class AnimeClient : ClientBase<IAnimeProvider>
+/// <remarks>
+/// Initializes an instance of <see cref="AnimeClient"/>.
+/// </remarks>
+public class AnimeClient(IHttpClientFactory httpClientFactory) : ClientBase<IAnimeProvider>(httpClientFactory)
 {
-    /// <summary>
-    /// Initializes an instance of <see cref="AnimeClient"/>.
-    /// </summary>
-    public AnimeClient(IHttpClientFactory httpClientFactory)
-        : base(httpClientFactory)
-    {
-    }
 
     /// <summary>
     /// Initializes an instance of <see cref="AnimeClient"/>.

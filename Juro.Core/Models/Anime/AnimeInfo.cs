@@ -29,5 +29,5 @@ public class AnimeInfo : IAnimeInfo
 
     public string? Summary { get; set; }
 
-    public List<Genre> Genres { get; set; } = new();
+    public List<Genre> Genres { get; set; } = [];
 }

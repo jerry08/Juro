@@ -19,14 +19,17 @@ namespace Juro.Providers.Anime;
 /// <summary>
 /// Client for interacting with gogoanime.
 /// </summary>
-public class Gogoanime
-    : AnimeBaseProvider,
+/// <remarks>
+/// Initializes an instance of <see cref="Gogoanime"/>.
+/// </remarks>
+public class Gogoanime(IHttpClientFactory httpClientFactory)
+    : AnimeBaseProvider(httpClientFactory),
         IAnimeProvider,
         IPopularProvider,
         ILastUpdatedProvider,
         INewSeasonProvider
 {
-    private readonly HttpClient _http;
+    private readonly HttpClient _http = httpClientFactory.CreateClient();
 
     public string Key => Name;
 
@@ -39,15 +42,6 @@ public class Gogoanime
     public string BaseUrl { get; private set; } = default!;
 
     public string CdnUrl { get; private set; } = default!;
-
-    /// <summary>
-    /// Initializes an instance of <see cref="Gogoanime"/>.
-    /// </summary>
-    public Gogoanime(IHttpClientFactory httpClientFactory)
-        : base(httpClientFactory)
-    {
-        _http = httpClientFactory.CreateClient();
-    }
 
     /// <summary>
     /// Initializes an instance of <see cref="Gogoanime"/>.
@@ -166,8 +160,8 @@ public class Gogoanime
 
         var document = Html.Parse(response);
 
-        var itemsNode = document.DocumentNode
-            .Descendants()
+        var itemsNode = document
+            .DocumentNode.Descendants()
             .FirstOrDefault(node => node.HasClass("items"));
 
         if (itemsNode is not null)
@@ -255,9 +249,10 @@ public class Gogoanime
 
             var epsDocument = Html.Parse(epsResponse);
 
-            url = epsDocument.DocumentNode
-                .SelectSingleNode(".//div[@class='anime-info']/a")
-                ?.Attributes["href"]?.Value;
+            url = epsDocument
+                .DocumentNode.SelectSingleNode(".//div[@class='anime-info']/a")
+                ?.Attributes["href"]
+                ?.Value;
 
             if (url is null)
                 return anime;
@@ -279,8 +274,8 @@ public class Gogoanime
 
         var document = Html.Parse(response);
 
-        var animeInfoNodes = document.DocumentNode
-            .SelectNodes(".//div[@class='anime_info_body_bg']/p")
+        var animeInfoNodes = document
+            .DocumentNode.SelectNodes(".//div[@class='anime_info_body_bg']/p")
             .ToList();
 
         var imgNode = document.DocumentNode.SelectSingleNode(
@@ -372,15 +367,17 @@ public class Gogoanime
 
         var document = Html.Parse(response);
 
-        var lastEpisode = document.DocumentNode
-            .Descendants()
+        var lastEpisode = document
+            .DocumentNode.Descendants()
             .LastOrDefault(x => x.Attributes["ep_end"] is not null)
-            ?.Attributes["ep_end"].Value;
+            ?.Attributes["ep_end"]
+            .Value;
 
-        var animeId = document.DocumentNode
-            .Descendants()
+        var animeId = document
+            .DocumentNode.Descendants()
             .FirstOrDefault(x => x.Id == "movie_id")
-            ?.Attributes["value"].Value;
+            ?.Attributes["value"]
+            .Value;
 
         var url =
             $"https://ajax.gogo-load.com/ajax/load-list-episode?ep_start=0&ep_end={lastEpisode}&id={animeId}";
@@ -445,7 +442,7 @@ public class Gogoanime
         var response = await _http.ExecuteAsync(episodeUrl, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
-            return new();
+            return [];
 
         var document = Html.Parse(response);
 
@@ -483,8 +480,8 @@ public class Gogoanime
 
         var document = Html.Parse(response);
 
-        var genresNode = document.DocumentNode
-            .Descendants()
+        var genresNode = document
+            .DocumentNode.Descendants()
             .FirstOrDefault(node => node.GetClasses().Contains("genre"));
 
         if (genresNode is not null)

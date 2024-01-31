@@ -12,9 +12,7 @@ public class VideoServer
     /// <summary>
     /// Initializes an instance of <see cref="VideoServer"/>.
     /// </summary>
-    public VideoServer()
-    {
-    }
+    public VideoServer() { }
 
     /// <summary>
     /// Initializes an instance of <see cref="VideoServer"/>.

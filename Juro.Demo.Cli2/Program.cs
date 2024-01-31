@@ -5,29 +5,17 @@ using Juro.Clients;
 
 namespace Juro.Demo.Cli2;
 
-interface ITest1
-{
-}
+interface ITest1 { }
 
-interface ITest2
-{
-}
+interface ITest2 { }
 
-interface ITest3 : ITest2
-{
-}
+interface ITest3 : ITest2 { }
 
-class Test1 : ITest1
-{
-}
+class Test1 : ITest1 { }
 
-class Test2 : ITest2
-{
-}
+class Test2 : ITest2 { }
 
-class Test3 : ITest3
-{
-}
+class Test3 : ITest3 { }
 
 internal static class Program
 {

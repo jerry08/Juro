@@ -17,9 +17,12 @@ namespace Juro.Providers.Manga;
 /// <summary>
 /// Client for interacting with Mangadex.
 /// </summary>
-public class Mangadex : IMangaProvider
+/// <remarks>
+/// Initializes an instance of <see cref="Mangadex"/>.
+/// </remarks>
+public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
 {
-    private readonly HttpClient _http;
+    private readonly HttpClient _http = httpClientFactory.CreateClient();
     private readonly string _apiUrl = "https://api.mangadex.org";
 
     public string Key => Name;
@@ -30,30 +33,20 @@ public class Mangadex : IMangaProvider
 
     public string BaseUrl => "https://mangadex.org";
 
-    public string Logo => "https://pbs.twimg.com/profile_images/1391016345714757632/xbt_jW78_400x400.jpg";
-
-    /// <summary>
-    /// Initializes an instance of <see cref="Mangadex"/>.
-    /// </summary>
-    public Mangadex(IHttpClientFactory httpClientFactory)
-    {
-        _http = httpClientFactory.CreateClient();
-    }
+    public string Logo =>
+        "https://pbs.twimg.com/profile_images/1391016345714757632/xbt_jW78_400x400.jpg";
 
     /// <summary>
     /// Initializes an instance of <see cref="Mangadex"/>.
     /// </summary>
     public Mangadex(Func<HttpClient> httpClientProvider)
-        : this(new HttpClientFactory(httpClientProvider))
-    {
-    }
+        : this(new HttpClientFactory(httpClientProvider)) { }
 
     /// <summary>
     /// Initializes an instance of <see cref="Mangadex"/>.
     /// </summary>
-    public Mangadex() : this(Http.ClientProvider)
-    {
-    }
+    public Mangadex()
+        : this(Http.ClientProvider) { }
 
     /// <summary>
     /// Search for manga.
@@ -63,7 +56,8 @@ public class Mangadex : IMangaProvider
     /// <returns>A <see cref="List{IMangaResult}"/> of <see cref="IMangaResult"/>s from <see cref="MangadexResult"/>s.</returns>
     public async ValueTask<List<IMangaResult>> SearchAsync(
         string query,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         return await SearchAsync(query, 1, 20, cancellationToken);
     }
@@ -81,7 +75,8 @@ public class Mangadex : IMangaProvider
         string query,
         int page = 1,
         int limit = 20,
-        CancellationToken cancellationToken = default!)
+        CancellationToken cancellationToken = default!
+    )
     {
         if (page <= 0)
             throw new Exception("Page number must be greater than 0");
@@ -92,43 +87,58 @@ public class Mangadex : IMangaProvider
         if (limit * (page - 1) >= 10000)
             throw new Exception("not enough results");
 
-        var url = $"{_apiUrl}/manga?limit={limit}&title={Uri.EscapeDataString(query)}&limit={limit}&offset={limit * (page - 1)}&order[relevance]=desc";
+        var url =
+            $"{_apiUrl}/manga?limit={limit}&title={Uri.EscapeDataString(query)}&limit={limit}&offset={limit * (page - 1)}&order[relevance]=desc";
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         var data = JsonNode.Parse(response);
         if (data?["result"]?.ToString() != "ok")
-            return new();
+            return [];
 
         var list = new List<IMangaResult>();
 
-        var results = data["data"]!.AsArray().Select(manga => new MangadexResult()
-        {
-            Id = manga!["id"]!.ToString(),
-            Title = manga["attributes"]!["title"]!.AsObject()
-                .Select(x => x.Value).FirstOrDefault()?.ToString(),
-            AltTitles = manga["attributes"]!["altTitles"]?
-                .AsArray().Select(x => x!.AsObject().FirstOrDefault())
-                .OrderByDescending(x => "en")
-                .ThenBy(x => x.Key)
-                .Select(x => x.Value?.ToString() ?? "")
-                .ToList() ?? new(),
-            Descriptions = manga["attributes"]!["description"]!
-                .AsObject().Select(x => new MangadexDescription()
-                {
-                    Description = x.Key,
-                    Language = x.Value?.ToString()
-                }).ToList() ?? new(),
-            Status = manga["attributes"]!["status"]?.ToString().ToLower() switch
+        var results = data["data"]!
+            .AsArray()
+            .Select(manga => new MangadexResult()
             {
-                "completed" => MediaStatus.Completed,
-                "ongoing" => MediaStatus.Ongoing,
-                _ => MediaStatus.Unknown,
-            },
-            ReleaseDate = int.TryParse(manga["attributes"]!["year"]?.ToString(), out var year) ? year : null,
-            ContentRating = manga["attributes"]!["contentRating"]!.ToString(),
-            LastVolume = manga["attributes"]!["lastVolume"]!.ToString(),
-            LastChapter = manga["attributes"]!["lastChapter"]!.ToString(),
-        }).ToList();
+                Id = manga!["id"]!.ToString(),
+                Title = manga["attributes"]!["title"]!
+                    .AsObject()
+                    .Select(x => x.Value)
+                    .FirstOrDefault()
+                    ?.ToString(),
+                AltTitles =
+                    manga["attributes"]!
+                        ["altTitles"]
+                        ?.AsArray()
+                        .Select(x => x!.AsObject().FirstOrDefault())
+                        .OrderByDescending(x => "en")
+                        .ThenBy(x => x.Key)
+                        .Select(x => x.Value?.ToString() ?? "")
+                        .ToList() ?? [],
+                Descriptions =
+                    manga["attributes"]!["description"]!
+                        .AsObject()
+                        .Select(x => new MangadexDescription()
+                        {
+                            Description = x.Key,
+                            Language = x.Value?.ToString()
+                        })
+                        .ToList() ?? [],
+                Status = manga["attributes"]!["status"]?.ToString().ToLower() switch
+                {
+                    "completed" => MediaStatus.Completed,
+                    "ongoing" => MediaStatus.Ongoing,
+                    _ => MediaStatus.Unknown,
+                },
+                ReleaseDate = int.TryParse(manga["attributes"]!["year"]?.ToString(), out var year)
+                    ? year
+                    : null,
+                ContentRating = manga["attributes"]!["contentRating"]!.ToString(),
+                LastVolume = manga["attributes"]!["lastVolume"]!.ToString(),
+                LastChapter = manga["attributes"]!["lastChapter"]!.ToString(),
+            })
+            .ToList();
 
         list.AddRange(results);
 
@@ -143,7 +153,8 @@ public class Mangadex : IMangaProvider
     /// <returns>An interface of type <see cref="IMangaResult"/> from an instance of <see cref="MangadexInfo"/>.</returns>
     public async ValueTask<IMangaInfo> GetMangaInfoAsync(
         string mangaId,
-        CancellationToken cancellationToken = default!)
+        CancellationToken cancellationToken = default!
+    )
     {
         var url = $"{_apiUrl}/manga/{mangaId}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
@@ -155,20 +166,28 @@ public class Mangadex : IMangaProvider
         var mangaInfo = new MangadexInfo
         {
             Id = data["data"]!["id"]!.ToString(),
-            Title = data["data"]!["attributes"]!["title"]!.AsObject()
-                .Select(x => x.Value).FirstOrDefault()?.ToString(),
-            AltTitles = data["data"]!["attributes"]!["altTitles"]?
-                .AsArray().Select(x => x!.AsObject().FirstOrDefault())
-                .OrderByDescending(x => "en")
-                .ThenBy(x => x.Key)
-                .Select(x => x.Value?.ToString() ?? "")
-                .ToList() ?? new(),
+            Title = data["data"]!["attributes"]!["title"]!
+                .AsObject()
+                .Select(x => x.Value)
+                .FirstOrDefault()
+                ?.ToString(),
+            AltTitles =
+                data["data"]!["attributes"]!
+                    ["altTitles"]
+                    ?.AsArray()
+                    .Select(x => x!.AsObject().FirstOrDefault())
+                    .OrderByDescending(x => "en")
+                    .ThenBy(x => x.Key)
+                    .Select(x => x.Value?.ToString() ?? "")
+                    .ToList() ?? [],
             Description = data["data"]!["attributes"]!["description"]!["en"]!.ToString(),
-            Genres = data["data"]!["attributes"]!["tags"]!.AsArray()
+            Genres = data["data"]!["attributes"]!["tags"]!
+                .AsArray()
                 .Where(tag => tag!["attributes"]!["group"]?.ToString() == "genre")
                 .Select(tag => tag!["attributes"]!["name"]!["en"]!.ToString())
                 .ToList(),
-            Themes = data["data"]!["attributes"]!["tags"]!.AsArray()
+            Themes = data["data"]!["attributes"]!["tags"]!
+                .AsArray()
                 .Where(tag => tag!["attributes"]!["group"]?.ToString() == "theme")
                 .Select(tag => tag!["attributes"]!["name"]!["en"]!.ToString())
                 .ToList(),
@@ -184,8 +203,10 @@ public class Mangadex : IMangaProvider
         var chapters = await GetAllChaptersAsync(mangaId, 0, cancellationToken);
         mangaInfo.Chapters.AddRange(chapters);
 
-        var coverArtId = data["data"]!["relationships"]!.AsArray()
-            .FirstOrDefault(x => x!["type"]!.ToString() == "cover_art")?["id"]!.ToString();
+        var coverArtId = data["data"]!["relationships"]!
+            .AsArray()
+            .FirstOrDefault(x => x!["type"]!.ToString() == "cover_art")
+            ?["id"]!.ToString();
 
         if (coverArtId is not null)
         {
@@ -201,22 +222,26 @@ public class Mangadex : IMangaProvider
     /// </summary>
     public async ValueTask<List<IMangaChapterPage>> GetChapterPagesAsync(
         string chapterId,
-        CancellationToken cancellationToken = default!)
+        CancellationToken cancellationToken = default!
+    )
     {
         var url = $"{_apiUrl}/at-home/server/{chapterId}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
 
         var data = JsonNode.Parse(response);
         if (data?["result"]?.ToString() != "ok")
-            return new();
+            return [];
 
         var list = new List<IMangaChapterPage>();
 
-        var pages = data!["chapter"]!["data"]!.AsArray().Select(id => new MangaChapterPage()
-        {
-            Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
-            Page = Convert.ToInt32(id!.ToString().Split('-')[0])
-        }).ToList();
+        var pages = data!["chapter"]!["data"]!
+            .AsArray()
+            .Select(id => new MangaChapterPage()
+            {
+                Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
+                Page = Convert.ToInt32(id!.ToString().Split('-')[0])
+            })
+            .ToList();
 
         list.AddRange(pages);
 
@@ -229,13 +254,15 @@ public class Mangadex : IMangaProvider
     public async ValueTask<List<MangadexChapter>> GetAllChaptersAsync(
         string mangaId,
         int offset,
-        CancellationToken cancellationToken = default!)
+        CancellationToken cancellationToken = default!
+    )
     {
         var list = new List<MangadexChapter>();
 
         while (true)
         {
-            var url = $"{_apiUrl}/manga/{mangaId}/feed?offset={offset}&limit=96&order[volume]=desc&order[chapter]=desc&translatedLanguage[]=en";
+            var url =
+                $"{_apiUrl}/manga/{mangaId}/feed?offset={offset}&limit=96&order[volume]=desc&order[chapter]=desc&translatedLanguage[]=en";
             var response = await _http.ExecuteAsync(url, cancellationToken);
 
             var data = JsonNode.Parse(response);
@@ -248,15 +275,20 @@ public class Mangadex : IMangaProvider
 
             offset += 96;
 
-            list.AddRange(data["data"]!.AsArray().Select(chapter => new MangadexChapter()
-            {
-                Id = chapter!["id"]!.ToString(),
-                Title =
-                    !string.IsNullOrWhiteSpace(chapter["attributes"]!["title"]?.ToString())
-                    ? chapter["attributes"]!["title"]!.ToString()
-                    : chapter["attributes"]!["chapter"]!.ToString(),
-                Pages = Convert.ToInt32(chapter["attributes"]!["pages"]!.ToString()),
-            }));
+            list.AddRange(
+                data["data"]!
+                    .AsArray()
+                    .Select(chapter => new MangadexChapter()
+                    {
+                        Id = chapter!["id"]!.ToString(),
+                        Title = !string.IsNullOrWhiteSpace(
+                            chapter["attributes"]!["title"]?.ToString()
+                        )
+                            ? chapter["attributes"]!["title"]!.ToString()
+                            : chapter["attributes"]!["chapter"]!.ToString(),
+                        Pages = Convert.ToInt32(chapter["attributes"]!["pages"]!.ToString()),
+                    })
+            );
         }
 
         return list;
@@ -267,7 +299,8 @@ public class Mangadex : IMangaProvider
     /// </summary>
     public async ValueTask<string> GetCoverImageAsync(
         string coverId,
-        CancellationToken cancellationToken = default!)
+        CancellationToken cancellationToken = default!
+    )
     {
         var url = $"{_apiUrl}/cover/{coverId}";
         var response = await _http.ExecuteAsync(url, cancellationToken);
