@@ -12,9 +12,9 @@ namespace Juro.Clients;
 /// <remarks>
 /// Initializes an instance of <see cref="MovieClient"/>.
 /// </remarks>
-public class MovieClient(IHttpClientFactory httpClientFactory) : ClientBase<IMovieProvider>(httpClientFactory)
+public class MovieClient(IHttpClientFactory httpClientFactory)
+    : ClientBase<IMovieProvider>(httpClientFactory)
 {
-
     /// <summary>
     /// Initializes an instance of <see cref="MovieClient"/>.
     /// </summary>
