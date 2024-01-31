@@ -25,4 +25,6 @@ public class MangaInfo : IMangaInfo
     public List<string> Authors { get; set; } = [];
 
     public List<IMangaChapter> Chapters { get; set; } = [];
+
+    public override string ToString() => $"{Title}";
 }

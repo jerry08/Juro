@@ -11,4 +11,6 @@ public class MangaChapterPage : IMangaChapterPage
     public string? Title { get; set; }
 
     public Dictionary<string, string> Headers { get; set; } = [];
+
+    public override string ToString() => $"{Title}";
 }

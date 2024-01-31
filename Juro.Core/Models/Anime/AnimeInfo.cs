@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Juro.Core.Models.Anime;
 
@@ -30,4 +31,6 @@ public class AnimeInfo : IAnimeInfo
     public string? Summary { get; set; }
 
     public List<Genre> Genres { get; set; } = [];
+
+    public override string ToString() => $"{Title}";
 }

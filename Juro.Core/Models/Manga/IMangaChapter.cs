@@ -4,7 +4,9 @@ public interface IMangaChapter
 {
     public string Id { get; set; }
 
-    public string Title { get; set; }
+    public float Number { get; set; }
+
+    public string? Title { get; set; }
 
     public string? Views { get; set; }
 

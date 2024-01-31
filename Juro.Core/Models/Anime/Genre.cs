@@ -21,4 +21,6 @@ public class Genre
         Name = name;
         Url = url;
     }
+
+    public override string ToString() => $"{Name}";
 }

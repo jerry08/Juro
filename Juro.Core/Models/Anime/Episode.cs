@@ -20,4 +20,6 @@ public class Episode
     public string? Image { get; set; }
 
     public float Progress { get; set; }
+
+    public override string ToString() => $"Episode {Number}";
 }

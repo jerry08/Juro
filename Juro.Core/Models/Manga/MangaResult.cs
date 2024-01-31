@@ -11,4 +11,6 @@ public class MangaResult : IMangaResult
     public string? Image { get; set; }
 
     public Dictionary<string, string> Headers { get; set; } = [];
+
+    public override string ToString() => $"{Title}";
 }
