@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
@@ -98,6 +99,9 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
 
         var document = Html.Parse(response);
 
+        var count = 1;
+        var chapterNumberRegex = new Regex("((?<=Chapter )[0-9.]+)([\\s:]+)?(.+)?");
+
         if (url.Contains("mangakakalot"))
         {
             mangaInfo.Title = document
@@ -147,25 +151,33 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                     .DocumentNode.SelectNodes(".//div[@class='manga-info-top']/ul/li[2]/a")
                     ?.Select(x => x.InnerText)
                     .ToList() ?? [];
+
             mangaInfo.Chapters =
                 document
                     .DocumentNode.SelectNodes(".//div[@class='chapter-list']/div[@class='row']")
                     ?.Select(el =>
-                        (IMangaChapter)
+                    {
+                        count++;
+
+                        var title = el.SelectSingleNode(".//span/a").InnerText;
+                        var chapNum = chapterNumberRegex.Match(title)?.Groups[0].Value;
+
+                        return (IMangaChapter)
                             new MangaChapter()
                             {
                                 Id = el.SelectSingleNode(".//span/a")
                                     .Attributes["href"]
                                     .Value.Split(new[] { "chapter/" }, StringSplitOptions.None)[1],
-                                Title = el.SelectSingleNode(".//span/a").InnerText,
+                                Number = int.TryParse(chapNum, out var num) ? num : count,
+                                Title = title,
                                 Views = el.SelectSingleNode(".//span[2]")
                                     ?.InnerText?.Replace(Environment.NewLine, "")
                                     .Trim(),
                                 ReleasedDate = el.SelectSingleNode(".//span[3]")
                                     ?.Attributes["title"]
                                     ?.Value
-                            }
-                    )
+                            };
+                    })
                     .ToList() ?? [];
         }
         else
@@ -228,18 +240,27 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                     )
                     ?.Select(x => x.InnerText)
                     .ToList() ?? [];
+
             mangaInfo.Chapters =
                 document
                     .DocumentNode.SelectNodes(
                         ".//div[@class='container-main-left']/div[@class='panel-story-chapter-list']/ul/li"
                     )
+                    .Reverse()
                     ?.Select(el =>
-                        (IMangaChapter)
+                    {
+                        count++;
+
+                        var title = el.SelectSingleNode(".//a").InnerText;
+                        var chapNum = chapterNumberRegex.Match(title)?.Groups[0].Value;
+
+                        return (IMangaChapter)
                             new MangaChapter()
                             {
                                 //Id = el.SelectSingleNode(".//a").Attributes["href"].Value.Split(new[] { ".com/" }, StringSplitOptions.None)[1] + "$$READMANGANATO",
                                 Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
-                                Title = el.SelectSingleNode(".//a").InnerText,
+                                Title = title,
+                                Number = int.TryParse(chapNum, out var num) ? num : count,
                                 Views = el.SelectSingleNode(
                                     ".//span[@class='chapter-view text-nowrap']"
                                 )
@@ -250,8 +271,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                                 )
                                     ?.Attributes["title"]
                                     ?.Value
-                            }
-                    )
+                            };
+                    })
                     .ToList() ?? [];
         }
 

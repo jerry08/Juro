@@ -275,18 +275,26 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
 
             offset += 96;
 
+            var count = 1;
+
             list.AddRange(
                 data["data"]!
                     .AsArray()
-                    .Select(chapter => new MangadexChapter()
+                    .Reverse()
+                    .Select(item =>
                     {
-                        Id = chapter!["id"]!.ToString(),
-                        Title = !string.IsNullOrWhiteSpace(
-                            chapter["attributes"]!["title"]?.ToString()
-                        )
-                            ? chapter["attributes"]!["title"]!.ToString()
-                            : chapter["attributes"]!["chapter"]!.ToString(),
-                        Pages = Convert.ToInt32(chapter["attributes"]!["pages"]!.ToString()),
+                        count++;
+
+                        var title = item?["attributes"]?["title"]?.ToString();
+                        var chapter = item?["attributes"]?["chapter"]?.ToString();
+
+                        return new MangadexChapter()
+                        {
+                            Id = item!["id"]!.ToString(),
+                            Title = !string.IsNullOrWhiteSpace(title) ? title : chapter,
+                            Number = int.TryParse(chapter, out var num) ? num : count,
+                            Pages = Convert.ToInt32(item["attributes"]!["pages"]!.ToString()),
+                        };
                     })
             );
         }

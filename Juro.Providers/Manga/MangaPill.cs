@@ -107,18 +107,29 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
             _ => MediaStatus.Unknown,
         };
 
+        var count = 1;
+
         mangaInfo.Chapters =
             document
                 .DocumentNode.SelectNodes(".//div[@id='chapters']/div/a")
                 ?.Reverse()
                 ?.Select(el =>
-                    (IMangaChapter)
+                {
+                    count++;
+
+                    return (IMangaChapter)
                         new MangaChapter()
                         {
                             Id = el.Attributes["href"].Value,
+                            Number = int.TryParse(
+                                el.InnerText.ToLower().Replace("chapter", "").Trim(),
+                                out var num
+                            )
+                                ? num
+                                : count,
                             Title = el.InnerText
-                        }
-                )
+                        };
+                })
                 .ToList() ?? [];
 
         return mangaInfo;

@@ -86,10 +86,10 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
         {
             var result = new MangaResult()
             {
-                Title = singleBookEl.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
-                Image = singleBookEl
+                Title = singleBookEl
                     .SelectSingleNode(".//div[@class='info']/h1[@class='heading']")
-                    ?.InnerText
+                    ?.InnerText,
+                Image = singleBookEl.SelectSingleNode(".//img")?.Attributes["src"]?.Value
             };
 
             var i = 0;
@@ -131,6 +131,9 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
 
         var mangaInfo = new MangaInfo { Id = mangaId };
 
+        mangaInfo.Title = document
+            .DocumentNode.SelectSingleNode(".//div[@class='info']/h1[@class='heading']")
+            ?.InnerText;
         mangaInfo.Description = document
             .DocumentNode.SelectSingleNode(".//div[@class='summary']/p")
             ?.InnerText.Trim();
@@ -150,18 +153,28 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
             _ => MediaStatus.Unknown,
         };
 
+        var count = 1;
+        var chapterNumberRegex = new Regex("([0-9]+(?:\\.[0-9]+)?)");
+
         mangaInfo.Chapters =
             document
                 .DocumentNode.SelectNodes(".//div[@class='chapters']//div[@class='chapter']/a")
                 ?.Reverse()
                 ?.Select(el =>
-                    (IMangaChapter)
+                {
+                    count++;
+
+                    var title = el.InnerText;
+                    var chapNum = chapterNumberRegex.Match(title)?.Groups[0].Value;
+
+                    return (IMangaChapter)
                         new MangaChapter()
                         {
                             Id = el.Attributes["href"].Value,
-                            Title = el.InnerText
-                        }
-                )
+                            Number = int.TryParse(chapNum, out var num) ? num : count,
+                            Title = title
+                        };
+                })
                 .ToList() ?? [];
 
         return mangaInfo;
