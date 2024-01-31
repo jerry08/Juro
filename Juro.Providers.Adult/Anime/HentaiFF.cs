@@ -198,10 +198,7 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
             var host = new Uri(url).Host;
             var link = $"https://{host}{source}";
 
-            return
-            [
-                new() { Format = VideoType.M3u8, VideoUrl = link }
-            ];
+            return [new() { Format = VideoType.M3u8, VideoUrl = link }];
         }
     }
 
