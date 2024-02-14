@@ -69,7 +69,8 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
                         {
                             Id = el.Attributes["href"].Value,
                             Title = el.SelectSingleNode(".//div[@class='font-black']")?.InnerText,
-                            Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value
+                            Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
+                            Headers = new() { ["Referer"] = BaseUrl }
                         }
                 )
                 .ToList() ?? [];
@@ -155,7 +156,7 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
                     new MangaChapterPage()
                     {
                         Image = el.Attributes["data-src"]!.Value,
-                        Headers = new() { { "Referer", BaseUrl } },
+                        Headers = new() { ["Referer"] = BaseUrl },
                         Page = i++
                     }
             )
