@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Juro.Providers.Adult\Juro.Providers.Adult.csproj" />
     <ProjectReference Include="..\Juro.Providers\Juro.Providers.csproj" />
     <ProjectReference Include="..\Juro\Juro.csproj" />
   </ItemGroup>
