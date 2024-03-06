@@ -380,7 +380,8 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
             .Value;
 
         var url =
-            $"https://ajax.gogo-load.com/ajax/load-list-episode?ep_start=0&ep_end={lastEpisode}&id={animeId}";
+            //$"https://ajax.gogo-load.com/ajax/load-list-episode?ep_start=0&ep_end={lastEpisode}&id={animeId}";
+            $"https://ajax.gogocdn.net/ajax/load-list-episode?ep_start=0&ep_end={lastEpisode}&id={animeId}";
         //response = await _http.ExecuteAsync(CdnUrl + animeId, cancellationToken);
         response = await _http.ExecuteAsync(url, cancellationToken);
 
