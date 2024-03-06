@@ -27,6 +27,9 @@ internal static class Program
         //
         //var timeStamps = await aniskipClient.GetAsync(52991, 1, 1559891 / 1000);
 
+        //var provider = new MissAVProvider();
+        //var result = await provider.GetPopularAsync();
+
         await AnimeDemo();
         await MangaDemo();
         //await MovieDemo();
@@ -46,7 +49,7 @@ internal static class Program
         var allProviders = client.GetAllProviders();
 
         //var provider = new OtakuDesu();
-        var provider = new Kaido();
+        var provider = new Gogoanime();
         //var provider = new Aniwatch();
 
         //var test = await provider.GetPopularAsync();
@@ -67,7 +70,11 @@ internal static class Program
 
         var downloader = new HlsDownloader();
         var qualities = await downloader.GetQualitiesAsync(videos[0].VideoUrl, videos[0].Headers);
-        await downloader.DownloadAllThenMergeAsync(qualities[0].Stream!, videos[0].Headers, filePath);
+        await downloader.DownloadAllThenMergeAsync(
+            qualities[0].Stream!,
+            videos[0].Headers,
+            filePath
+        );
     }
 
     private static async Task MovieDemo()
@@ -120,10 +127,6 @@ internal static class Program
         var fileName = $@"{Environment.CurrentDirectory}\page1.png";
 
         var downloader = new Downloader();
-        await downloader.DownloadAsync(
-            pages[0].Image,
-            fileName,
-            headers: pages[0].Headers
-        );
+        await downloader.DownloadAsync(pages[0].Image, fileName, headers: pages[0].Headers);
     }
 }
