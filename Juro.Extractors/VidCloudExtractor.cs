@@ -47,13 +47,21 @@ public class VidCloudExtractor(IHttpClientFactory httpClientFactory, bool isAlte
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
-        CancellationToken cancellationToken = default!
+        CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var http = _httpClientFactory.CreateClient();
 
         var id = new Stack<string>(url.Split('/')).Pop()?.Split('?')[0];
-        var headers = new Dictionary<string, string>()
+
+        headers = new Dictionary<string, string>()
         {
             { "X-Requested-With", "XMLHttpRequest" },
             { "Referer", url },

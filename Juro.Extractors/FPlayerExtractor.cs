@@ -40,6 +40,13 @@ public class FPlayerExtractor(IHttpClientFactory httpClientFactory) : IVideoExtr
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var http = _httpClientFactory.CreateClient();
@@ -50,7 +57,7 @@ public class FPlayerExtractor(IHttpClientFactory httpClientFactory) : IVideoExtr
 
         try
         {
-            var headers = new Dictionary<string, string>() { { "Referer", url } };
+            headers = new Dictionary<string, string>() { { "Referer", url } };
 
             var json = await http.PostAsync(apiLink, headers, cancellationToken);
             if (!string.IsNullOrWhiteSpace(json))

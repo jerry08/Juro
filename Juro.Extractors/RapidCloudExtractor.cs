@@ -97,6 +97,13 @@ public class RapidCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoE
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
@@ -107,7 +114,7 @@ public class RapidCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoE
         if (indexPairs.Count == 0)
             return [];
 
-        var headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
+        headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
 
         var response = await _http.ExecuteAsync(
             $"https://{host}/ajax/embed-6-v2/getSources?id={id}",

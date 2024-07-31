@@ -49,6 +49,13 @@ public class KwikExtractor(IHttpClientFactory httpClientFactory) : IVideoExtract
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var http = _httpClientFactory.CreateClient();
@@ -75,7 +82,7 @@ public class KwikExtractor(IHttpClientFactory httpClientFactory) : IVideoExtract
         var postUrl = _urlRegex.Match(decrypted).Groups.OfType<Group>().ToArray()[1].Value;
         var token = _tokenRegex.Match(decrypted).Groups.OfType<Group>().ToArray()[1].Value;
 
-        var headers = new Dictionary<string, string>()
+        headers = new Dictionary<string, string>()
         {
             { "Referer", kwikLink },
             { "Cookie", cookies }

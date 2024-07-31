@@ -46,6 +46,13 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
@@ -56,7 +63,7 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
         if (decryptKey.Count == 0)
             return [];
 
-        var headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
+        headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
 
         var response = await _http.ExecuteAsync(
             $"https://{host}/embed-2/ajax/e-1/getSources?id={id}",

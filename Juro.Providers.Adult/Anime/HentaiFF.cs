@@ -54,20 +54,22 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
         CancellationToken cancellationToken = default
     )
     {
-        var list = new List<IAnimeInfo>();
-
         _http.Timeout = TimeSpan.FromSeconds(30);
 
         var response = await _http.ExecuteAsync($"{BaseUrl}/?s={query}", cancellationToken);
 
         if (string.IsNullOrWhiteSpace(response))
-            return list;
+            return [];
 
         var document = Html.Parse(response);
 
         var nodes = document.DocumentNode
         //.SelectNodes(".//article[@class='bs']//div[@class='bsx']//a");
         .SelectNodes(".//article//div[@class='bsx']//a");
+        if (nodes is null)
+            return [];
+
+        var list = new List<IAnimeInfo>();
 
         foreach (var node in nodes)
         {
@@ -179,8 +181,16 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
 
         public string ServerName => string.Empty;
 
+        /// <inheritdoc />
         public async ValueTask<List<VideoSource>> ExtractAsync(
             string url,
+            CancellationToken cancellationToken = default
+        ) => await ExtractAsync(url, [], cancellationToken);
+
+        /// <inheritdoc />
+        public async ValueTask<List<VideoSource>> ExtractAsync(
+            string url,
+            Dictionary<string, string> headers,
             CancellationToken cancellationToken = default
         )
         {
@@ -206,15 +216,23 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
     {
         public string ServerName => string.Empty;
 
+        /// <inheritdoc />
+        public async ValueTask<List<VideoSource>> ExtractAsync(
+            string url,
+            CancellationToken cancellationToken = default
+        ) => await ExtractAsync(url, [], cancellationToken);
+
+        /// <inheritdoc />
         public ValueTask<List<VideoSource>> ExtractAsync(
             string url,
+            Dictionary<string, string> headers,
             CancellationToken cancellationToken = default
         )
         {
             var base64 = url.SubstringAfter("html#");
             var link = base64.DecodeBase64().SubstringAfter("url=").SubstringBefore(";");
 
-            var headers = new Dictionary<string, string>()
+            headers = new Dictionary<string, string>()
             {
                 ["Referer"] = "https://hentaistream.moe/"
             };

@@ -40,7 +40,14 @@ public class YourUploadExtractor(IHttpClientFactory httpClientFactory) : IVideoE
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
-    ) => await ExtractAsync(url, null, cancellationToken);
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, quality: null, cancellationToken);
 
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,

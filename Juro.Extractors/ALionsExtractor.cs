@@ -23,7 +23,7 @@ public class ALionsExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     /// <inheritdoc />
-    public string ServerName => "ALions";
+    public string ServerName => "ALions / Vidhide";
 
     /// <summary>
     /// Initializes an instance of <see cref="ALionsExtractor"/>.
@@ -40,6 +40,13 @@ public class ALionsExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
+        CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
         CancellationToken cancellationToken = default
     )
     {

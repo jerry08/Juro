@@ -39,6 +39,13 @@ public class VidStreamExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var http = _httpClientFactory.CreateClient();

@@ -17,7 +17,7 @@ public class HentaiStream(IHttpClientFactory httpClientFactory) : HentaiFF(httpC
 
     public override string Name => "Hentai Stream";
 
-    public override string BaseUrl => "https://hentaistream.moe";
+    public override string BaseUrl => "https://hstream.moe";
 
     /// <summary>
     /// Initializes an instance of <see cref="HentaiStream"/>.

@@ -43,6 +43,13 @@ public class StreamSBExtractor(IHttpClientFactory httpClientFactory) : IVideoExt
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var http = _httpClientFactory.CreateClient();
@@ -61,7 +68,7 @@ public class StreamSBExtractor(IHttpClientFactory httpClientFactory) : IVideoExt
 
         var jsonLink = $"{source.Trim()}/{bytesToHex}/";
 
-        var headers = new Dictionary<string, string>()
+        headers = new Dictionary<string, string>()
         {
             //{ "watchsb", "streamsb" },
             { "watchsb", "sbstream" },

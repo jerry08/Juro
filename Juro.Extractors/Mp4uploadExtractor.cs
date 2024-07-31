@@ -40,11 +40,18 @@ public class Mp4uploadExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var http = _httpClientFactory.CreateClient();
 
-        var headers = new Dictionary<string, string>() { ["Referer"] = "https://mp4upload.com/" };
+        headers = new Dictionary<string, string>() { ["Referer"] = "https://mp4upload.com/" };
 
         var response = await http.ExecuteAsync(url, headers, cancellationToken);
 

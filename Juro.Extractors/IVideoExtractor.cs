@@ -22,4 +22,11 @@ public interface IVideoExtractor
         string url,
         CancellationToken cancellationToken = default
     );
+
+    /// <inheritdoc cref="ExtractAsync(string, CancellationToken)" />
+    ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
+    );
 }

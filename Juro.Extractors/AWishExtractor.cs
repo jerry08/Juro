@@ -41,15 +41,35 @@ public class AWishExtractor(IHttpClientFactory httpClientFactory) : IVideoExtrac
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
         CancellationToken cancellationToken = default
+    ) => await ExtractAsync(url, [], cancellationToken);
+
+    /// <inheritdoc />
+    public async ValueTask<List<VideoSource>> ExtractAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken = default
     )
     {
         var http = _httpClientFactory.CreateClient();
 
         var response = await http.ExecuteAsync(url, cancellationToken);
 
-        //var mediaUrl = new Regex("file:\"([^\"]+)\"\\}").Match(response)
+        var document = Html.Parse(response);
+
+        var script = document
+            .DocumentNode.Descendants()
+            .FirstOrDefault(x => x.Name == "script" && x.InnerText?.Contains("m3u8") == true)
+            ?.InnerText;
+
+        // Sometimes the script body is packed, sometimes it isn't
+        var scriptBody = JsUnpacker.IsPacked(script) ? JsUnpacker.UnpackAndCombine(script) : script;
+
+        if (string.IsNullOrEmpty(scriptBody))
+            return [];
+
+        //var mediaUrl = new Regex("file:\"([^\"]+)\"\\}").Match(scriptBody)
         var mediaUrl = new Regex("file:\"([^\"]+)\"")
-            .Match(response)
+            .Match(scriptBody)
             .Groups.OfType<Group>()
             .ToList()[1]
             .Value;
