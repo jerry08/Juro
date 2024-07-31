@@ -465,6 +465,9 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
             list.Add(new VideoServer(name, new FileUrl(url)));
         }
 
+        // VidHide doesn't work
+        list.RemoveAll(x => x.Name.ToLower().Contains("vidhide"));
+
         return list;
     }
 
