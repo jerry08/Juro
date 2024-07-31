@@ -5,6 +5,18 @@ namespace Juro.Utils;
 
 public static class AssemblyEx
 {
+    public static void LoadReferencedAssemblies()
+    {
+        var assembly = Assembly.GetEntryAssembly();
+        if (assembly is null)
+            return;
+
+        foreach (var reference in assembly.GetReferencedAssemblies())
+        {
+            Assembly.Load(reference);
+        }
+    }
+
     public static IEnumerable<Assembly> GetReferencedAssemblies()
     {
         var assembly = Assembly.GetEntryAssembly();

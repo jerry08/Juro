@@ -34,12 +34,24 @@ public class ClientBase<IProvider>(IHttpClientFactory httpClientFactory) : IJuro
                 x.GetInterfaces().Contains(typeof(IProvider))
                 && x.GetConstructor(Type.EmptyTypes) is not null
             )
-            .Select(x =>
-                (IProvider)Activator.CreateInstance(x, new object[] { _httpClientFactory })!
-            )
+            .Select(x => (IProvider)Activator.CreateInstance(x, [_httpClientFactory])!)
             .Where(x =>
                 string.IsNullOrEmpty(language)
                 || x.Language.Equals(language, StringComparison.OrdinalIgnoreCase)
+            )
+            .ToList();
+
+    public IList<Type> GetProviderTypes(string? filePath = null) =>
+        PluginLoader
+            .GetAssemblies()
+            .Where(x =>
+                string.IsNullOrWhiteSpace(filePath)
+                || string.Equals(x.Location, filePath, StringComparison.OrdinalIgnoreCase)
+            )
+            .SelectMany(a => a.GetTypes())
+            .Where(x =>
+                x.GetInterfaces().Contains(typeof(IProvider))
+                && x.GetConstructor(Type.EmptyTypes) is not null
             )
             .ToList();
 }
