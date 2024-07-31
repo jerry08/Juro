@@ -262,13 +262,13 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                                 Title = title,
                                 Number = int.TryParse(chapNum, out var num) ? num : count,
                                 Views = el.SelectSingleNode(
-                                    ".//span[@class='chapter-view text-nowrap']"
-                                )
+                                        ".//span[@class='chapter-view text-nowrap']"
+                                    )
                                     ?.InnerText?.Replace(Environment.NewLine, "")
                                     .Trim(),
                                 ReleasedDate = el.SelectSingleNode(
-                                    ".//span[@class='chapter-time text-nowrap']"
-                                )
+                                        ".//span[@class='chapter-time text-nowrap']"
+                                    )
                                     ?.Attributes["title"]
                                     ?.Value
                             };

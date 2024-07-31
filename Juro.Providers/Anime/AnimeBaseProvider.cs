@@ -30,6 +30,8 @@ public class AnimeBaseProvider(IHttpClientFactory httpClientFactory) : IVideoExt
             "playtaku.net"
             or "goone.pro"
             or "embtaku.pro"
+            or "embtaku.com"
+            or "s3taku.com"
                 => new GogoCDNExtractor(_httpClientFactory),
             "alions.pro" => new ALionsExtractor(_httpClientFactory),
             "awish.pro" => new AWishExtractor(_httpClientFactory),
