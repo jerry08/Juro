@@ -86,8 +86,8 @@ public class ALionsExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
             {
                 Format = VideoType.M3u8,
                 VideoUrl = mediaUrl!,
-                Title = ServerName
-            }
+                Title = ServerName,
+            },
         ];
     }
 }

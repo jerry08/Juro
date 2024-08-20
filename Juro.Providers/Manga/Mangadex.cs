@@ -122,7 +122,7 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
                         .Select(x => new MangadexDescription()
                         {
                             Description = x.Key,
-                            Language = x.Value?.ToString()
+                            Language = x.Value?.ToString(),
                         })
                         .ToList() ?? [],
                 Status = manga["attributes"]!["status"]?.ToString().ToLower() switch
@@ -197,7 +197,7 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
                 "ongoing" => MediaStatus.Ongoing,
                 _ => MediaStatus.Unknown,
             },
-            ReleaseDate = Convert.ToInt32(data["data"]!["attributes"]!["year"]!.ToString())
+            ReleaseDate = Convert.ToInt32(data["data"]!["attributes"]!["year"]!.ToString()),
         };
 
         var chapters = await GetAllChaptersAsync(mangaId, 0, cancellationToken);
@@ -239,7 +239,7 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
             .Select(id => new MangaChapterPage()
             {
                 Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
-                Page = Convert.ToInt32(id!.ToString().Split('-')[0])
+                Page = Convert.ToInt32(id!.ToString().Split('-')[0]),
             })
             .ToList();
 

@@ -71,7 +71,7 @@ public class StreamTapeExtractor(IHttpClientFactory httpClientFactory) : IVideoE
                 Format = VideoType.M3u8,
                 VideoUrl = vidUrl,
                 Resolution = "Multi Quality",
-            }
+            },
         ];
     }
 }

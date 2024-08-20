@@ -85,7 +85,7 @@ public class KwikExtractor(IHttpClientFactory httpClientFactory) : IVideoExtract
         headers = new Dictionary<string, string>()
         {
             { "Referer", kwikLink },
-            { "Cookie", cookies }
+            { "Cookie", cookies },
         };
 
         var formContent = new FormUrlEncodedContent(
@@ -126,8 +126,8 @@ public class KwikExtractor(IHttpClientFactory httpClientFactory) : IVideoExtract
             {
                 VideoUrl = mp4Url,
                 Format = VideoType.Container,
-                FileType = "mp4"
-            }
+                FileType = "mp4",
+            },
         ];
     }
 

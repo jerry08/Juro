@@ -61,14 +61,14 @@ public class OkRuExtractor(IHttpClientFactory httpClientFactory) : IVideoExtract
             {
                 Format = VideoType.M3u8,
                 VideoUrl = mediaUrl.Value,
-                Title = ServerName
+                Title = ServerName,
             },
             new()
             {
                 Format = VideoType.Dash,
                 VideoUrl = mediaUrl.NextMatch().Value,
-                Title = ServerName
-            }
+                Title = ServerName,
+            },
         ];
     }
 }

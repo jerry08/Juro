@@ -78,7 +78,7 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                         ?.Attributes["href"]!.Value.Split('/')[3]!,
                     Title = node.SelectSingleNode(".//div/h3/a")?.InnerText,
                     Image = node.SelectSingleNode(".//a/img")?.Attributes["src"]?.Value,
-                    Headers = new() { { "Referer", BaseUrl } }
+                    Headers = new() { { "Referer", BaseUrl } },
                 }
             );
         }
@@ -175,7 +175,7 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                                     .Trim(),
                                 ReleasedDate = el.SelectSingleNode(".//span[3]")
                                     ?.Attributes["title"]
-                                    ?.Value
+                                    ?.Value,
                             };
                     })
                     .ToList() ?? [];
@@ -270,7 +270,7 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                                         ".//span[@class='chapter-time text-nowrap']"
                                     )
                                     ?.Attributes["title"]
-                                    ?.Value
+                                    ?.Value,
                             };
                     })
                     .ToList() ?? [];
@@ -308,7 +308,7 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                             ?.Value.Replace("- MangaNato.com", "")
                             .Replace("- Mangakakalot.com", "")
                             .Trim(),
-                        Headers = new() { { "Referer", BaseUrl } }
+                        Headers = new() { { "Referer", BaseUrl } },
                     }
             )
             .ToList();

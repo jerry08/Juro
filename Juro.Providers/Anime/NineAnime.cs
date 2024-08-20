@@ -284,7 +284,7 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
                     Id = possibleIds[0], // Sub
                     Name = node.SelectSingleNode(".//span")?.InnerText,
                     //Link = link,
-                    Number = int.Parse(node.Attributes["data-num"]?.Value ?? "0")
+                    Number = int.Parse(node.Attributes["data-num"]?.Value ?? "0"),
                 }
             );
         }
@@ -349,7 +349,7 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
         return new()
         {
             Name = node.InnerText,
-            Embed = new(realLink) { Headers = new() { ["Referer"] = BaseUrl } }
+            Embed = new(realLink) { Headers = new() { ["Referer"] = BaseUrl } },
         };
     }
 
@@ -362,7 +362,7 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
             "filemoon" => new FilemoonExtractor(_httpClientFactory),
             "streamtape" => new StreamTapeExtractor(_httpClientFactory),
             "mp4upload" => new Mp4uploadExtractor(_httpClientFactory),
-            _ => null
+            _ => null,
         };
     }
 

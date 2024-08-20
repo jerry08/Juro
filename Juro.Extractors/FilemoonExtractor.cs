@@ -79,7 +79,7 @@ public class FilemoonExtractor(IHttpClientFactory httpClientFactory) : IVideoExt
                 Format = VideoType.M3u8,
                 VideoUrl = masterUrl,
                 Resolution = "Multi Quality",
-            }
+            },
         ];
     }
 }

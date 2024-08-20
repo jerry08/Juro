@@ -113,7 +113,7 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
                             )
                             ?.InnerText?.ToLower() == "movie"
                             ? TvType.Movie
-                            : TvType.TvSeries
+                            : TvType.TvSeries,
                 }
             );
         }
@@ -247,7 +247,7 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
                             ),
                             Season = season,
                             Url =
-                                $"{BaseUrl}/ajax/v2/episode/servers/{nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1]}"
+                                $"{BaseUrl}/ajax/v2/episode/servers/{nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1]}",
                         }
                     );
                 }
@@ -263,8 +263,8 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
                 {
                     Id = uid,
                     Title = movieInfo.Title + " Movie",
-                    Url = $"{BaseUrl}/ajax/movie/episodes/{uid}"
-                }
+                    Url = $"{BaseUrl}/ajax/movie/episodes/{uid}",
+                },
             ];
         }
 
@@ -315,8 +315,8 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
                             $"{BaseUrl}/{mediaId}.{(!mediaId.Contains("movie") ? nodes[i].SelectSingleNode(".//a").Attributes["data-id"].Value : nodes[i].SelectSingleNode(".//a").Attributes["data-linkid"].Value)}".Replace(
                                 !mediaId.Contains("movie") ? "/tv/" : "/movie/",
                                 !mediaId.Contains("movie") ? "/watch-tv/" : "/watch-movie/"
-                            )
-                    }
+                            ),
+                    },
                 }
             );
         }
@@ -339,17 +339,14 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
             return server switch
             {
                 StreamingServers.MixDrop => [],
-                StreamingServers.UpCloud
-                    => await new VidCloudExtractor(_httpClientFactory).ExtractAsync(
-                        serverUrl,
-                        cancellationToken
-                    ),
+                StreamingServers.UpCloud => await new VidCloudExtractor(
+                    _httpClientFactory
+                ).ExtractAsync(serverUrl, cancellationToken),
                 StreamingServers.VidCloud => [],
-                _
-                    => await new VidCloudExtractor(_httpClientFactory).ExtractAsync(
-                        serverUrl,
-                        cancellationToken
-                    ),
+                _ => await new VidCloudExtractor(_httpClientFactory).ExtractAsync(
+                    serverUrl,
+                    cancellationToken
+                ),
             };
         }
 

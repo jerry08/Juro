@@ -62,8 +62,8 @@ public class VidStreamExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
                 {
                     Format = VideoType.M3u8,
                     VideoUrl = link,
-                    Title = ServerName
-                }
+                    Title = ServerName,
+                },
             ];
         }
 

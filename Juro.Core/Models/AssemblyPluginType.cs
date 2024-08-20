@@ -9,5 +9,5 @@ public enum AssemblyPluginType
     Movie,
     Manga,
     Anime,
-    Novel
+    Novel,
 }

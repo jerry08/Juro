@@ -4,5 +4,5 @@ public enum SubtitleType
 {
     VTT,
     ASS,
-    SRT
+    SRT,
 }

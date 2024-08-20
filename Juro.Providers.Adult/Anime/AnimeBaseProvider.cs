@@ -32,7 +32,7 @@ public class AnimeBaseProvider(IHttpClientFactory httpClientFactory) : IVideoExt
             "dood.wf" => new DoodExtractor(_httpClientFactory),
             "ok.ru" => new OkRuExtractor(_httpClientFactory),
             "streamlare.com" => null,
-            _ => null
+            _ => null,
         };
     }
 

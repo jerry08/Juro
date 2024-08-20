@@ -87,8 +87,8 @@ public class DoodExtractor(IHttpClientFactory httpClientFactory) : IVideoExtract
                     Headers = new()
                     {
                         ["User-Agent"] = "Juro",
-                        ["Referer"] = $"https://dood.{doodTld}"
-                    }
+                        ["Referer"] = $"https://dood.{doodTld}",
+                    },
                 }
             );
         }

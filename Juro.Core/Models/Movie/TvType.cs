@@ -3,5 +3,5 @@
 public enum TvType
 {
     Movie,
-    TvSeries
+    TvSeries,
 }

@@ -14,5 +14,5 @@ public enum StreamingServers
     // same as vizcloud
     MyCloud,
     Filemoon,
-    VidStreaming
+    VidStreaming,
 }

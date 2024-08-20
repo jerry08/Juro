@@ -136,7 +136,7 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
                         Id = x!["anime_session"]!.ToString(),
                         Title = x["anime_title"]!.ToString(),
                         Image = x["snapshot"]!.ToString(),
-                        Site = AnimeSites.AnimePahe
+                        Site = AnimeSites.AnimePahe,
                     }
             )
             .ToList();
@@ -256,7 +256,7 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
                 Image = el["snapshot"]?.ToString(),
                 Description = el["title"]?.ToString(),
                 Link = link,
-                Duration = (float)TimeSpan.Parse(el["duration"]!.ToString()).TotalMilliseconds
+                Duration = (float)TimeSpan.Parse(el["duration"]!.ToString()).TotalMilliseconds,
             };
         }
 
@@ -333,8 +333,8 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
                     Embed = new FileUrl()
                     {
                         Url = el.Attributes["href"]!.Value,
-                        Headers = new() { { "Referer", BaseUrl } }
-                    }
+                        Headers = new() { { "Referer", BaseUrl } },
+                    },
                 };
             })
             .ToList();

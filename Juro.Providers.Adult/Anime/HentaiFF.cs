@@ -234,7 +234,7 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
 
             headers = new Dictionary<string, string>()
             {
-                ["Referer"] = "https://hentaistream.moe/"
+                ["Referer"] = "https://hentaistream.moe/",
             };
 
             var list = new List<VideoSource>()
@@ -245,7 +245,7 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
                     VideoUrl = $"{link}x264.720p.mp4",
                     Resolution = "720p",
                     FileType = "MP4",
-                    Headers = headers
+                    Headers = headers,
                 },
                 new()
                 {
@@ -253,7 +253,7 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
                     VideoUrl = $"{link}av1.1080p.webm",
                     Resolution = "1080p",
                     FileType = "WEBM",
-                    Headers = headers
+                    Headers = headers,
                 },
                 new()
                 {
@@ -261,8 +261,8 @@ public class HentaiFF(IHttpClientFactory httpClientFactory) : IAnimeProvider
                     VideoUrl = $"{link}av1.2160p.webm",
                     Resolution = "2160p",
                     FileType = "WEBM",
-                    Headers = headers
-                }
+                    Headers = headers,
+                },
             };
 
             return new ValueTask<List<VideoSource>>(list);

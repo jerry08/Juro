@@ -86,8 +86,8 @@ public class StreamSBProExtractor(IHttpClientFactory httpClientFactory) : IVideo
                 Format = VideoType.M3u8,
                 VideoUrl = masterUrl,
                 Headers = headers,
-                Resolution = "Multi Quality"
-            }
+                Resolution = "Multi Quality",
+            },
         ];
     }
 

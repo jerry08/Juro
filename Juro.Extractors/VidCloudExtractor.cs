@@ -65,7 +65,7 @@ public class VidCloudExtractor(IHttpClientFactory httpClientFactory, bool isAlte
         {
             { "X-Requested-With", "XMLHttpRequest" },
             { "Referer", url },
-            { "User-Agent", Http.ChromeUserAgent() }
+            { "User-Agent", Http.ChromeUserAgent() },
         };
 
         var response = await http.ExecuteAsync(
@@ -95,7 +95,7 @@ public class VidCloudExtractor(IHttpClientFactory httpClientFactory, bool isAlte
             .Select(track => new Subtitle()
             {
                 Url = track!["file"]!.ToString(),
-                Language = track["label"]!.ToString()
+                Language = track["label"]!.ToString(),
             })
             .ToList();
 
@@ -110,9 +110,9 @@ public class VidCloudExtractor(IHttpClientFactory httpClientFactory, bool isAlte
                     : source["type"]!.ToString().ToLower() switch
                     {
                         "hls" => VideoType.Hls,
-                        _ => VideoType.Container
+                        _ => VideoType.Container,
                     },
-                Subtitles = subtitles
+                Subtitles = subtitles,
             })
             .ToList();
 

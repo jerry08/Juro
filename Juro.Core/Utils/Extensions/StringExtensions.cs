@@ -84,7 +84,7 @@ internal static class StringExtensions
         32,
         33,
         34,
-        35
+        35,
     ];
 
     internal static int DigitOf(char c, int radix)

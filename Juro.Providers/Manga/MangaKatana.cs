@@ -73,7 +73,7 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
                         {
                             Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
                             Title = el.SelectSingleNode(".//img")?.Attributes["alt"]?.Value,
-                            Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value
+                            Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
                         }
                 );
 
@@ -89,7 +89,7 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
                 Title = singleBookEl
                     .SelectSingleNode(".//div[@class='info']/h1[@class='heading']")
                     ?.InnerText,
-                Image = singleBookEl.SelectSingleNode(".//img")?.Attributes["src"]?.Value
+                Image = singleBookEl.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
             };
 
             var i = 0;
@@ -100,7 +100,7 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
                 {
                     Image = el.Attributes["href"]!.Value,
                     Title = el.InnerText,
-                    Page = i++
+                    Page = i++,
                 })
                 .Reverse()
                 .ToList();
@@ -172,7 +172,7 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
                         {
                             Id = el.Attributes["href"].Value,
                             Number = int.TryParse(chapNum, out var num) ? num : count,
-                            Title = title
+                            Title = title,
                         };
                 })
                 .ToList() ?? [];

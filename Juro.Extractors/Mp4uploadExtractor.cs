@@ -75,8 +75,8 @@ public class Mp4uploadExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
                     Format = VideoType.Container,
                     VideoUrl = link!,
                     Resolution = "Default Quality",
-                    Headers = headers
-                }
+                    Headers = headers,
+                },
             ];
         }
 
@@ -100,8 +100,8 @@ public class Mp4uploadExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
                 Format = VideoType.Container,
                 VideoUrl = videoUrl,
                 Resolution = "Default Quality",
-                Headers = headers
-            }
+                Headers = headers,
+            },
         ];
     }
 }

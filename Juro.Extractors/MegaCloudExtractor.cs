@@ -143,8 +143,8 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
                 Headers = headers,
                 Format = VideoType.M3u8,
                 Resolution = "Multi Quality",
-                Subtitles = subtitles
-            }
+                Subtitles = subtitles,
+            },
         ];
     }
 

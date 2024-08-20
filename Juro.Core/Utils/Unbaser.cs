@@ -16,7 +16,7 @@ internal class Unbaser(int @base)
             [54] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR",
             [62] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
             [95] =
-                " !\\\"#\\$%&\\\\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+                " !\\\"#\\$%&\\\\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
         };
 
     public int Unbase(string value)
@@ -29,7 +29,7 @@ internal class Unbaser(int @base)
             > 62 => 95,
             > 54 => 62,
             > 52 => 54,
-            _ => 52
+            _ => 52,
         };
 
         var dict = _alphabet[selector]?.ToCharArray();

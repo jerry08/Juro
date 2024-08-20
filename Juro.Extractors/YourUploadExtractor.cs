@@ -59,7 +59,7 @@ public class YourUploadExtractor(IHttpClientFactory httpClientFactory) : IVideoE
 
         var headers = new Dictionary<string, string>()
         {
-            ["Referer"] = "https://www.yourupload.com/"
+            ["Referer"] = "https://www.yourupload.com/",
         };
 
         var response = await http.ExecuteAsync(url, headers, cancellationToken);
@@ -86,8 +86,8 @@ public class YourUploadExtractor(IHttpClientFactory httpClientFactory) : IVideoE
                 VideoUrl = basicUrl,
                 Resolution = quality,
                 Headers = headers,
-                Title = $"{quality} - {ServerName}"
-            }
+                Title = $"{quality} - {ServerName}",
+            },
         ];
     }
 }

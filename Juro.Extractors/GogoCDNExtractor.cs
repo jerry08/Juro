@@ -120,7 +120,7 @@ public class GogoCDNExtractor(IHttpClientFactory httpClientFactory) : IVideoExtr
                             Format = VideoType.M3u8,
                             VideoUrl = fileURL,
                             Resolution = "Multi Quality" + (backup ? " (Backup)" : ""),
-                            Headers = new() { ["Referer"] = url, }
+                            Headers = new() { ["Referer"] = url },
                         }
                     );
                 }
@@ -132,7 +132,7 @@ public class GogoCDNExtractor(IHttpClientFactory httpClientFactory) : IVideoExtr
                             Format = VideoType.Container,
                             VideoUrl = fileURL,
                             Resolution = label,
-                            Headers = new() { ["Referer"] = url, }
+                            Headers = new() { ["Referer"] = url },
                         }
                     );
                 }

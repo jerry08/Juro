@@ -87,7 +87,7 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
                     Image = Uri.UnescapeDataString(
                         BaseUrl + node.SelectSingleNode(".//img")!.Attributes["src"]!.Value
                     ),
-                    Headers = new() { { "Referer", BaseUrl } }
+                    Headers = new() { { "Referer", BaseUrl } },
                 }
             );
         }
@@ -203,7 +203,7 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
                 {
                     Id = url2,
                     Number = chapterNumber,
-                    Title = title
+                    Title = title,
                 }
             );
         }
@@ -246,7 +246,7 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
                 {
                     Image = url,
                     Page = pageIndex,
-                    Title = $"Page {pageIndex}"
+                    Title = $"Page {pageIndex}",
                 }
             );
         }

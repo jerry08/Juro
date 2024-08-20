@@ -18,5 +18,5 @@ public enum SubDub
     /// <summary>
     /// Selects dub.
     /// </summary>
-    Dub
+    Dub,
 }

@@ -27,18 +27,14 @@ public class AnimeBaseProvider(IHttpClientFactory httpClientFactory) : IVideoExt
             "streamtape.com" => new StreamTapeExtractor(_httpClientFactory),
             "vidstream.pro" => new VidStreamExtractor(_httpClientFactory),
             "mp4upload.com" => new Mp4uploadExtractor(_httpClientFactory),
-            "playtaku.net"
-            or "goone.pro"
-            or "embtaku.pro"
-            or "embtaku.com"
-            or "s3taku.com"
-                => new GogoCDNExtractor(_httpClientFactory),
+            "playtaku.net" or "goone.pro" or "embtaku.pro" or "embtaku.com" or "s3taku.com" =>
+                new GogoCDNExtractor(_httpClientFactory),
             "alions.pro" => new ALionsExtractor(_httpClientFactory),
             "awish.pro" => new AWishExtractor(_httpClientFactory),
             "dood.wf" => new DoodExtractor(_httpClientFactory),
             "ok.ru" => new OkRuExtractor(_httpClientFactory),
             "streamlare.com" => null,
-            _ => null
+            _ => null,
         };
     }
 

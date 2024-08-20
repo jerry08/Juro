@@ -164,7 +164,7 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
                     Image = img,
                     Title = title,
                     Category = category,
-                    Link = BaseUrl + category
+                    Link = BaseUrl + category,
                 }
             );
         }
@@ -310,7 +310,7 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
                     Id = link,
                     Name = $"{i + 1} - {title}",
                     Link = link,
-                    Number = dataNumber
+                    Number = dataNumber,
                 }
             );
         }

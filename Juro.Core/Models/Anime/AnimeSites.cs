@@ -38,5 +38,5 @@ public enum AnimeSites
     /// <summary>
     /// Parses anime and information from Kaido.
     /// </summary>
-    Kaido
+    Kaido,
 }

@@ -6,5 +6,5 @@ public enum MediaStatus
     Completed,
     Ongoing,
     Hiatus,
-    Cancelled
+    Cancelled,
 }

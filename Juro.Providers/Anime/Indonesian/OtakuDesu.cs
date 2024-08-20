@@ -543,7 +543,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                     Format = VideoType.Container,
                     Resolution = quality,
                     Title = $"DesuStream - {quality}",
-                    VideoUrl = realLink
+                    VideoUrl = realLink,
                 }
             );
         }
@@ -598,6 +598,6 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
             new("Super Power", $"{BaseUrl}/genres/super-power"),
             new("Supernatural", $"{BaseUrl}/genres/supernatural"),
             new("Thriller", $"{BaseUrl}/genres/thriller"),
-            new("Vampire", $"{BaseUrl}/genres/vampire")
+            new("Vampire", $"{BaseUrl}/genres/vampire"),
         };
 }

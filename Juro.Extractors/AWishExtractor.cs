@@ -80,8 +80,8 @@ public class AWishExtractor(IHttpClientFactory httpClientFactory) : IVideoExtrac
             {
                 Format = VideoType.M3u8,
                 VideoUrl = mediaUrl,
-                Title = ServerName
-            }
+                Title = ServerName,
+            },
         ];
     }
 }
