@@ -63,7 +63,7 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
         var nodes = document
             //.DocumentNode.SelectNodes(".//div[@class='grid']/a")
             .DocumentNode.SelectNodes(".//div[contains(@class, 'grid')]/a")
-            .Where(x => x.Attributes.Contains("href"))
+            ?.Where(x => x.Attributes.Contains("href"))
             ?.ToList();
         if (nodes is null)
             return [];
@@ -222,7 +222,7 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
 
         var document = Html.Parse(response);
 
-        var nodes = document.DocumentNode.SelectNodes(".//img[@alt='chapter']").ToList();
+        var nodes = document.DocumentNode.SelectNodes(".//img[contains(@alt, 'chapter')]").ToList();
 
         var list = new List<IMangaChapterPage>();
 
