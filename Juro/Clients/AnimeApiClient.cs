@@ -21,7 +21,7 @@ public class AnimeApiClient(string baseUrl, IHttpClientFactory httpClientFactory
 
     public string BaseUrl { get; set; } = baseUrl;
 
-    public string ProviderKey { get; set; } = "Gogoanime";
+    public string ProviderKey { get; set; } = "Anime";
 
     /// <summary>
     /// Initializes an instance of <see cref="AnimeApiClient"/>.
@@ -36,28 +36,15 @@ public class AnimeApiClient(string baseUrl, IHttpClientFactory httpClientFactory
         : this(baseUrl, Http.ClientProvider) { }
 
     public async ValueTask<List<Provider>> GetProvidersAsync(
-        ProviderType type,
         CancellationToken cancellationToken = default
     )
     {
         var response = await _http.ExecuteAsync(
-            $"{BaseUrl}/Providers?type={type}",
+            $"{BaseUrl}/Providers?type={(int)ProviderType.Anime}",
             cancellationToken: cancellationToken
         );
 
         return JsonSerializer.Deserialize<List<Provider>>(response, _options)!;
-    }
-
-    public async ValueTask<Provider> GetDefaultProviderAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        var response = await _http.ExecuteAsync(
-            $"{BaseUrl}/Providers",
-            cancellationToken: cancellationToken
-        );
-
-        return JsonSerializer.Deserialize<Provider>(response, _options)!;
     }
 
     public async ValueTask<IAnimeInfo> GetAsync(
