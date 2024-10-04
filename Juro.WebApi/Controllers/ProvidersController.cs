@@ -5,7 +5,7 @@ namespace Juro.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ProivdersController : ControllerBase
+public class ProvidersController : ControllerBase
 {
     [HttpGet]
     public IEnumerable<Provider> Get(ProviderType type) =>

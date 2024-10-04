@@ -41,7 +41,7 @@ public class MangaApiClient(string baseUrl, IHttpClientFactory httpClientFactory
 
     public string BaseUrl { get; set; } = baseUrl;
 
-    public string ProviderKey { get; set; } = "MangaPill";
+    public string ProviderKey { get; set; } = "Manga";
 
     /// <summary>
     /// Initializes an instance of <see cref="MangaApiClient"/>.
