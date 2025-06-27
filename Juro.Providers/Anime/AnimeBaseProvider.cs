@@ -23,7 +23,7 @@ public class AnimeBaseProvider(IHttpClientFactory httpClientFactory) : IVideoExt
         {
             "filemoon.to" or "filemoon.sx" => new FilemoonExtractor(_httpClientFactory),
             "rapid-cloud.co" => new RapidCloudExtractor(_httpClientFactory),
-            "megacloud.tv" => new MegaCloudExtractor(_httpClientFactory),
+            "megacloud.tv" or "megacloud.blog" => new MegaCloudExtractor(_httpClientFactory),
             "streamtape.com" => new StreamTapeExtractor(_httpClientFactory),
             "vidstream.pro" => new VidStreamExtractor(_httpClientFactory),
             "mp4upload.com" => new Mp4uploadExtractor(_httpClientFactory),
