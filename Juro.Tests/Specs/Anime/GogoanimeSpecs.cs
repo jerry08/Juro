@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Httpz;
@@ -8,6 +9,7 @@ using Xunit;
 
 namespace Juro.Tests.Specs.Anime;
 
+[Obsolete("Gogoanime/Anitaku is officially dead.")]
 public class GogoanimeSpecs
 {
     [Theory]

@@ -170,7 +170,9 @@ internal class Program
 
 public static class Providers
 {
+#pragma warning disable CS0618
     public static Gogoanime Gogoanime { get; set; } = new();
+#pragma warning restore CS0618
     public static AnimePahe AnimePahe { get; set; } = new();
     public static Kaido Kaido { get; set; } = new();
     public static Aniwave Aniwave { get; set; } = new();

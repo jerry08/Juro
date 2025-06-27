@@ -1,10 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net461;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net9.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
-
   <PropertyGroup>
     <Description>
       Core plugins for source providers.
@@ -12,38 +10,52 @@
     <PackageIcon>favicon.png</PackageIcon>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
   <ItemGroup>
     <None Include="../favicon.png" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="CSharpier.MsBuild" Version="0.29.2" PrivateAssets="all" />
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.67" />
+    <PackageReference Include="CSharpier.MsBuild" Version="1.0.2" PrivateAssets="all" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
-    <PackageReference Include="System.Text.Json" Version="8.0.4" Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'" />
+    <PackageReference
+      Include="System.Text.Json"
+      Version="9.0.6"
+      Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'"
+    />
+    <PackageReference
+      Include="System.Threading.Tasks.Extensions"
+      Version="4.6.3"
+      Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net461'"
+    />
   </ItemGroup>
-
   <!-- .NET Framework -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <Reference Include="System.Net.Http" />
   </ItemGroup>
-
   <!-- .NET Core -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' OR '$(TargetFrameworkIdentifier)' == '.NETStandard'">
     <Compile Remove="**\**\*.netcore.cs" />
-    <None Include="**\**\*.netcore.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <None
+      Include="**\**\*.netcore.cs"
+      Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"
+    />
     <Compile Remove="**\netcore\**\*.cs" />
-    <None Include="**\netcore\**\*.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <None
+      Include="**\netcore\**\*.cs"
+      Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"
+    />
   </ItemGroup>
-
   <!-- .NET Standard -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCOREAPP'">
     <Compile Remove="**\**\*.netstandard.cs" />
-    <None Include="**\**\*.netstandard.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <None
+      Include="**\**\*.netstandard.cs"
+      Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"
+    />
     <Compile Remove="**\netstandard\**\*.cs" />
-    <None Include="**\netstandard\**\*.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <None
+      Include="**\netstandard\**\*.cs"
+      Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)"
+    />
   </ItemGroup>
-
 </Project>
