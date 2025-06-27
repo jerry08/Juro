@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
@@ -127,7 +126,7 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
         mangaInfo.Headers = new() { { "Referer", BaseUrl } };
 
         mangaInfo.Image = Uri.UnescapeDataString(
-            BaseUrl + wrapper.SelectSingleNode(".//img[@alt='poster']")!.Attributes["src"].Value
+            BaseUrl + wrapper?.SelectSingleNode(".//img[@alt='poster']")?.Attributes["src"].Value
         );
 
         mangaInfo.Genres =
@@ -170,11 +169,13 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
             .DocumentNode.SelectNodes(
                 ".//div[contains(@class, 'scrollbar-thumb-themecolor')]/div[contains(@class, 'group')]"
             )
-            .Reverse();
+            ?.Reverse();
+        if (chapterNodes is null)
+            return mangaInfo;
 
         foreach (var chapterNode in chapterNodes)
         {
-            var rawUrl = BaseUrl + chapterNode.SelectSingleNode(".//a").Attributes["href"].Value;
+            var rawUrl = BaseUrl + chapterNode.SelectSingleNode(".//a")?.Attributes["href"].Value;
 
             var id = GetChapterId(rawUrl);
             //var mangaId = GetMangaId(rawUrl);
@@ -222,11 +223,13 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
 
         var document = Html.Parse(response);
 
-        var nodes = document.DocumentNode.SelectNodes(".//img[contains(@alt, 'chapter')]").ToList();
+        var nodes = document
+            .DocumentNode.SelectNodes(".//img[contains(@alt, 'chapter')]")
+            ?.ToList();
 
         var list = new List<IMangaChapterPage>();
 
-        for (var i = 0; i < nodes.Count; i++)
+        for (var i = 0; i < nodes?.Count; i++)
         {
             url = nodes[i].Attributes["src"]!.Value;
 

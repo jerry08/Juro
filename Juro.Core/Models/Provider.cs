@@ -6,5 +6,9 @@ public class Provider
 
     public string Name { get; set; } = default!;
 
+    public string Language { get; set; } = default!;
+
     public ProviderType Type { get; set; }
+
+    public override string ToString() => Name;
 }

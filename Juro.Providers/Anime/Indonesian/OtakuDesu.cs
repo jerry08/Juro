@@ -91,7 +91,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
             if (imgNode is not null)
                 anime.Image = imgNode.Attributes["src"].Value;
 
-            var genresNode = nodes[i].SelectNodes(".//div[@class='set']").FirstOrDefault();
+            var genresNode = nodes[i].SelectNodes(".//div[@class='set']")?.FirstOrDefault();
             if (genresNode is not null)
             {
                 //var genres = genresNode.InnerText?.Split(':').Skip(1).ToArray();
@@ -99,11 +99,11 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 anime.Genres = genres?.Select(x => new Genre(x.Trim())).ToList() ?? [];
             }
 
-            var statusNode = nodes[i].SelectNodes(".//div[@class='set']").ElementAtOrDefault(1);
+            var statusNode = nodes[i].SelectNodes(".//div[@class='set']")?.ElementAtOrDefault(1);
             if (statusNode is not null)
                 anime.Status = statusNode.InnerText?.Split(':').LastOrDefault()?.Trim();
 
-            var ratingNode = nodes[i].SelectNodes(".//div[@class='set']").ElementAtOrDefault(2);
+            var ratingNode = nodes[i].SelectNodes(".//div[@class='set']")?.ElementAtOrDefault(2);
             if (ratingNode is not null)
             {
                 var ratingStr = ratingNode.InnerText?.Split(':').LastOrDefault()?.Trim();
@@ -149,7 +149,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
             ".//div[@id='venkonten']//div[@class='venser']//div[@class='col-anime']"
         );
 
-        for (var i = 0; i < nodes.Count; i++)
+        for (var i = 0; i < nodes?.Count; i++)
         {
             var anime = new OtakuDesuAnimeInfo() { Site = AnimeSites.OtakuDesu };
 
@@ -213,20 +213,20 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[1]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? Array.Empty<string>()
+                    .Skip(1) ?? []
             )
             .Trim();
 
         animeInfo.Image = document
             .DocumentNode.SelectSingleNode(".//div[@class='fotoanime']/img")
-            .Attributes["src"]
+            ?.Attributes["src"]
             ?.Value;
 
         animeInfo.Type = string.Concat(
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[5]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? Array.Empty<string>()
+                    .Skip(1) ?? []
             )
             .Trim();
 
@@ -234,7 +234,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[6]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? Array.Empty<string>()
+                    .Skip(1) ?? []
             )
             .Trim();
 
@@ -242,7 +242,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[10]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? Array.Empty<string>()
+                    .Skip(1) ?? []
             )
             .Trim();
 
@@ -250,7 +250,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[11]/span")
                     ?.InnerText?.Split(':')
-                    .Skip(1) ?? Array.Empty<string>()
+                    .Skip(1) ?? []
             )
             .Split(',')
             .Select(x => new Genre(x.Trim()))
@@ -278,12 +278,14 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
         //var nodes = document.DocumentNode.SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li");
         var nodes = document
             .DocumentNode.SelectNodes(".//div[@id='venkonten']//div[@class='venser']/div[8]/ul/li")
-            .Reverse()
+            ?.Reverse()
             .ToList();
 
-        for (var i = 0; i < nodes.Count; i++)
+        for (var i = 0; i < nodes?.Count; i++)
         {
             var node = nodes[i].SelectSingleNode(".//a");
+            if (node is null)
+                continue;
 
             var link = node.Attributes["href"].Value;
 
@@ -321,9 +323,12 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
 
         var document = Html.Parse(response!);
 
+        var nodes = document.DocumentNode.SelectNodes(".//div[@class='download']/ul/li/a");
+        if (nodes is null)
+            return list;
+
         list.AddRange(
-            document
-                .DocumentNode.SelectNodes(".//div[@class='download']/ul/li/a")
+            nodes
                 .GroupBy(x => x.InnerText)
                 .Select(x => x.FirstOrDefault())
                 .Where(x => x is not null)
@@ -353,7 +358,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
         // Download nodes
         var nodes = document
             .DocumentNode.SelectNodes(".//div[@class='download']/ul/li/a")
-            .Select(x => new VideoSource()
+            ?.Select(x => new VideoSource()
             {
                 ExtraNote = x.InnerText, // Video server name
                 Resolution = x.ParentNode.FirstChild.InnerText,
@@ -365,6 +370,9 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                     : 0,
                 VideoUrl = x.Attributes["href"].Value,
             });
+
+        if (nodes is null)
+            return list;
 
         list.AddRange(nodes);
 
@@ -414,7 +422,9 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
 
         var videoListNodes = document
             .DocumentNode.SelectNodes(".//div[@class='mirrorstream']//ul//li//a")
-            .ToList();
+            ?.ToList();
+        if (videoListNodes is null)
+            return list;
 
         var functions = Enumerable
             .Range(0, videoListNodes.Count)
@@ -462,7 +472,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
         var list = new List<VideoSource>();
 
         //var dataContent = videoListNode.Attributes["data-content"].Value;
-        var dataContent = videoListNode.GetAttributeValue("data-content", null);
+        var dataContent = videoListNode.GetAttributeValue("data-content", string.Empty);
         if (string.IsNullOrWhiteSpace(dataContent))
             return list;
 
@@ -497,9 +507,9 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
 
         var document2 = Html.Parse(data);
 
-        var url = document2.DocumentNode.SelectSingleNode(".//iframe").Attributes["src"].Value;
+        var url = document2.DocumentNode.SelectSingleNode(".//iframe")?.Attributes["src"].Value;
 
-        if (url.Contains("yourupload"))
+        if (url?.ToLower().Contains("yourupload") == true)
         {
             var id2 = url.Split(new[] { "id=" }, StringSplitOptions.None)
                 .LastOrDefault()
@@ -519,7 +529,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 );
             }
         }
-        else if (url.Contains("desustream"))
+        else if (url?.ToLower().Contains("desustream") == true)
         {
             var response = await _http.ExecuteAsync(url, cancellationToken);
 
@@ -547,7 +557,7 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 }
             );
         }
-        else if (url.Contains("mp4upload"))
+        else if (url?.ToLower().Contains("mp4upload") == true)
         {
             var result = await new Mp4uploadExtractor(_httpClientFactory).ExtractAsync(
                 url,

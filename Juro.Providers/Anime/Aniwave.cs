@@ -40,7 +40,7 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
 
     public bool IsDubAvailableSeparately => false;
 
-    public string BaseUrl => "https://aniwave.to";
+    public string BaseUrl => "https://aniwave.lv";
 
     /// <summary>
     /// Initializes an instance of <see cref="Aniwave"/>.
@@ -60,24 +60,11 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        //var vrf = await EncodeVrfAsync(Uri.EscapeDataString(query), cancellationToken);
-
-        //  var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-        //var url = $"{BaseUrl}/ajax/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-        var url =
-            $"{BaseUrl}/ajax/anime/search?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
-        //url = $"{url}&sort=${filters.sort}&{vrf}&page={page}";
-        //url = $"{url}&{vrf}";
+        var url = $"{BaseUrl}/filter?keyword={Uri.EscapeDataString(query).Replace("%20", "+")}";
 
         var response = await _http.ExecuteAsync(
             url,
             new Dictionary<string, string>() { ["Referer"] = BaseUrl },
-            //new Dictionary<string, string>()
-            //{
-            //    ["Referer"] = BaseUrl,
-            //    ["Cookie"] = "waf_jschallenge_c40d24eb070195c3=1701458622-2ab75ee0ecf1d26ea40ad78ad986ae2a",
-            //    ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-            //},
             cancellationToken
         );
 
@@ -127,6 +114,8 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
         var nodes = document.DocumentNode.SelectNodes(
             ".//div[@id='list-items']/div[contains(@class, 'item')]"
         );
+        if (nodes is null)
+            return [];
 
         foreach (var node in nodes)
         {
@@ -136,16 +125,17 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
             //    ".//div/div[contains(@class, 'ani')]/a"
             //).Attributes["href"].Value?.Split('/')[2]!;
 
-            animeInfo.Id = node.SelectSingleNode(".//div/div[contains(@class, 'ani')]/a")
+            animeInfo.Id = node.SelectSingleNode(".//div/div[contains(@class, 'ani')]/a")!
                 .Attributes["href"]
                 .Value;
 
-            animeInfo.Title = node.SelectSingleNode(
-                ".//div/div[contains(@class, 'info')]/div[contains(@class, 'b1')]/a"
-            ).InnerText;
+            animeInfo.Title =
+                node.SelectSingleNode(
+                    ".//div/div[contains(@class, 'info')]/div[contains(@class, 'b1')]/a"
+                )?.InnerText ?? string.Empty;
 
             animeInfo.Image = node.SelectSingleNode(".//div/div[contains(@class, 'ani')]/a/img")
-                .Attributes["src"]
+                ?.Attributes["src"]
                 .Value;
 
             list.Add(animeInfo);
@@ -161,32 +151,72 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
         if (string.IsNullOrWhiteSpace(response))
             return list;
 
-        var data = JsonNode.Parse(response!)!;
-
-        response = data["result"]?["html"]?.ToString();
-
         var document = Html.Parse(response!);
-        var nodes = document.DocumentNode.SelectNodes("//a[contains(@class, 'item')]");
 
-        foreach (var node in nodes)
+        var listItems = document.DocumentNode.SelectNodes(
+            "//div[@id='list-items']//div[contains(@class, 'inner')]"
+        );
+
+        for (var i = 0; i < listItems?.Count; i++)
         {
-            var animeInfo = new AnimeInfo() { Site = AnimeSites.Aniwave };
+            var titleNode = listItems[i]
+                .SelectSingleNode(".//div[contains(@class, 'info')]//a[contains(@class, 'name')]");
+            if (titleNode is null)
+                return list;
 
-            animeInfo.Id = node.GetAttributeValue("href", "");
+            var title = titleNode.InnerText;
+            var link = titleNode.GetAttributeValue("href", string.Empty);
+            link = System.Text.RegularExpressions.Regex.Replace(link, "/ep.*$", "");
 
-            animeInfo.Title = node.SelectSingleNode(".//div[@class='name d-title']")
-                .InnerText.Trim();
+            var posterNode = listItems[i]
+                .SelectSingleNode(".//div[contains(@class, 'poster')]//a//img");
+            var poster = posterNode?.GetAttributeValue("src", string.Empty);
 
-            animeInfo.Image = node.SelectSingleNode(".//img").GetAttributeValue("src", "");
+            var metaNode = listItems[i]
+                .SelectSingleNode(
+                    ".//div[contains(@class, 'poster')]//a//div[contains(@class, 'meta')]//div[contains(@class, 'inner')]//div[contains(@class, 'left')]"
+                );
+            var subbedEpisodes = metaNode
+                ?.SelectSingleNode(".//span[contains(@class, 'sub')]")
+                ?.InnerText;
+            var dubbedEpisodes = metaNode
+                ?.SelectSingleNode(".//span[contains(@class, 'dub')]")
+                ?.InnerText;
 
-            animeInfo.Released = node.SelectSingleNode(".//div[@class='meta']/span[last()]")
-                .InnerText.Trim();
-
-            animeInfo.Type = node.SelectSingleNode(".//div[@class='meta']/span[last()-1]")
-                .InnerText.Trim();
-
-            list.Add(animeInfo);
+            var subbedEpisodesInt = int.TryParse(subbedEpisodes, out var subbed)
+                ? (int?)subbed
+                : null;
+            var dubbedEpisodesInt = int.TryParse(dubbedEpisodes, out var dubbed)
+                ? (int?)dubbed
+                : null;
         }
+
+        //var data = JsonNode.Parse(response!)!;
+        //
+        //response = data["result"]?["html"]?.ToString();
+        //
+        //var document = Html.Parse(response!);
+        //var nodes = document.DocumentNode.SelectNodes("//a[contains(@class, 'item')]");
+        //
+        //foreach (var node in nodes)
+        //{
+        //    var animeInfo = new AnimeInfo() { Site = AnimeSites.Aniwave };
+        //
+        //    animeInfo.Id = node.GetAttributeValue("href", "");
+        //
+        //    animeInfo.Title = node.SelectSingleNode(".//div[@class='name d-title']")
+        //        .InnerText.Trim();
+        //
+        //    animeInfo.Image = node.SelectSingleNode(".//img").GetAttributeValue("src", "");
+        //
+        //    animeInfo.Released = node.SelectSingleNode(".//div[@class='meta']/span[last()]")
+        //        .InnerText.Trim();
+        //
+        //    animeInfo.Type = node.SelectSingleNode(".//div[@class='meta']/span[last()-1]")
+        //        .InnerText.Trim();
+        //
+        //    list.Add(animeInfo);
+        //}
 
         return list;
     }
@@ -205,51 +235,52 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
         {
             Id = id,
             Site = AnimeSites.Aniwave,
-            Title = document
-                .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
-                .InnerText,
+            Title =
+                document
+                    .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
+                    ?.InnerText ?? string.Empty,
             Image = document
                 .DocumentNode.SelectSingleNode(
                     ".//div[contains(@class, 'binfo')]/div[contains(@class, 'poster')]/span/img"
                 )
-                .Attributes["src"]
+                ?.Attributes["src"]
                 .Value,
         };
 
         var jpAttr = document
             .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
-            .Attributes["data-jp"];
+            ?.Attributes["data-jp"];
         if (jpAttr is not null)
             anime.OtherNames = jpAttr.Value;
 
         anime.Summary =
-            document.DocumentNode.SelectSingleNode(".//div[@class='content']").InnerText?.Trim()
+            document.DocumentNode.SelectSingleNode(".//div[@class='content']")?.InnerText?.Trim()
             ?? "";
 
         var genresNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("genres") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("genres") == true)
             ?.SelectNodes(".//span/a");
         if (genresNode is not null)
             anime.Genres.AddRange(genresNode.Select(x => new Genre(x.InnerText)));
 
         var airedNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("aired") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("aired") == true)
             ?.SelectSingleNode(".//span");
         if (airedNode is not null)
             anime.Released = airedNode.InnerText.Trim();
 
         var typeNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("type") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("type") == true)
             ?.SelectSingleNode(".//span");
         if (typeNode is not null)
             anime.Type = typeNode.InnerText.Trim();
 
         var statusNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("status") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("status") == true)
             ?.SelectSingleNode(".//span");
         if (statusNode is not null)
             anime.Status = statusNode.InnerText.Trim();
@@ -288,6 +319,8 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
         var nodes = document.DocumentNode.SelectNodes(
             ".//div[contains(@class, 'episodes')]/ul/li/a"
         );
+        if (nodes is null)
+            return [];
 
         foreach (var node in nodes)
         {

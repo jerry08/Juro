@@ -44,6 +44,7 @@ public class Program
                 {
                     Key = provider.Key,
                     Name = provider.Name,
+                    Language = provider.Language,
                     Type = ProviderType.Anime
                 })
         );
@@ -67,6 +68,7 @@ public class Program
                 {
                     Key = provider.Key,
                     Name = provider.Name,
+                    Language = provider.Language,
                     Type = ProviderType.Manga
                 })
         );

@@ -10,13 +10,12 @@ namespace Juro.Core.Utils.Tasks;
 
 internal static class TaskEx
 {
-    private static readonly TaskFactory _myTaskFactory =
-        new(
-            CancellationToken.None,
-            TaskCreationOptions.None,
-            TaskContinuationOptions.None,
-            TaskScheduler.Default
-        );
+    private static readonly TaskFactory _myTaskFactory = new(
+        CancellationToken.None,
+        TaskCreationOptions.None,
+        TaskContinuationOptions.None,
+        TaskScheduler.Default
+    );
 
     public static TResult RunSync<TResult>(Func<Task<TResult>> func)
     {

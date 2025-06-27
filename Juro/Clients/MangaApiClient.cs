@@ -16,28 +16,27 @@ namespace Juro.Clients;
 public class MangaApiClient(string baseUrl, IHttpClientFactory httpClientFactory)
 {
     private readonly HttpClient _http = httpClientFactory.CreateClient();
-    private readonly JsonSerializerOptions _options =
-        new()
+    private readonly JsonSerializerOptions _options = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
-            PropertyNameCaseInsensitive = true,
-            TypeInfoResolver = new DefaultJsonTypeInfoResolver
+            Modifiers =
             {
-                Modifiers =
+                static typeInfo =>
                 {
-                    static typeInfo =>
-                    {
-                        if (typeInfo.Type == typeof(IMangaInfo))
-                            typeInfo.CreateObject = () => new MangaInfo();
-                        else if (typeInfo.Type == typeof(IMangaResult))
-                            typeInfo.CreateObject = () => new MangaResult();
-                        else if (typeInfo.Type == typeof(IMangaChapter))
-                            typeInfo.CreateObject = () => new MangaChapter();
-                        else if (typeInfo.Type == typeof(IMangaChapterPage))
-                            typeInfo.CreateObject = () => new MangaChapterPage();
-                    },
+                    if (typeInfo.Type == typeof(IMangaInfo))
+                        typeInfo.CreateObject = () => new MangaInfo();
+                    else if (typeInfo.Type == typeof(IMangaResult))
+                        typeInfo.CreateObject = () => new MangaResult();
+                    else if (typeInfo.Type == typeof(IMangaChapter))
+                        typeInfo.CreateObject = () => new MangaChapter();
+                    else if (typeInfo.Type == typeof(IMangaChapterPage))
+                        typeInfo.CreateObject = () => new MangaChapterPage();
                 },
             },
-        };
+        },
+    };
 
     public string BaseUrl { get; set; } = baseUrl;
 

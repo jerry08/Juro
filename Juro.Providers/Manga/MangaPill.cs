@@ -150,16 +150,16 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
         var i = 1;
 
         return document
-            .DocumentNode.SelectNodes(".//img[@class='js-page']")
-            .Select(el =>
-                (IMangaChapterPage)
-                    new MangaChapterPage()
-                    {
-                        Image = el.Attributes["data-src"]!.Value,
-                        Headers = new() { ["Referer"] = BaseUrl },
-                        Page = i++,
-                    }
-            )
-            .ToList();
+                .DocumentNode.SelectNodes(".//img[@class='js-page']")
+                ?.Select(el =>
+                    (IMangaChapterPage)
+                        new MangaChapterPage()
+                        {
+                            Image = el.Attributes["data-src"]!.Value,
+                            Headers = new() { ["Referer"] = BaseUrl },
+                            Page = i++,
+                        }
+                )
+                .ToList() ?? [];
     }
 }

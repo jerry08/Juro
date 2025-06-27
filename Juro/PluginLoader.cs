@@ -67,7 +67,7 @@ public static class PluginLoader
                 x.GetInterfaces().Contains(typeof(IClientConfig))
                 && x.GetConstructor(Type.EmptyTypes) is not null
             )
-            .Select(x => (IClientConfig)Activator.CreateInstance(x, Array.Empty<object>())!)
+            .Select(x => (IClientConfig)Activator.CreateInstance(x, [])!)
             .FirstOrDefault()!;
     }
 

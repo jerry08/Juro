@@ -22,6 +22,7 @@ namespace Juro.Providers.Anime;
 /// <remarks>
 /// Initializes an instance of <see cref="Gogoanime"/>.
 /// </remarks>
+[Obsolete("Gogoanime/Anitaku is officially dead.")]
 public class Gogoanime(IHttpClientFactory httpClientFactory)
     : AnimeBaseProvider(httpClientFactory),
         IAnimeProvider,
@@ -33,13 +34,13 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
 
     public string Key => Name;
 
-    public string Name => "Gogo";
+    public string Name => "GogoAnime";
 
     public string Language => "en";
 
     public bool IsDubAvailableSeparately => true;
 
-    public string BaseUrl { get; private set; } = default!;
+    public string BaseUrl { get; } = "https://anitaku.bz/";
 
     public string CdnUrl { get; private set; } = default!;
 
@@ -55,24 +56,24 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
     public Gogoanime()
         : this(Http.ClientProvider) { }
 
-    private async ValueTask LoadUrlsAsync(CancellationToken cancellationToken = default)
-    {
-        if (!string.IsNullOrWhiteSpace(BaseUrl))
-            return;
-
-        var response = await _http.ExecuteAsync(
-            "https://raw.githubusercontent.com/jerry08/anistream-extras/main/gogoanime.json",
-            cancellationToken
-        );
-
-        if (!string.IsNullOrWhiteSpace(response))
-        {
-            var data = JsonNode.Parse(response)!;
-
-            BaseUrl = data["base_url"]!.ToString();
-            CdnUrl = data["cdn_url"]!.ToString();
-        }
-    }
+    //private async ValueTask LoadUrlsAsync(CancellationToken cancellationToken = default)
+    //{
+    //    if (!string.IsNullOrWhiteSpace(BaseUrl))
+    //        return;
+    //
+    //    var response = await _http.ExecuteAsync(
+    //        "https://raw.githubusercontent.com/jerry08/anistream-extras/main/gogoanime.json",
+    //        cancellationToken
+    //    );
+    //
+    //    if (!string.IsNullOrWhiteSpace(response))
+    //    {
+    //        var data = JsonNode.Parse(response)!;
+    //
+    //        BaseUrl = data["base_url"]!.ToString();
+    //        CdnUrl = data["cdn_url"]!.ToString();
+    //    }
+    //}
 
     /// <inheritdoc />
     public async ValueTask<List<IAnimeInfo>> SearchAsync(
@@ -90,7 +91,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         //query = selectDub ? query + "%(Dub)" : query;
         //query = query.Replace(" ", "+");
@@ -112,7 +113,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}popular.html?page={page}",
@@ -128,7 +129,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         var response = await _http.ExecuteAsync(
             $"{BaseUrl}new-season.html?page={page}",
@@ -144,7 +145,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         var response = await _http.ExecuteAsync($"{BaseUrl}?page={page}", cancellationToken);
 
@@ -231,7 +232,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         // Exceptions
         if (id.Contains("/jujutsu-kaisen-2nd-season"))
@@ -276,7 +277,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
 
         var animeInfoNodes = document
             .DocumentNode.SelectNodes(".//div[@class='anime_info_body_bg']/p")
-            .ToList();
+            ?.ToList();
 
         var imgNode = document.DocumentNode.SelectSingleNode(
             ".//div[@class='anime_info_body_bg']/img"
@@ -296,7 +297,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         if (anime.Title.EndsWith(@""""))
             anime.Title = anime.Title.Substring(0, anime.Title.Length - 1);
 
-        for (var i = 0; i < animeInfoNodes.Count; i++)
+        for (var i = 0; i < animeInfoNodes?.Count; i++)
         {
             switch (i)
             {
@@ -356,7 +357,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
             id = id.Replace("jujutsu-kaisen-2nd-season", "jujutsu-kaisen-tv-2nd-season");
         }
 
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         var episodes = new List<Episode>();
 
@@ -436,7 +437,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         var episodeUrl = BaseUrl + episodeId;
 
@@ -454,13 +455,18 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
         var list = new List<VideoServer>();
 
         var servers = document.DocumentNode.SelectNodes(".//div[@class='anime_muti_link']/ul/li");
-        for (var i = 0; i < servers.Count; i++)
+        for (var i = 0; i < servers?.Count; i++)
         {
             var name = servers[i]
                 .SelectSingleNode("a")
-                .InnerText.Replace("Choose this server", "")
+                ?.InnerText.Replace("Choose this server", "")
                 .Trim();
-            var url = HttpsIfy(servers[i].SelectSingleNode("a").Attributes["data-video"].Value);
+            if (string.IsNullOrWhiteSpace(name))
+                continue;
+
+            var url = HttpsIfy(
+                servers[i].SelectSingleNode("a")?.Attributes["data-video"].Value ?? string.Empty
+            );
 
             list.Add(new VideoServer(name, new FileUrl(url)));
         }
@@ -473,7 +479,7 @@ public class Gogoanime(IHttpClientFactory httpClientFactory)
 
     public async ValueTask<List<Genre>> GetGenresAsync(CancellationToken cancellationToken)
     {
-        await LoadUrlsAsync(cancellationToken);
+        //await LoadUrlsAsync(cancellationToken);
 
         var genres = new List<Genre>();
 

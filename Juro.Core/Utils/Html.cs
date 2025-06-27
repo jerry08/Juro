@@ -7,7 +7,7 @@ internal static class Html
     public static HtmlDocument Parse(string source)
     {
         var document = new HtmlDocument();
-        document.LoadHtml(HtmlEntity.DeEntitize(source));
+        document.LoadHtml(HtmlEntity.DeEntitize(source) ?? string.Empty);
         return document;
     }
 }

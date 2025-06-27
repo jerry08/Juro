@@ -74,7 +74,9 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
 
         var nodes = document
             .DocumentNode.SelectNodes(".//div[@class='film_list-wrap']/div[@class='flw-item']")
-            .ToList();
+            ?.ToList();
+        if (nodes is null)
+            return [];
 
         var movies = new List<MovieResult>();
         foreach (var node in nodes)
@@ -168,19 +170,22 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
             .DocumentNode.SelectNodes(".//div[@class='row-line']")
             ?[2]?.InnerText?.Replace("Released: ", "")
             ?.Trim();
-        movieInfo.Genres = document
-            .DocumentNode.SelectNodes(".//div[@class='row-line'][2]/a")
-            .SelectMany(x => x.InnerText.Split(new[] { "&" }, StringSplitOptions.None))
-            .Select(x => x.Trim())
-            .ToList();
-        movieInfo.Casts = document
-            .DocumentNode.SelectNodes(".//div[@class='row-line'][5]/a")
-            .Select(x => x.InnerText.Trim())
-            .ToList();
-        movieInfo.Tags = document
-            .DocumentNode.SelectNodes(".//div[@class='row-line'][6]/h2")
-            .Select(x => x.InnerText.Trim())
-            .ToList();
+        movieInfo.Genres =
+            document
+                .DocumentNode.SelectNodes(".//div[@class='row-line'][2]/a")
+                ?.SelectMany(x => x.InnerText.Split(new[] { "&" }, StringSplitOptions.None))
+                .Select(x => x.Trim())
+                .ToList() ?? [];
+        movieInfo.Casts =
+            document
+                .DocumentNode.SelectNodes(".//div[@class='row-line'][5]/a")
+                ?.Select(x => x.InnerText.Trim())
+                .ToList() ?? [];
+        movieInfo.Tags =
+            document
+                .DocumentNode.SelectNodes(".//div[@class='row-line'][6]/h2")
+                ?.Select(x => x.InnerText.Trim())
+                .ToList() ?? [];
         movieInfo.Production = document
             .DocumentNode.SelectSingleNode(".//div[@class='row-line'][4]/a[2]")
             ?.InnerText?.Trim();
@@ -222,32 +227,32 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
 
                 var nodes = document
                     .DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li")
-                    .ToList();
+                    ?.ToList();
 
-                for (var i = 0; i < nodes.Count; i++)
+                for (var i = 0; i < nodes?.Count; i++)
                 {
                     movieInfo.Episodes.Add(
                         new()
                         {
                             Id = nodes[i]
-                                .SelectSingleNode(".//a")
+                                .SelectSingleNode(".//a")!
                                 .Attributes["id"]
                                 .Value.Split('-')[1],
                             Title = nodes[i]
-                                .SelectSingleNode(".//a")
+                                .SelectSingleNode(".//a")!
                                 .Attributes["id"]
                                 .Value.Split('-')[1],
                             Number = Convert.ToInt32(
                                 nodes[i]
                                     .SelectSingleNode(".//a")
-                                    .Attributes["title"]
+                                    ?.Attributes["title"]
                                     .Value.Split(':')[0]
                                     .Substring(3)
                                     .Trim()
                             ),
                             Season = season,
                             Url =
-                                $"{BaseUrl}/ajax/v2/episode/servers/{nodes[i].SelectSingleNode(".//a").Attributes["id"].Value.Split('-')[1]}",
+                                $"{BaseUrl}/ajax/v2/episode/servers/{nodes[i]?.SelectSingleNode(".//a")?.Attributes["id"].Value.Split('-')[1]}",
                         }
                     );
                 }
@@ -294,17 +299,19 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
 
         var document = Html.Parse(response);
 
-        var nodes = document.DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li").ToList();
+        var nodes = document
+            .DocumentNode.SelectNodes(".//ul[contains(@class, 'nav')]/li")
+            ?.ToList();
 
-        for (var i = 0; i < nodes.Count; i++)
+        for (var i = 0; i < nodes?.Count; i++)
         {
             list.Add(
                 new()
                 {
                     Name = mediaId.Contains("movie")
-                        ? nodes[i].SelectSingleNode(".//a").Attributes["title"].Value.ToLower()
+                        ? nodes[i].SelectSingleNode(".//a")!.Attributes["title"].Value.ToLower()
                         : nodes[i]
-                            .SelectSingleNode(".//a")
+                            .SelectSingleNode(".//a")!
                             .Attributes["title"]
                             .Value.Substring(6)
                             .Trim()
@@ -312,7 +319,7 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
                     Embed = new()
                     {
                         Url =
-                            $"{BaseUrl}/{mediaId}.{(!mediaId.Contains("movie") ? nodes[i].SelectSingleNode(".//a").Attributes["data-id"].Value : nodes[i].SelectSingleNode(".//a").Attributes["data-linkid"].Value)}".Replace(
+                            $"{BaseUrl}/{mediaId}.{(!mediaId.Contains("movie") ? nodes[i].SelectSingleNode(".//a")?.Attributes["data-id"].Value : nodes[i].SelectSingleNode(".//a")?.Attributes["data-linkid"].Value)}".Replace(
                                 !mediaId.Contains("movie") ? "/tv/" : "/movie/",
                                 !mediaId.Contains("movie") ? "/watch-tv/" : "/watch-movie/"
                             ),

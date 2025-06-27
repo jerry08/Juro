@@ -172,20 +172,21 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
                 .DocumentNode.SelectSingleNode(".//div[contains(@class, 'anime-summary')]/div")
                 ?.InnerText ?? "";
 
-        anime.Genres = document
-            .DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/div/ul/li/a")
-            .Select(el => new Genre(el.Attributes["title"].Value))
-            .ToList();
+        anime.Genres =
+            document
+                .DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/div/ul/li/a")
+                ?.Select(el => new Genre(el.Attributes["title"].Value))
+                .ToList() ?? [];
 
-        var list = document
-            .DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/p")
-            .ToList();
+        var list =
+            document.DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/p")?.ToList()
+            ?? [];
 
         var typeNode = list.Find(x =>
             x.ChildNodes.ElementAtOrDefault(0)?.InnerText?.ToLower().Contains("type") == true
         );
 
-        var otherNamesCount = list.IndexOf(typeNode);
+        var otherNamesCount = typeNode is not null ? list.IndexOf(typeNode) : 0;
 
         anime.Type = typeNode?.SelectSingleNode(".//a")?.InnerText?.Trim() ?? "";
 
@@ -312,7 +313,7 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
 
         return document
             .GetElementbyId("pickDownload")
-            .SelectNodes(".//a")
+            .SelectNodes(".//a")!
             .Select(el =>
             {
                 //var match = _videoServerRegex.Match(el.InnerText);

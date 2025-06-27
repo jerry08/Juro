@@ -71,7 +71,7 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
                     (IMangaResult)
                         new MangaResult()
                         {
-                            Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
+                            Id = el.SelectSingleNode(".//a")!.Attributes["href"].Value,
                             Title = el.SelectSingleNode(".//img")?.Attributes["alt"]?.Value,
                             Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
                         }
@@ -95,7 +95,7 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
             var i = 0;
 
             var chapters = document
-                .DocumentNode.SelectNodes(".//div[@class='chapters']//div[@class='chapter']//a")
+                .DocumentNode.SelectNodes(".//div[@class='chapters']//div[@class='chapter']//a")!
                 .Select(el => new MangaChapterPage()
                 {
                     Image = el.Attributes["href"]!.Value,

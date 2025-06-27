@@ -112,6 +112,8 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
         var nodes = document.DocumentNode.SelectNodes(
             ".//div[@id='list-items']/div[contains(@class, 'item')]"
         );
+        if (nodes is null)
+            return list;
 
         foreach (var node in nodes)
         {
@@ -121,16 +123,16 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
             //    ".//div/div[contains(@class, 'ani')]/a"
             //).Attributes["href"].Value?.Split('/')[2]!;
 
-            animeInfo.Id = node.SelectSingleNode(".//div/div[contains(@class, 'ani')]/a")
+            animeInfo.Id = node.SelectSingleNode(".//div/div[contains(@class, 'ani')]/a")!
                 .Attributes["href"]
                 .Value;
 
             animeInfo.Title = node.SelectSingleNode(
                 ".//div/div[contains(@class, 'info')]/div[contains(@class, 'b1')]/a"
-            ).InnerText;
+            )!.InnerText;
 
             animeInfo.Image = node.SelectSingleNode(".//div/div[contains(@class, 'ani')]/a/img")
-                .Attributes["src"]
+                ?.Attributes["src"]
                 .Value;
 
             list.Add(animeInfo);
@@ -152,6 +154,8 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
 
         var document = Html.Parse(response!);
         var nodes = document.DocumentNode.SelectNodes("//a[contains(@class, 'item')]");
+        if (nodes is null)
+            return list;
 
         foreach (var node in nodes)
         {
@@ -159,16 +163,17 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
 
             animeInfo.Id = node.GetAttributeValue("href", "");
 
-            animeInfo.Title = node.SelectSingleNode(".//div[@class='name d-title']")
-                .InnerText.Trim();
+            animeInfo.Title =
+                node.SelectSingleNode(".//div[@class='name d-title']")?.InnerText.Trim()
+                ?? string.Empty;
 
-            animeInfo.Image = node.SelectSingleNode(".//img").GetAttributeValue("src", "");
+            animeInfo.Image = node.SelectSingleNode(".//img")?.GetAttributeValue("src", "");
 
             animeInfo.Released = node.SelectSingleNode(".//div[@class='meta']/span[last()]")
-                .InnerText.Trim();
+                ?.InnerText.Trim();
 
             animeInfo.Type = node.SelectSingleNode(".//div[@class='meta']/span[last()-1]")
-                .InnerText.Trim();
+                ?.InnerText.Trim();
 
             list.Add(animeInfo);
         }
@@ -190,51 +195,52 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
         {
             Id = id,
             Site = AnimeSites.Aniwave,
-            Title = document
-                .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
-                .InnerText,
+            Title =
+                document
+                    .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
+                    ?.InnerText ?? string.Empty,
             Image = document
                 .DocumentNode.SelectSingleNode(
                     ".//div[contains(@class, 'binfo')]/div[contains(@class, 'poster')]/span/img"
                 )
-                .Attributes["src"]
+                ?.Attributes["src"]
                 .Value,
         };
 
         var jpAttr = document
             .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
-            .Attributes["data-jp"];
+            ?.Attributes["data-jp"];
         if (jpAttr is not null)
             anime.OtherNames = jpAttr.Value;
 
         anime.Summary =
-            document.DocumentNode.SelectSingleNode(".//div[@class='content']").InnerText?.Trim()
+            document.DocumentNode.SelectSingleNode(".//div[@class='content']")?.InnerText?.Trim()
             ?? "";
 
         var genresNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("genres") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("genres") == true)
             ?.SelectNodes(".//span/a");
         if (genresNode is not null)
             anime.Genres.AddRange(genresNode.Select(x => new Genre(x.InnerText)));
 
         var airedNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("aired") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("aired") == true)
             ?.SelectSingleNode(".//span");
         if (airedNode is not null)
             anime.Released = airedNode.InnerText.Trim();
 
         var typeNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("type") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("type") == true)
             ?.SelectSingleNode(".//span");
         if (typeNode is not null)
             anime.Type = typeNode.InnerText.Trim();
 
         var statusNode = document
             .DocumentNode.SelectNodes(".//div[contains(@class, 'meta')][1]/div")
-            .FirstOrDefault(x => x.InnerText?.ToLower().Contains("status") == true)
+            ?.FirstOrDefault(x => x.InnerText?.ToLower().Contains("status") == true)
             ?.SelectSingleNode(".//span");
         if (statusNode is not null)
             anime.Status = statusNode.InnerText.Trim();
@@ -273,6 +279,8 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
         var nodes = document.DocumentNode.SelectNodes(
             ".//div[contains(@class, 'episodes')]/ul/li/a"
         );
+        if (nodes is null)
+            return list;
 
         foreach (var node in nodes)
         {

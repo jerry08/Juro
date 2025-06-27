@@ -9,15 +9,14 @@ internal class Unbaser(int @base)
 {
     private readonly int _base = @base;
 
-    private readonly Dictionary<int, string> _alphabet =
-        new()
-        {
-            [52] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP",
-            [54] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR",
-            [62] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-            [95] =
-                " !\\\"#\\$%&\\\\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
-        };
+    private readonly Dictionary<int, string> _alphabet = new()
+    {
+        [52] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP",
+        [54] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQR",
+        [62] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        [95] =
+            " !\\\"#\\$%&\\\\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\\\]^_`abcdefghijklmnopqrstuvwxyz{|}~",
+    };
 
     public int Unbase(string value)
     {

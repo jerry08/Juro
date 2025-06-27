@@ -52,7 +52,10 @@ public class AnimeBaseController(IAnimeProvider animeProvider) : ControllerBase
     {
         query = Uri.UnescapeDataString(query);
 
-        if (Uri.IsWellFormedUriString(query, UriKind.Absolute))
+        if (
+            Uri.IsWellFormedUriString(query, UriKind.Absolute)
+            && !query.Contains("animepahe.ru/play/", StringComparison.OrdinalIgnoreCase)
+        )
         {
             var server = new VideoServer(query);
             return await animeProvider.GetVideosAsync(server);

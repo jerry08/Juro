@@ -40,7 +40,8 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
 
     public bool IsDubAvailableSeparately => true;
 
-    public virtual string BaseUrl => "https://aniwatch.to";
+    // Previously zoro.to -> aniwatch.to -> aniwatchtv.to -> hianimez.to -> hianime.to
+    public virtual string BaseUrl => "https://hianime.to";
 
     public virtual string AjaxUrl => $"{BaseUrl}/ajax/v2";
 
@@ -149,7 +150,7 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
 
             var nameNode = nodes[i]
                 .SelectSingleNode(".//div[@class='film-detail']")
-                .SelectSingleNode(".//a");
+                ?.SelectSingleNode(".//a");
             if (nameNode is not null)
             {
                 category = nameNode.Attributes["href"].Value;
@@ -217,13 +218,13 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
 
         var overviewNode =
             itemHeadNodes
-                .FirstOrDefault(x =>
+                ?.FirstOrDefault(x =>
                     !string.IsNullOrWhiteSpace(x.InnerHtml)
                     && x.InnerHtml.ToLower().Contains("overview")
                 )
                 ?.ParentNode.SelectSingleNode(".//span[@class='name']")
             ?? itemHeadNodes
-                .FirstOrDefault(x =>
+                ?.FirstOrDefault(x =>
                     !string.IsNullOrWhiteSpace(x.InnerHtml)
                     && x.InnerHtml.ToLower().Contains("overview")
                 )
@@ -239,7 +240,7 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
             anime.Type = typeNode.InnerText;
 
         var statusNode = itemHeadNodes
-            .FirstOrDefault(x =>
+            ?.FirstOrDefault(x =>
                 !string.IsNullOrWhiteSpace(x.InnerHtml) && x.InnerHtml.ToLower().Contains("status")
             )
             ?.ParentNode.SelectSingleNode(".//span[@class='name']");
@@ -247,16 +248,16 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
             anime.Status = statusNode.InnerText;
 
         var genresNode = itemHeadNodes
-            .FirstOrDefault(x =>
+            ?.FirstOrDefault(x =>
                 !string.IsNullOrWhiteSpace(x.InnerHtml) && x.InnerHtml.ToLower().Contains("genres")
             )
             ?.ParentNode.SelectNodes(".//a")
-            .ToList();
+            ?.ToList();
         if (genresNode is not null)
             anime.Genres.AddRange(genresNode.Select(x => new Genre(x.Attributes["title"].Value)));
 
         var airedNode = itemHeadNodes
-            .FirstOrDefault(x =>
+            ?.FirstOrDefault(x =>
                 !string.IsNullOrWhiteSpace(x.InnerHtml) && x.InnerHtml.ToLower().Contains("aired")
             )
             ?.ParentNode.SelectSingleNode(".//span[@class='name']");
@@ -264,7 +265,7 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
             anime.Released = airedNode.InnerText;
 
         var synonymsNode = itemHeadNodes
-            .FirstOrDefault(x =>
+            ?.FirstOrDefault(x =>
                 !string.IsNullOrWhiteSpace(x.InnerHtml)
                 && x.InnerHtml.ToLower().Contains("synonyms")
             )
@@ -293,11 +294,11 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
 
         var nodes = document
             .DocumentNode.SelectNodes(".//a")
-            .Where(x => x.Attributes["data-page"] == null)
+            ?.Where(x => x.Attributes["data-page"] == null)
             .ToList();
 
         var episodes = new List<Episode>();
-        for (var i = 0; i < nodes.Count; i++)
+        for (var i = 0; i < nodes?.Count; i++)
         {
             var title = nodes[i].Attributes["title"].Value;
             var dataNumber = Convert.ToInt32(nodes[i].Attributes["data-number"].Value);
@@ -345,7 +346,10 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
 
         var nodes = doc
             .DocumentNode.SelectNodes(".//div[contains(@class, 'server-item')]")
-            .ToList();
+            ?.ToList();
+
+        if (nodes is null)
+            return [];
 
         var list = new List<VideoServer>();
 

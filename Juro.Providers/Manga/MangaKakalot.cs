@@ -159,13 +159,13 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                     {
                         count++;
 
-                        var title = el.SelectSingleNode(".//span/a").InnerText;
+                        var title = el.SelectSingleNode(".//span/a")!.InnerText;
                         var chapNum = chapterNumberRegex.Match(title)?.Groups[0].Value;
 
                         return (IMangaChapter)
                             new MangaChapter()
                             {
-                                Id = el.SelectSingleNode(".//span/a")
+                                Id = el.SelectSingleNode(".//span/a")!
                                     .Attributes["href"]
                                     .Value.Split(new[] { "chapter/" }, StringSplitOptions.None)[1],
                                 Number = int.TryParse(chapNum, out var num) ? num : count,
@@ -246,19 +246,19 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                     .DocumentNode.SelectNodes(
                         ".//div[@class='container-main-left']/div[@class='panel-story-chapter-list']/ul/li"
                     )
-                    .Reverse()
+                    ?.Reverse()
                     ?.Select(el =>
                     {
                         count++;
 
-                        var title = el.SelectSingleNode(".//a").InnerText;
+                        var title = el.SelectSingleNode(".//a")!.InnerText;
                         var chapNum = chapterNumberRegex.Match(title)?.Groups[0].Value;
 
                         return (IMangaChapter)
                             new MangaChapter()
                             {
                                 //Id = el.SelectSingleNode(".//a").Attributes["href"].Value.Split(new[] { ".com/" }, StringSplitOptions.None)[1] + "$$READMANGANATO",
-                                Id = el.SelectSingleNode(".//a").Attributes["href"].Value,
+                                Id = el.SelectSingleNode(".//a")!.Attributes["href"].Value,
                                 Title = title,
                                 Number = int.TryParse(chapNum, out var num) ? num : count,
                                 Views = el.SelectSingleNode(
@@ -298,7 +298,7 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
 
         var pages = document
             .DocumentNode.SelectNodes(".//div[@class='container-chapter-reader']/img")
-            .Select(el =>
+            ?.Select(el =>
                 (IMangaChapterPage)
                     new MangaChapterPage()
                     {
@@ -313,6 +313,6 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
             )
             .ToList();
 
-        return pages;
+        return pages ?? [];
     }
 }
