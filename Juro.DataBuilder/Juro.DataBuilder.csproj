@@ -8,9 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="Httpz" Version="1.1.7" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.6" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.7" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.7" />
     <PackageReference Include="Spectre.Console" Version="0.50.0" />
   </ItemGroup>
 
