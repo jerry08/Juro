@@ -35,7 +35,7 @@ internal class Unbaser(int @base)
 
         var returnVal = 0;
 
-        var valArray = value.ToCharArray().Reverse().ToArray();
+        var valArray = value.ToCharArray().AsEnumerable().Reverse().ToArray();
         for (var i = 0; i < valArray.Length; i++)
         {
             var cipher = valArray[i];
