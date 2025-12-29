@@ -1,2 +1,2 @@
-dotnet publish -c Release --os linux -o build/linux
+dotnet publish -c Release --os linux -p:PublishReferencesDocumentationFiles=false -o build/linux
 pause
