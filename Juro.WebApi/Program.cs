@@ -45,7 +45,7 @@ public class Program
                     Key = provider.Key,
                     Name = provider.Name,
                     Language = provider.Language,
-                    Type = ProviderType.Anime
+                    Type = ProviderType.Anime,
                 })
         );
 
@@ -69,7 +69,7 @@ public class Program
                     Key = provider.Key,
                     Name = provider.Name,
                     Language = provider.Language,
-                    Type = ProviderType.Manga
+                    Type = ProviderType.Manga,
                 })
         );
 
@@ -94,6 +94,47 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+#if DEBUG
+        app.MapGet(
+            "/",
+            () =>
+                Results.Content(
+                    """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Juro API</title>
+                    </head>
+                    <body>
+                        <h1>Welcome to Juro API</h1>
+                        <p><a href="/swagger">View API Documentation</a></p>
+                    </body>
+                    </html>
+                    """,
+                    "text/html"
+                )
+        );
+#else
+        app.MapGet(
+            "/",
+            () =>
+                Results.Content(
+                    """
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Juro API</title>
+                    </head>
+                    <body>
+                        <h1>Welcome to Juro API</h1>
+                    </body>
+                    </html>
+                    """,
+                    "text/html"
+                )
+        );
+#endif
 
         app.Run();
     }
