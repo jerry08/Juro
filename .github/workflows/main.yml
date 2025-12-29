@@ -1,0 +1,152 @@
+name: main
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - master
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  PROJECT_NAME: Juro.WebApi
+
+jobs:
+  #format:
+  #  runs-on: ubuntu-latest
+  #  timeout-minutes: 10
+  #
+  #  permissions:
+  #    contents: read
+  #
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v4
+  #
+  #    - name: Install .NET
+  #      uses: actions/setup-dotnet@v4
+  #      with:
+  #        dotnet-version: 10.0.x
+  #
+  #    - name: Verify formatting
+  #      run: >
+  #        dotnet build
+  #        -t:CSharpierFormat
+  #        --configuration Release
+
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish app
+        run: >
+          dotnet publish ${{ env.PROJECT_NAME }}
+          -p:Version=${{ github.ref_type == 'tag' && github.ref_name || format('999.9.9-ci-{0}', github.sha) }}
+          -p:CSharpier_Bypass=true
+          -p:DebugType=None
+          -p:DebugSymbols=false
+          -p:PublishReferencesDocumentationFiles=false
+          --output ${{ env.PROJECT_NAME }}/bin/publish
+          --configuration Release
+          --runtime linux-x64
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}.linux-x64
+          path: ${{ env.PROJECT_NAME }}/bin/publish
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Deploy via SSH
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "${{ env.PROJECT_NAME }}/bin/publish/*"
+          target: "/opt/juro"
+          strip_components: 3  # removes the 'ProjectName/bin/publish' prefix
+
+      - name: Restart service
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            sudo systemctl restart Juro.WebApi
+
+  release:
+    if: ${{ github.ref_type == 'tag' }}
+
+    needs:
+      #- format
+      - pack
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release create ${{ github.ref_name }}
+          --repo ${{ github.event.repository.full_name }}
+          --title ${{ github.ref_name }}
+          --generate-notes
+          --verify-tag
+
+  deploy:
+    needs: release
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}.win-x64
+          path: ${{ env.PROJECT_NAME }}/
+
+      - name: Create package
+        # Change into the artifacts directory to avoid including the directory itself in the zip archive
+        working-directory: ${{ env.PROJECT_NAME }}/
+        run: >
+          zip -r ../${{ env.PROJECT_NAME }}.win-x64.zip .
+
+      - name: Upload release asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release upload ${{ github.ref_name }}
+          ${{ env.PROJECT_NAME }}.win-x64.zip
+          --repo ${{ github.event.repository.full_name }}
