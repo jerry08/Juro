@@ -161,7 +161,8 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
                 .DocumentNode.SelectSingleNode(
                     ".//div[contains(@class, 'header-wrapper')]/header/div/h1/span"
                 )
-                ?.InnerText ?? "";
+                ?.InnerText
+            ?? "";
 
         anime.Image = document
             .DocumentNode.SelectSingleNode(".//header/div/div/div/a/img")!
@@ -170,13 +171,15 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
         anime.Summary =
             document
                 .DocumentNode.SelectSingleNode(".//div[contains(@class, 'anime-summary')]/div")
-                ?.InnerText ?? "";
+                ?.InnerText
+            ?? "";
 
         anime.Genres =
             document
                 .DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/div/ul/li/a")
                 ?.Select(el => new Genre(el.Attributes["title"].Value))
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
 
         var list =
             document.DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/p")?.ToList()
@@ -207,7 +210,8 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
                 .Replace("Aired:", "")
                 .Replace("\n", "")
                 .Replace("\r", "")
-                .Replace("\t", "") ?? "";
+                .Replace("\t", "")
+            ?? "";
 
         var statusNode = list.Find(x =>
             x.ChildNodes.ElementAtOrDefault(1)?.InnerText?.ToLower().Contains("status") == true

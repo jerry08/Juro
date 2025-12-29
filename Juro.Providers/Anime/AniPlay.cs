@@ -105,7 +105,8 @@ public class AniPlay(IHttpClientFactory httpClientFactory) : IAnimeProvider
                         Description = x.Description,
                     })
                 )
-                ?.ToList() ?? [];
+                ?.ToList()
+            ?? [];
     }
 
     public ValueTask<List<VideoServer>> GetVideoServersAsync(

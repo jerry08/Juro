@@ -73,7 +73,8 @@ public class AnimeApiClient(string baseUrl, IHttpClientFactory httpClientFactory
         return JsonSerializer
                 .Deserialize<List<AnimeInfo>>(response, _options)
                 ?.Cast<IAnimeInfo>()
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
     }
 
     public async ValueTask<List<Episode>> GetEpisodesAsync(

@@ -141,7 +141,8 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
             document
                 .DocumentNode.SelectNodes(".//div[@class='genres']/a")
                 ?.Select(el => el.InnerText)
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
 
         var statusText = document
             .DocumentNode.SelectSingleNode(".//ul[@class='meta d-table']/li[4]/div[2]")
@@ -175,7 +176,8 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
                             Title = title,
                         };
                 })
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
 
         return mangaInfo;
     }

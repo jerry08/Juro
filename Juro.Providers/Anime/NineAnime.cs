@@ -198,7 +198,8 @@ public class NineAnime(IHttpClientFactory httpClientFactory)
             Title =
                 document
                     .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
-                    ?.InnerText ?? string.Empty,
+                    ?.InnerText
+                ?? string.Empty,
             Image = document
                 .DocumentNode.SelectSingleNode(
                     ".//div[contains(@class, 'binfo')]/div[contains(@class, 'poster')]/span/img"

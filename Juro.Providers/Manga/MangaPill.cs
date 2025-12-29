@@ -73,7 +73,8 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
                             Headers = new() { ["Referer"] = BaseUrl },
                         }
                 )
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
     }
 
     /// <inheritdoc />
@@ -96,7 +97,8 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
             document
                 .DocumentNode.SelectNodes(".//div[@class='flex flex-col']/div[4]/a")
                 ?.Select(el => el.InnerText)
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
 
         var statusText = document
             .DocumentNode.SelectSingleNode(".//div[@class='flex flex-col']/div[3]/div[2]/div")
@@ -131,7 +133,8 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
                             Title = el.InnerText,
                         };
                 })
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
 
         return mangaInfo;
     }
@@ -160,6 +163,7 @@ public class MangaPill(IHttpClientFactory httpClientFactory) : IMangaProvider
                             Page = i++,
                         }
                 )
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
     }
 }

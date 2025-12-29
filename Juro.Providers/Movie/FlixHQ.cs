@@ -93,7 +93,8 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
                     Id =
                         node.SelectSingleNode(".//div[@class='film-poster']/a")
                             ?.Attributes["href"]
-                            ?.Value.Substring(1) ?? string.Empty,
+                            ?.Value.Substring(1)
+                        ?? string.Empty,
                     Title = node.SelectSingleNode(".//div[@class='film-detail']/h2/a")
                         ?.Attributes["title"]
                         ?.Value,
@@ -175,17 +176,20 @@ public class FlixHQ(IHttpClientFactory httpClientFactory) : MovieBaseProvider(ht
                 .DocumentNode.SelectNodes(".//div[@class='row-line'][2]/a")
                 ?.SelectMany(x => x.InnerText.Split(new[] { "&" }, StringSplitOptions.None))
                 .Select(x => x.Trim())
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
         movieInfo.Casts =
             document
                 .DocumentNode.SelectNodes(".//div[@class='row-line'][5]/a")
                 ?.Select(x => x.InnerText.Trim())
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
         movieInfo.Tags =
             document
                 .DocumentNode.SelectNodes(".//div[@class='row-line'][6]/h2")
                 ?.Select(x => x.InnerText.Trim())
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
         movieInfo.Production = document
             .DocumentNode.SelectSingleNode(".//div[@class='row-line'][4]/a[2]")
             ?.InnerText?.Trim();

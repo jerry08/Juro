@@ -115,7 +115,8 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
                         .OrderByDescending(x => "en")
                         .ThenBy(x => x.Key)
                         .Select(x => x.Value?.ToString() ?? "")
-                        .ToList() ?? [],
+                        .ToList()
+                    ?? [],
                 Descriptions =
                     manga["attributes"]!["description"]!
                         .AsObject()
@@ -124,7 +125,8 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
                             Description = x.Key,
                             Language = x.Value?.ToString(),
                         })
-                        .ToList() ?? [],
+                        .ToList()
+                    ?? [],
                 Status = manga["attributes"]!["status"]?.ToString().ToLower() switch
                 {
                     "completed" => MediaStatus.Completed,
@@ -179,7 +181,8 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
                     .OrderByDescending(x => "en")
                     .ThenBy(x => x.Key)
                     .Select(x => x.Value?.ToString() ?? "")
-                    .ToList() ?? [],
+                    .ToList()
+                ?? [],
             Description = data["data"]!["attributes"]!["description"]!["en"]!.ToString(),
             Genres = data["data"]!["attributes"]!["tags"]!
                 .AsArray()

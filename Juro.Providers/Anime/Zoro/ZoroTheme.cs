@@ -81,7 +81,7 @@ public abstract class ZoroTheme
     /// Enabled video types (servers-sub, servers-dub, servers-mixed, servers-raw).
     /// </summary>
     public HashSet<string> EnabledTypes { get; set; } =
-        ["servers-sub", "servers-dub", "servers-mixed", "servers-raw"];
+    ["servers-sub", "servers-dub", "servers-mixed", "servers-raw"];
 
     protected ZoroTheme(IHttpClientFactory httpClientFactory)
         : base(httpClientFactory)

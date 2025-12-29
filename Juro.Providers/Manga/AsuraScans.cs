@@ -135,7 +135,8 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
                     ".//div[starts-with(@class, 'space')]//div[contains(@class, 'flex')]//button[contains(@class, 'text-white')]"
                 )
                 ?.Select(x => x.InnerText)
-                .ToList() ?? [];
+                .ToList()
+            ?? [];
 
         var statusText = document
             .DocumentNode.SelectSingleNode(

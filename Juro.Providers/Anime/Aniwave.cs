@@ -132,7 +132,8 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
             animeInfo.Title =
                 node.SelectSingleNode(
                     ".//div/div[contains(@class, 'info')]/div[contains(@class, 'b1')]/a"
-                )?.InnerText ?? string.Empty;
+                )?.InnerText
+                ?? string.Empty;
 
             animeInfo.Image = node.SelectSingleNode(".//div/div[contains(@class, 'ani')]/a/img")
                 ?.Attributes["src"]
@@ -238,7 +239,8 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
             Title =
                 document
                     .DocumentNode.SelectSingleNode(".//h1[contains(@class, 'title')]")
-                    ?.InnerText ?? string.Empty,
+                    ?.InnerText
+                ?? string.Empty,
             Image = document
                 .DocumentNode.SelectSingleNode(
                     ".//div[contains(@class, 'binfo')]/div[contains(@class, 'poster')]/span/img"

@@ -160,7 +160,8 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 nodes[i]
                     .SelectSingleNode(".//div[@class='col-anime-title']/a")
                     ?.Attributes["href"]
-                    ?.Value ?? "";
+                    ?.Value
+                ?? "";
 
             anime.Id = anime.Link;
 
@@ -213,7 +214,8 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[1]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? []
+                    .Skip(1)
+                    ?? []
             )
             .Trim();
 
@@ -226,7 +228,8 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[5]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? []
+                    .Skip(1)
+                    ?? []
             )
             .Trim();
 
@@ -234,7 +237,8 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[6]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? []
+                    .Skip(1)
+                    ?? []
             )
             .Trim();
 
@@ -242,7 +246,8 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[10]/span")
                     ?.LastChild?.InnerText?.Split(':')
-                    .Skip(1) ?? []
+                    .Skip(1)
+                    ?? []
             )
             .Trim();
 
@@ -250,7 +255,8 @@ public class OtakuDesu(IHttpClientFactory httpClientFactory) : IAnimeProvider
                 document
                     .DocumentNode.SelectSingleNode(".//div[@class='infozin']//p[11]/span")
                     ?.InnerText?.Split(':')
-                    .Skip(1) ?? []
+                    .Skip(1)
+                    ?? []
             )
             .Split(',')
             .Select(x => new Genre(x.Trim()))

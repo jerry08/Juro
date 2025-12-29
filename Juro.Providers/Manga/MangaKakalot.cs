@@ -113,7 +113,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                     ?.InnerText.Replace("Alternative :", "")
                     .Split(';')
                     ?.Select(x => x.Trim())
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
             mangaInfo.Description = document
                 .GetElementbyId("noidungm")
                 ?.InnerText?.Replace($"{mangaInfo.Title} summary:", "")
@@ -128,7 +129,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                 document
                     .DocumentNode.SelectNodes(".//div[@class='manga-info-top']/ul/li[7]/a")
                     ?.Select(x => x.InnerText)
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
 
             var statusText = document
                 .DocumentNode.SelectSingleNode(".//div[@class='manga-info-top']/ul/li[3]")
@@ -150,7 +152,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                 document
                     .DocumentNode.SelectNodes(".//div[@class='manga-info-top']/ul/li[2]/a")
                     ?.Select(x => x.InnerText)
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
 
             mangaInfo.Chapters =
                 document
@@ -178,7 +181,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                                     ?.Value,
                             };
                     })
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
         }
         else
         {
@@ -195,7 +199,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                     ?.InnerText.Replace("Alternative :", "")
                     .Split(';')
                     ?.Select(x => x.Trim())
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
             mangaInfo.Description = document
                 .DocumentNode.SelectSingleNode(".//div[@id='panel-story-info-description']")
                 ?.InnerText?.Replace("Description :", "")
@@ -214,7 +219,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                         ".//div[@class='story-info-right']/table/tbody/tr[4]/td[@class='table-value']/a"
                     )
                     ?.Select(x => x.InnerText)
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
 
             var statusText = document
                 .DocumentNode.SelectSingleNode(
@@ -239,7 +245,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                         ".//div[@class='story-info-right']/table/tbody/tr[2]/td[@class='table-value']/a"
                     )
                     ?.Select(x => x.InnerText)
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
 
             mangaInfo.Chapters =
                 document
@@ -273,7 +280,8 @@ public class MangaKakalot(IHttpClientFactory httpClientFactory) : IMangaProvider
                                     ?.Value,
                             };
                     })
-                    .ToList() ?? [];
+                    .ToList()
+                ?? [];
         }
 
         return mangaInfo;

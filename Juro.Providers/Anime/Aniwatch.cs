@@ -197,18 +197,21 @@ public class Aniwatch(IHttpClientFactory httpClientFactory)
         anime.Title =
             document
                 .DocumentNode.SelectSingleNode(".//h2[contains(@class, 'film-name')]")
-                ?.InnerText ?? "";
+                ?.InnerText
+            ?? "";
 
         anime.Summary =
             document
                 .DocumentNode.SelectSingleNode(".//div[contains(@class, 'film-description')]")
-                ?.InnerText?.Trim() ?? "";
+                ?.InnerText?.Trim()
+            ?? "";
 
         anime.Image =
             document
                 .DocumentNode.SelectSingleNode(".//img[contains(@class, 'film-poster-img')]")
                 ?.Attributes["src"]
-                ?.Value?.ToString() ?? "";
+                ?.Value?.ToString()
+            ?? "";
 
         var itemHeadNodes = document.DocumentNode.SelectNodes(
             ".//div[@class='anisc-info-wrap']/div[@class='anisc-info']//span[@class='item-head']"
