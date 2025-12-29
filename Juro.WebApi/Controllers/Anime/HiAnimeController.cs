@@ -5,6 +5,6 @@ namespace Juro.WebApi.Controllers.Anime;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AnimeController(HiAnime provider) : HiAnimeController(provider)
+public class HiAnimeController(HiAnime provider) : AnimeBaseController(provider)
 {
 }
