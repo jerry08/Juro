@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".github/workflows/nuget.yml" />
+    <File Path="Directory.Build.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="Juro.Core/Juro.Core.csproj" />
+  <Project Path="Juro.DataBuilder/Juro.DataBuilder.csproj" />
+  <Project Path="Juro.Demo.Cli2/Juro.Demo.Cli2.csproj" />
+  <Project Path="Juro.DemoConsole/Juro.DemoConsole.csproj" />
+  <Project Path="Juro.Extractors/Juro.Extractors.csproj" />
+  <Project Path="Juro.Providers/Juro.Providers.csproj" />
+  <Project Path="Juro.Tests/Juro.Tests.csproj" />
+  <Project Path="Juro.WebApi/Juro.WebApi.csproj" />
+  <Project Path="Juro/Juro.csproj" />
+</Solution>
