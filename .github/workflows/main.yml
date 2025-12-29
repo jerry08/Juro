@@ -84,7 +84,7 @@ jobs:
           username: deploy
           key: ${{ secrets.VPS_SSH_KEY }}
           source: "${{ env.PROJECT_NAME }}/bin/publish/*"
-          target: "/opt/juro"
+          target: "/var/www/juro"
           strip_components: 3  # removes the 'ProjectName/bin/publish' prefix
 
       - name: Restart service
