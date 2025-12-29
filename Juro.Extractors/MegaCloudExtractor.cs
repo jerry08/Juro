@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -8,17 +7,18 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
-using Juro.Core.Models;
 using Juro.Core.Models.Videos;
 using Juro.Core.Utils;
 using Juro.Core.Utils.Extensions;
 
 namespace Juro.Extractors;
 
-// Inspired from https://github.com/yuzono/aniyomi-extensions/blob/master/lib/megacloud-extractor/src/main/java/eu/kanade/tachiyomi/lib/megacloudextractor/MegaCloudExtractor.kt
+// Inspired from https://github.com/yuzono/aniyomi-extensions/blob/master/lib/megacloudextractor/src/main/java/eu/kanade/tachiyomi/lib/megacloudextractor/MegaCloudExtractor.kt
+// And https://github.com/SenZmaKi/Senpwai/issues/91
 /// <summary>
 /// Extractor for MegaCloud.
 /// </summary>
@@ -29,18 +29,9 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
 {
     private readonly HttpClient _http = httpClientFactory.CreateClient();
 
-    private static readonly string[] SOURCES_URL =
-    [
-        "/embed-2/v2/e-1/getSources?id=",
-        "/ajax/embed-6-v2/getSources?id=",
-    ];
-    private static readonly string[] SOURCES_SPLITTER = ["/e-1/", "/embed-6-v2/"];
-    private static readonly string[] SERVER_URL =
-    [
-        "https://megacloud.tv",
-        "https://rapid-cloud.co",
-    ];
-    private static readonly string[] SOURCES_KEY = ["1", "6"];
+    private const string SOURCES_URL = "/embed-2/v3/e-1/getSources?id=";
+    private const string SOURCES_SPLITTER = "/e-1/";
+    private string? _cachedKey;
 
     /// <inheritdoc />
     public string ServerName => "MegaCloud";
@@ -70,201 +61,138 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
         CancellationToken cancellationToken = default
     )
     {
-        var type =
-            url.StartsWith("https://megacloud.tv") || url.StartsWith("https://megacloud.blog")
-                ? 0
-                : 1;
+        var uri = new Uri(url);
+        var serverUrl = $"{uri.Scheme}://{uri.Host}";
 
-        var id = url.Substring(url.IndexOf(SOURCES_SPLITTER[type]) + SOURCES_SPLITTER[type].Length);
-        id = id.Substring(0, id.IndexOf("?"));
+        // 1. Extract ID
+        var id = url.Split([SOURCES_SPLITTER], StringSplitOptions.None)
+            .LastOrDefault()
+            ?.Split('?')
+            .FirstOrDefault();
         if (string.IsNullOrEmpty(id))
-        {
-            throw new Exception("Failed to extract ID from URL");
-        }
+            throw new Exception("Failed to extract ID");
 
-        var srcRes = await _http.ExecuteAsync(
-            SERVER_URL[type] + SOURCES_URL[type] + id,
-            headers,
-            cancellationToken
+        headers = new Dictionary<string, string>(headers) { ["Referer"] = serverUrl };
+
+        // 2. Get the Nonce from the embed page
+        var embedPage = await _http.ExecuteAsync(url, headers, cancellationToken);
+        var nonce = ExtractNonce(embedPage);
+
+        // 3. Fetch Sources
+        var request = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{serverUrl}{SOURCES_URL}{id}&_k={nonce}"
         );
+        request.Headers.Add("X-Requested-With", "XMLHttpRequest");
+        request.Headers.Add("Referer", serverUrl);
 
-        var data = JsonNode.Parse(srcRes);
+        var response = await _http.SendAsync(request, cancellationToken);
+        var jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
+        var data = JsonNode.Parse(jsonResponse);
 
-        var sources = data?["sources"]?.ToString();
-        if (string.IsNullOrWhiteSpace(sources))
+        if (data?["sources"] is null)
             return [];
 
-        var isEncrypted = (bool)data!["encrypted"]!;
-        if (isEncrypted)
+        // 4. Decrypt Sources
+        var isEncrypted = data["encrypted"]?.GetValue<bool>() ?? true;
+        var key = _cachedKey ?? await RequestNewKeyAsync();
+
+        var videoSources = new List<VideoSource>();
+        foreach (var source in data["sources"]!.AsArray())
         {
-            sources = await TryDecryptingAsync(sources);
-        }
+            var file = source?["file"]?.ToString();
+            if (string.IsNullOrEmpty(file))
+                continue;
 
-        var subtitles = new List<Subtitle>();
+            var m3u8Url =
+                (isEncrypted && !file.Contains(".m3u8"))
+                    ? MegaCloudExtractor.DecryptLocal(file, key, nonce)
+                    : file;
 
-        var tracksStr = data["tracks"]?.ToString();
-        if (!string.IsNullOrWhiteSpace(tracksStr))
-        {
-            foreach (var subtitle in JsonNode.Parse(tracksStr!)!.AsArray())
-            {
-                var kind = subtitle!["kind"]?.ToString();
-                var label = subtitle["label"]?.ToString();
-                var file = subtitle["file"]?.ToString();
-
-                if (
-                    kind == "captions"
-                    && !string.IsNullOrEmpty(label)
-                    && !string.IsNullOrEmpty(file)
-                )
+            videoSources.Add(
+                new VideoSource
                 {
-                    subtitles.Add(new(file!, label!));
+                    VideoUrl = m3u8Url,
+                    Format = VideoType.M3u8,
+                    Resolution = "Multi Quality",
+                    Headers = headers,
                 }
-            }
+            );
         }
 
-        var m3u8File = JsonNode.Parse(sources!)![0]!["file"]!.ToString();
-
-        return
-        [
-            new()
-            {
-                VideoUrl = m3u8File,
-                Headers = headers,
-                Format = VideoType.M3u8,
-                Resolution = "Multi Quality",
-                Subtitles = subtitles,
-            },
-        ];
+        return videoSources;
     }
 
-    private string? megaKey;
-
-    public async Task<string> TryDecryptingAsync(string ciphered)
+    private static string ExtractNonce(string html)
     {
-        if (megaKey != null)
-        {
-            try
-            {
-                var decryptedUrl = DecryptOpenSSL(ciphered, megaKey);
-                Console.WriteLine($"Decrypted URL: {decryptedUrl}");
-                return decryptedUrl;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Decryption failed with existing key: {ex.Message}");
-                return await DecryptWithNewKeyAsync(ciphered);
-            }
-        }
-        else
-        {
-            return await DecryptWithNewKeyAsync(ciphered);
-        }
+        // Try 48-char match first
+        var match1 = Regex.Match(html, @"\b[a-zA-Z0-9]{48}\b");
+        if (match1.Success)
+            return match1.Value;
+
+        // Try triplet match
+        var match2 = Regex.Match(
+            html,
+            @"\b([a-zA-Z0-9]{16})\b.*?\b([a-zA-Z0-9]{16})\b.*?\b([a-zA-Z0-9]{16})\b"
+        );
+        if (match2.Success)
+            return match2.Groups[1].Value + match2.Groups[2].Value + match2.Groups[3].Value;
+
+        throw new Exception("Nonce not found");
     }
 
-    private async Task<string> DecryptWithNewKeyAsync(string ciphered)
+    private static string DecryptLocal(string cipherText, string secret, string nonce)
     {
-        var newKey = await RequestNewKeyAsync();
-        megaKey = newKey;
-        var decryptedUrl = DecryptOpenSSL(ciphered, newKey);
-        Console.WriteLine($"Decrypted URL with new key: {decryptedUrl}");
-        return decryptedUrl;
+        // The "password" for the OpenSSL derivation is the secret key
+        return DecryptOpenSSL(cipherText, secret);
     }
 
     private async Task<string> RequestNewKeyAsync()
     {
-        try
-        {
-            var response = await _http.GetAsync(
-                "https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json"
-            );
-            response.EnsureSuccessStatusCode();
-
-            var jsonStr = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(jsonStr))
-                throw new InvalidOperationException("keys.json is empty");
-
-            var json = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonStr);
-            if (json == null || !json.ContainsKey("mega"))
-                throw new InvalidOperationException("Mega key not found in keys.json");
-
-            var key = json["mega"];
-            Console.WriteLine($"Using Mega Key: {key}");
-            megaKey = key;
-            return key;
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Failed to fetch keys.json: {ex.Message}");
-            throw;
-        }
+        var json = await _http.GetStringAsync(
+            "https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json"
+        );
+        var data = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
+        _cachedKey = data?["mega"] ?? throw new Exception("Key not found");
+        return _cachedKey;
     }
 
-    private static string DecryptOpenSSL(string encBase64, string password)
+    // --- Standard OpenSSL Decryption Helper ---
+    private static string DecryptOpenSSL(string base64Input, string password)
     {
-        try
-        {
-            var data = Convert.FromBase64String(encBase64);
-            if (!data.Take(8).SequenceEqual(Encoding.ASCII.GetBytes("Salted__")))
-            {
-                throw new InvalidOperationException("Invalid encrypted data format.");
-            }
+        var data = Convert.FromBase64String(base64Input);
+        var salt = data.Skip(8).Take(8).ToArray();
+        var ciphertext = data.Skip(16).ToArray();
 
-            var salt = data.Skip(8).Take(8).ToArray();
-            var (key, iv) = OpenSSLKeyIv(Encoding.UTF8.GetBytes(password), salt);
+        var (key, iv) = DeriveKeyAndIv(password, salt);
 
-            using var cipher = Aes.Create();
-            cipher.Mode = CipherMode.CBC;
-            cipher.Padding = PaddingMode.PKCS7;
-            cipher.Key = key;
-            cipher.IV = iv;
+        using var aes = Aes.Create();
+        aes.Key = key;
+        aes.IV = iv;
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
 
-            using var decryptor = cipher.CreateDecryptor();
-            using var ms = new MemoryStream(data.Skip(16).ToArray());
-            using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-            using var reader = new StreamReader(cs);
-            return reader.ReadToEnd();
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Decryption failed: {ex.Message}");
-            throw new InvalidOperationException($"Decryption failed: {ex.Message}", ex);
-        }
+        using var decryptor = aes.CreateDecryptor();
+        using var ms = new MemoryStream(ciphertext);
+        using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
+        using var reader = new StreamReader(cs);
+        return reader.ReadToEnd();
     }
 
-    private static (byte[] key, byte[] iv) OpenSSLKeyIv(
-        byte[] password,
-        byte[] salt,
-        int keyLen = 32,
-        int ivLen = 16
-    )
+    private static (byte[] Key, byte[] Iv) DeriveKeyAndIv(string password, byte[] salt)
     {
-        var d = new byte[0];
-        var d_i = new byte[0];
-        while (d.Length < keyLen + ivLen)
+        var passBytes = Encoding.UTF8.GetBytes(password);
+        var combined = new List<byte>();
+        var currentHash = Array.Empty<byte>();
+
+        while (combined.Count < 48) // 32 for Key + 16 for IV
         {
-            using var md = MD5.Create();
-            d_i = md.ComputeHash(Combine(d_i, password, salt));
-            d = Combine(d, d_i);
+            using var md5 = MD5.Create();
+            var input = currentHash.Concat(passBytes).Concat(salt).ToArray();
+            currentHash = md5.ComputeHash(input);
+            combined.AddRange(currentHash);
         }
 
-        var key = new byte[keyLen];
-        var iv = new byte[ivLen];
-        Array.Copy(d, 0, key, 0, keyLen);
-        Array.Copy(d, keyLen, iv, 0, ivLen);
-
-        return (key, iv);
-    }
-
-    private static byte[] Combine(params byte[][] arrays)
-    {
-        var length = arrays.Sum(a => a.Length);
-        var result = new byte[length];
-        var offset = 0;
-        foreach (var array in arrays)
-        {
-            Buffer.BlockCopy(array, 0, result, offset, array.Length);
-            offset += array.Length;
-        }
-        return result;
+        return (combined.Take(32).ToArray(), combined.Skip(32).Take(16).ToArray());
     }
 }
