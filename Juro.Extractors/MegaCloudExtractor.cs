@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
+using Juro.Core.Models;
 using Juro.Core.Models.Videos;
 using Juro.Core.Utils;
 using Juro.Core.Utils.Extensions;
@@ -97,6 +98,31 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
         var isEncrypted = data["encrypted"]?.GetValue<bool>() ?? true;
         var key = _cachedKey ?? await RequestNewKeyAsync();
 
+        // 5. Extract Subtitles from tracks (only captions)
+        var subtitles = new List<Subtitle>();
+        if (data["tracks"] is JsonArray tracks)
+        {
+            foreach (var track in tracks)
+            {
+                var kind = track?["kind"]?.ToString();
+
+                // Only include captions
+                if (!string.Equals(kind, "captions", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var file = track?["file"]?.ToString();
+                var label = track?["label"]?.ToString();
+
+                if (string.IsNullOrWhiteSpace(file))
+                    continue;
+
+                var subtitleType = GetSubtitleType(file);
+                var language = !string.IsNullOrEmpty(label) ? label : "Unknown";
+
+                subtitles.Add(new Subtitle(file, language, subtitleType));
+            }
+        }
+
         var videoSources = new List<VideoSource>();
         foreach (var source in data["sources"]!.AsArray())
         {
@@ -105,9 +131,7 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
                 continue;
 
             var m3u8Url =
-                (isEncrypted && !file.Contains(".m3u8"))
-                    ? MegaCloudExtractor.DecryptLocal(file, key, nonce)
-                    : file;
+                (isEncrypted && !file.Contains(".m3u8")) ? DecryptLocal(file, key, nonce) : file;
 
             videoSources.Add(
                 new VideoSource
@@ -121,6 +145,17 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
         }
 
         return videoSources;
+    }
+
+    private static SubtitleType GetSubtitleType(string url)
+    {
+        if (url.Contains(".vtt", StringComparison.OrdinalIgnoreCase))
+            return SubtitleType.VTT;
+        if (url.Contains(".ass", StringComparison.OrdinalIgnoreCase))
+            return SubtitleType.ASS;
+        if (url.Contains(".srt", StringComparison.OrdinalIgnoreCase))
+            return SubtitleType.SRT;
+        return SubtitleType.VTT; // Default to VTT
     }
 
     private static string ExtractNonce(string html)
