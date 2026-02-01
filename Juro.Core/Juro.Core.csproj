@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
     <PackageReference
       Include="System.Text.Json"
-      Version="10.0.1"
+      Version="10.0.2"
       Condition="'$(TargetFrameworkIdentifier)' != '.NETCOREAPP'"
     />
     <PackageReference
