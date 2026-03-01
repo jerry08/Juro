@@ -15,7 +15,11 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CSharpier.MsBuild" Version="1.2.4" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="all" />
+    <PackageReference
+      Include="Microsoft.SourceLink.GitHub"
+      Version="10.0.103"
+      PrivateAssets="all"
+    />
   </ItemGroup>
   <!-- .NET Framework -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
