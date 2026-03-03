@@ -66,11 +66,17 @@ public class AniKai : AnimeBaseProvider, IAnimeProvider
         {
             ["Accept"] = "text/html, */*; q=0.01",
             ["Accept-Language"] = "en-US,en;q=0.5",
+            ["Cache-Control"] = "no-cache",
+            ["Connection"] = "keep-alive",
+            ["Cookie"] = "__p_mov=1; usertype=guest",
             ["Host"] = uri.Host,
+            ["Pragma"] = "no-cache",
+            ["Priority"] = "u=0",
             ["Referer"] = $"{BaseUrl}/",
             ["Sec-Fetch-Dest"] = "empty",
             ["Sec-Fetch-Mode"] = "cors",
             ["Sec-Fetch-Site"] = "same-origin",
+            ["Sec-GPC"] = "1",
         };
     }
 
