@@ -44,4 +44,9 @@ public enum AnimeSites
     /// Parses anime and information from Zoro.
     /// </summary>
     Zoro,
+
+    /// <summary>
+    /// Parses anime and information from AniKai.
+    /// </summary>
+    AniKai,
 }

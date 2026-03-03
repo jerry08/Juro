@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Juro.Providers.Anime;
@@ -6,13 +5,13 @@ using Xunit;
 
 namespace Juro.Tests.Specs.Anime;
 
-public class HiAnimeSpecs
+public class AniKaiSpecs
 {
     [Fact]
     public async Task I_can_get_results_from_a_search_query()
     {
         // Arrange
-        var provider = new HiAnime();
+        var provider = new AniKai();
 
         // Act
         var results = await provider.SearchAsync("naruto");
@@ -25,7 +24,7 @@ public class HiAnimeSpecs
     public async Task I_can_get_more_details_from_an_anime()
     {
         // Arrange
-        var provider = new HiAnime();
+        var provider = new AniKai();
 
         // Act
         var results = await provider.SearchAsync("naruto");
@@ -44,7 +43,7 @@ public class HiAnimeSpecs
     public async Task I_can_get_episode_results_from_an_anime()
     {
         // Arrange
-        var provider = new HiAnime();
+        var provider = new AniKai();
 
         // Act
         var results = await provider.SearchAsync("naruto");
@@ -63,7 +62,7 @@ public class HiAnimeSpecs
     public async Task I_can_get_video_server_results_from_an_episode()
     {
         // Arrange
-        var provider = new HiAnime();
+        var provider = new AniKai();
 
         // Act
         var results = await provider.SearchAsync("naruto");
@@ -88,7 +87,7 @@ public class HiAnimeSpecs
     public async Task I_can_get_video_results_from_a_video_server()
     {
         // Arrange
-        var provider = new HiAnime();
+        var provider = new AniKai();
 
         // Act
         var results = await provider.SearchAsync("naruto");
@@ -119,7 +118,7 @@ public class HiAnimeSpecs
     public async Task I_can_get_video_results_from_all_video_servers()
     {
         // Arrange
-        var provider = new HiAnime();
+        var provider = new AniKai();
 
         // Act
         var results = await provider.SearchAsync("naruto");
@@ -150,10 +149,10 @@ public class HiAnimeSpecs
     }
 
     [Fact]
-    public async Task I_can_get_video_subtitles_from_all_video_servers()
+    public async Task I_can_get_video_results_with_m3u8_format()
     {
         // Arrange
-        var provider = new HiAnime();
+        var provider = new AniKai();
 
         // Act
         var results = await provider.SearchAsync("spy x family");
@@ -174,16 +173,10 @@ public class HiAnimeSpecs
         videoServers.Should().NotBeEmpty();
 
         // Act
-        foreach (var videoServer in videoServers)
-        {
-            var videos = await provider.GetVideosAsync(videoServer);
+        var videos = await provider.GetVideosAsync(videoServers[0]);
 
-            // Assert
-            videos.Should().NotBeEmpty();
-
-            var subtitles = videos.SelectMany(v => v.Subtitles).ToList();
-            //videos.WriteLine($"\nTotal subtitles found: {subtitles.Count}");
-            subtitles.Should().NotBeEmpty("HiAnime HD-1/HD-2 servers should return subtitles");
-        }
+        // Assert
+        videos.Should().NotBeEmpty();
+        videos[0].VideoUrl.Should().Contain(".m3u8");
     }
 }
