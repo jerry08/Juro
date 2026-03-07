@@ -188,8 +188,19 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
         var json = await _http.GetStringAsync(
             "https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json"
         );
-        var data = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-        _cachedKey = data?["mega"] ?? throw new Exception("Key not found");
+
+        var data = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json);
+
+        if (
+            data is null
+            || !data.TryGetValue("cinesrc", out var cinesrc)
+            || !cinesrc.TryGetValue("getStream", out var key)
+        )
+        {
+            throw new Exception("Key not found");
+        }
+
+        _cachedKey = key;
         return _cachedKey;
     }
 
