@@ -19,7 +19,7 @@ using Juro.Extractors;
 namespace Juro.Providers.Anime;
 
 /// <summary>
-/// Client for interacting with AniKai.to (AnimeKai).
+/// Client for interacting with AnimeKai.
 /// This is a standalone provider — not ZoroTheme-based.
 /// </summary>
 public class AniKai : AnimeBaseProvider, IAnimeProvider
@@ -31,7 +31,7 @@ public class AniKai : AnimeBaseProvider, IAnimeProvider
     public string Key => Name;
     public string Name => "AniKai";
     public string Language => "en";
-    public string BaseUrl => "https://anikai.to";
+    public string BaseUrl => "https://animekai.to";
     public bool IsDubAvailableSeparately => false;
 
     /// <summary>
@@ -98,8 +98,7 @@ public class AniKai : AnimeBaseProvider, IAnimeProvider
         CancellationToken cancellationToken = default
     )
     {
-        var keyword = Regex.Replace(query, @"[\W_]+", "+");
-        var url = $"{BaseUrl}/browser?keyword={keyword}";
+        var url = $"{BaseUrl}/browser?keyword={Uri.EscapeDataString(query)}";
         var response = await _http.ExecuteAsync(url, GetHeaders(), cancellationToken);
         return ParseAnimeList(response);
     }
@@ -281,7 +280,7 @@ public class AniKai : AnimeBaseProvider, IAnimeProvider
             return [];
 
         // Generate token and fetch episode list
-        var token = await _megaUp.GenerateTokenAsync(aniId!, cancellationToken);
+        var token = await _megaUp.GenerateTokenAsync(aniId!, BaseUrl, cancellationToken);
         var ajaxUrl = $"{BaseUrl}/ajax/episodes/list?ani_id={aniId}&_={token}";
         var ajaxResponse = await _http.ExecuteAsync(
             ajaxUrl,
@@ -349,7 +348,7 @@ public class AniKai : AnimeBaseProvider, IAnimeProvider
             return [];
 
         // Fetch server list
-        var token = await _megaUp.GenerateTokenAsync(epToken, cancellationToken);
+        var token = await _megaUp.GenerateTokenAsync(epToken, BaseUrl, cancellationToken);
         var ajaxUrl = $"{BaseUrl}/ajax/links/list?token={epToken}&_={token}";
         var referer = $"{BaseUrl}/watch/{episodeId.Split('$')[0]}";
         var response = await _http.ExecuteAsync(
@@ -388,7 +387,11 @@ public class AniKai : AnimeBaseProvider, IAnimeProvider
                     continue;
 
                 // Fetch the actual embed URL for this server
-                var linkToken = await _megaUp.GenerateTokenAsync(linkId, cancellationToken);
+                var linkToken = await _megaUp.GenerateTokenAsync(
+                    linkId,
+                    BaseUrl,
+                    cancellationToken
+                );
                 var linkUrl = $"{BaseUrl}/ajax/links/view?id={linkId}&_={linkToken}";
                 var linkResponse = await _http.ExecuteAsync(
                     linkUrl,
@@ -403,6 +406,7 @@ public class AniKai : AnimeBaseProvider, IAnimeProvider
                 // Decode the iframe data to get the video URL
                 var (videoUrl, _, _) = await _megaUp.DecodeIframeDataAsync(
                     linkResult!,
+                    BaseUrl,
                     cancellationToken
                 );
 

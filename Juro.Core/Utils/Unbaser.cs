@@ -39,7 +39,11 @@ internal class Unbaser(int @base)
         for (var i = 0; i < valArray.Length; i++)
         {
             var cipher = valArray[i];
-            returnVal += (int)(Math.Pow(_base, i) * (dict?[cipher] ?? 0));
+            var index = dict is null ? -1 : Array.IndexOf(dict, cipher);
+            if (index < 0)
+                continue;
+
+            returnVal += (int)(Math.Pow(_base, i) * index);
         }
 
         return returnVal;

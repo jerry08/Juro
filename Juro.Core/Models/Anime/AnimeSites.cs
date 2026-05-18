@@ -49,4 +49,19 @@ public enum AnimeSites
     /// Parses anime and information from AniKai.
     /// </summary>
     AniKai,
+
+    /// <summary>
+    /// Parses anime and information from AnimeGG.
+    /// </summary>
+    AnimeGG,
+
+    /// <summary>
+    /// Parses anime and information from Miruro.
+    /// </summary>
+    Miruro,
+
+    /// <summary>
+    /// Parses anime and information from KickAssAnime.
+    /// </summary>
+    KickAssAnime,
 }

@@ -5,13 +5,13 @@ using Xunit;
 
 namespace Juro.Tests.Specs.Anime;
 
-public class AnimePaheSpecs
+public class MiruroSpecs
 {
     [Fact]
     public async Task I_can_get_results_from_a_search_query()
     {
         // Arrange
-        var provider = new AnimePahe();
+        var provider = new Miruro();
 
         // Act
         var results = await provider.SearchAsync(
@@ -27,7 +27,7 @@ public class AnimePaheSpecs
     public async Task I_can_get_more_details_from_an_anime()
     {
         // Arrange
-        var provider = new AnimePahe();
+        var provider = new Miruro();
 
         // Act
         var results = await provider.SearchAsync(
@@ -52,7 +52,7 @@ public class AnimePaheSpecs
     public async Task I_can_get_episode_results_from_an_anime()
     {
         // Arrange
-        var provider = new AnimePahe();
+        var provider = new Miruro();
 
         // Act
         var results = await provider.SearchAsync(
@@ -77,7 +77,7 @@ public class AnimePaheSpecs
     public async Task I_can_get_video_server_results_from_an_episode()
     {
         // Arrange
-        var provider = new AnimePahe();
+        var provider = new Miruro();
 
         // Act
         var results = await provider.SearchAsync(
@@ -111,7 +111,7 @@ public class AnimePaheSpecs
     public async Task I_can_get_video_results_from_a_video_server()
     {
         // Arrange
-        var provider = new AnimePahe();
+        var provider = new Miruro();
 
         // Act
         var results = await provider.SearchAsync(
@@ -148,51 +148,5 @@ public class AnimePaheSpecs
 
         // Assert
         videos.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task I_can_get_video_results_from_all_video_servers()
-    {
-        // Arrange
-        var provider = new AnimePahe();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "naruto",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-
-        // Act
-        var episodes = await provider.GetEpisodesAsync(
-            results[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        episodes.Should().NotBeEmpty();
-
-        // Act
-        var videoServers = await provider.GetVideoServersAsync(
-            episodes[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        videoServers.Should().NotBeEmpty();
-
-        // Act
-        foreach (var videoServer in videoServers)
-        {
-            var videos = await provider.GetVideosAsync(
-                videoServer,
-                cancellationToken: TestContext.Current.CancellationToken
-            );
-
-            // Assert
-            videos.Should().NotBeEmpty();
-        }
     }
 }

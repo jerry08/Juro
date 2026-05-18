@@ -1,6 +1,7 @@
 using System.Linq;
 using FluentAssertions;
 using Juro.Clients;
+using Juro.Providers.Anime;
 using Xunit;
 
 namespace Juro.Tests.Specs;
@@ -18,5 +19,21 @@ public class MainSpecs
 
         // Assert
         results.Should().HaveCount(0);
+    }
+
+    [Fact]
+    public void Anime_client_discovers_added_anime_providers()
+    {
+        // Arrange
+        _ = typeof(AnimeGG);
+        var client = new AnimeClient();
+
+        // Act
+        var providerTypes = client.GetAllProviders().Select(x => x.GetType()).ToList();
+
+        // Assert
+        providerTypes.Should().Contain(typeof(AnimeGG));
+        providerTypes.Should().Contain(typeof(Miruro));
+        providerTypes.Should().Contain(typeof(KickAssAnime));
     }
 }

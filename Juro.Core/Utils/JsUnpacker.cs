@@ -135,7 +135,11 @@ public static class JsUnpacker
                     (match) =>
                     {
                         var word = match.Value;
-                        var unbased = symtab[unbaser.Unbase(word)];
+                        var unbasedIndex = unbaser.Unbase(word);
+                        if (unbasedIndex < 0 || unbasedIndex >= symtab.Length)
+                            return word;
+
+                        var unbased = symtab[unbasedIndex];
                         if (string.IsNullOrEmpty(unbased))
                             return word;
 

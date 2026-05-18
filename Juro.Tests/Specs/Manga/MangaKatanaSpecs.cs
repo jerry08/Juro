@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Juro.Providers.Manga;
 using Xunit;
@@ -15,7 +15,10 @@ public class MangaKatanaSpecs
         var provider = new MangaKatana();
 
         // Act
-        var results = await provider.SearchAsync(query);
+        var results = await provider.SearchAsync(
+            query,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
@@ -29,13 +32,19 @@ public class MangaKatanaSpecs
         var provider = new MangaKatana();
 
         // Act
-        var results = await provider.SearchAsync(query);
+        var results = await provider.SearchAsync(
+            query,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var mangaInfo = await provider.GetMangaInfoAsync(results[0].Id);
+        var mangaInfo = await provider.GetMangaInfoAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         mangaInfo.Should().NotBeNull();
@@ -49,13 +58,19 @@ public class MangaKatanaSpecs
         var provider = new MangaKatana();
 
         // Act
-        var results = await provider.SearchAsync(query);
+        var results = await provider.SearchAsync(
+            query,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var mangaInfo = await provider.GetMangaInfoAsync(results[0].Id);
+        var mangaInfo = await provider.GetMangaInfoAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         mangaInfo.Should().NotBeNull();
@@ -72,13 +87,19 @@ public class MangaKatanaSpecs
         var provider = new MangaKatana();
 
         // Act
-        var results = await provider.SearchAsync(query);
+        var results = await provider.SearchAsync(
+            query,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var mangaInfo = await provider.GetMangaInfoAsync(results[0].Id);
+        var mangaInfo = await provider.GetMangaInfoAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         mangaInfo.Should().NotBeNull();
@@ -87,7 +108,10 @@ public class MangaKatanaSpecs
         mangaInfo.Chapters.Should().NotBeEmpty();
 
         // Act
-        var pages = await provider.GetChapterPagesAsync(mangaInfo.Chapters[0].Id);
+        var pages = await provider.GetChapterPagesAsync(
+            mangaInfo.Chapters[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         pages.Should().NotBeEmpty();

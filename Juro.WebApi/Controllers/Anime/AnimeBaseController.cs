@@ -55,6 +55,7 @@ public class AnimeBaseController(IAnimeProvider animeProvider) : ControllerBase
         if (
             Uri.IsWellFormedUriString(query, UriKind.Absolute)
             && !query.Contains("animepahe.ru/play/", StringComparison.OrdinalIgnoreCase)
+            && !query.Contains("animepahe.pw/play/", StringComparison.OrdinalIgnoreCase)
         )
         {
             var server = new VideoServer(query);

@@ -27,7 +27,7 @@ public class HiAnime(IHttpClientFactory httpClientFactory) : ZoroTheme
     /// </summary>
     protected override string AjaxRoute => "/v2";
 
-    protected override List<string> HosterNames => ["HD-1", "HD-2", "StreamTape", "StreamSB"];
+    protected override List<string> HosterNames => ["HD-1", "HD-2", "HD-3", "StreamTape"];
 
     /// <summary>
     /// Initializes an instance of <see cref="HiAnime"/>.
@@ -52,9 +52,8 @@ public class HiAnime(IHttpClientFactory httpClientFactory) : ZoroTheme
             var s when s.Contains("hd-1") || s.Contains("vidcloud") => new MegaCloudExtractor(
                 _httpClientFactory
             ),
-            var s when s.Contains("hd-2") || s.Contains("vidstreaming") => new MegaCloudExtractor(
-                _httpClientFactory
-            ),
+            var s when s.Contains("hd-2") || s.Contains("hd-3") || s.Contains("vidstreaming") =>
+                new MegaCloudExtractor(_httpClientFactory),
             var s when s.Contains("streamtape") => new StreamTapeExtractor(_httpClientFactory),
             var s when s.Contains("streamsb") => new StreamSBExtractor(_httpClientFactory),
             _ => base.GetVideoExtractor(server),

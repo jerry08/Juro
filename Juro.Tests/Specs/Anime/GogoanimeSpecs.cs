@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -23,7 +23,10 @@ public class GogoanimeSpecs
         var provider = new Gogoanime();
 
         // Act
-        var results = await provider.SearchAsync(query);
+        var results = await provider.SearchAsync(
+            query,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
@@ -40,13 +43,19 @@ public class GogoanimeSpecs
         var provider = new Gogoanime();
 
         // Act
-        var results = await provider.SearchAsync(query);
+        var results = await provider.SearchAsync(
+            query,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var animeInfo = await provider.GetAnimeInfoAsync(results[0].Id);
+        var animeInfo = await provider.GetAnimeInfoAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         animeInfo.Should().NotBeNull();
@@ -63,13 +72,19 @@ public class GogoanimeSpecs
         var provider = new Gogoanime();
 
         // Act
-        var results = await provider.SearchAsync(query);
+        var results = await provider.SearchAsync(
+            query,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var episodes = await provider.GetEpisodesAsync(results[0].Id);
+        var episodes = await provider.GetEpisodesAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         episodes.Should().NotBeEmpty();
@@ -82,19 +97,28 @@ public class GogoanimeSpecs
         var provider = new Gogoanime();
 
         // Act
-        var results = await provider.SearchAsync("naruto");
+        var results = await provider.SearchAsync(
+            "naruto",
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var episodes = await provider.GetEpisodesAsync(results[0].Id);
+        var episodes = await provider.GetEpisodesAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         episodes.Should().NotBeEmpty();
 
         // Act
-        var videoServers = await provider.GetVideoServersAsync(episodes[0].Id);
+        var videoServers = await provider.GetVideoServersAsync(
+            episodes[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         videoServers.Should().NotBeEmpty();
@@ -107,25 +131,37 @@ public class GogoanimeSpecs
         var provider = new Gogoanime();
 
         // Act
-        var results = await provider.SearchAsync("naruto");
+        var results = await provider.SearchAsync(
+            "naruto",
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var episodes = await provider.GetEpisodesAsync(results[0].Id);
+        var episodes = await provider.GetEpisodesAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         episodes.Should().NotBeEmpty();
 
         // Act
-        var videoServers = await provider.GetVideoServersAsync(episodes[0].Id);
+        var videoServers = await provider.GetVideoServersAsync(
+            episodes[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         videoServers.Should().NotBeEmpty();
 
         // Act
-        var videos = await provider.GetVideosAsync(videoServers[0]);
+        var videos = await provider.GetVideosAsync(
+            videoServers[0],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         videos.Should().NotBeEmpty();
@@ -138,19 +174,28 @@ public class GogoanimeSpecs
         var provider = new Gogoanime();
 
         // Act
-        var results = await provider.SearchAsync("naruto");
+        var results = await provider.SearchAsync(
+            "naruto",
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var episodes = await provider.GetEpisodesAsync(results[0].Id);
+        var episodes = await provider.GetEpisodesAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         episodes.Should().NotBeEmpty();
 
         // Act
-        var videoServers = await provider.GetVideoServersAsync(episodes[0].Id);
+        var videoServers = await provider.GetVideoServersAsync(
+            episodes[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         videoServers.Should().NotBeEmpty();
@@ -158,7 +203,10 @@ public class GogoanimeSpecs
         // Act
         foreach (var videoServer in videoServers)
         {
-            var videos = await provider.GetVideosAsync(videoServer);
+            var videos = await provider.GetVideosAsync(
+                videoServer,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
 
             // Assert
             videos.Should().NotBeEmpty();
@@ -172,19 +220,28 @@ public class GogoanimeSpecs
         var provider = new Gogoanime();
 
         // Act
-        var results = await provider.SearchAsync("naruto");
+        var results = await provider.SearchAsync(
+            "naruto",
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         results.Should().NotBeEmpty();
 
         // Act
-        var episodes = await provider.GetEpisodesAsync(results[0].Id);
+        var episodes = await provider.GetEpisodesAsync(
+            results[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         episodes.Should().NotBeEmpty();
 
         // Act
-        var videoServers = await provider.GetVideoServersAsync(episodes[0].Id);
+        var videoServers = await provider.GetVideoServersAsync(
+            episodes[0].Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         // Assert
         videoServers.Should().NotBeEmpty();
@@ -192,7 +249,10 @@ public class GogoanimeSpecs
         // Act
         foreach (var videoServer in videoServers)
         {
-            var videos = await provider.GetVideosAsync(videoServer);
+            var videos = await provider.GetVideosAsync(
+                videoServer,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
 
             // Assert
             videos.Should().NotBeEmpty();
@@ -201,7 +261,11 @@ public class GogoanimeSpecs
             foreach (var video in videos.Where(x => x.Format is VideoType.M3u8))
             {
                 var downloader = new HlsDownloader();
-                var qualities = await downloader.GetQualitiesAsync(video.VideoUrl, video.Headers);
+                var qualities = await downloader.GetQualitiesAsync(
+                    video.VideoUrl,
+                    video.Headers,
+                    TestContext.Current.CancellationToken
+                );
 
                 // Assert
                 qualities.Should().NotBeEmpty();

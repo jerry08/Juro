@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json.Nodes;
@@ -29,9 +30,23 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
     : AnimeBaseProvider(httpClientFactory),
         IAnimeProvider
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private const string DesktopUserAgent =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
 
-    private static readonly Regex _videoServerRegex = new("(.+) · (.+)p \\((.+)MB\\) ?(.*)");
+    private static readonly Regex _animeSessionRegex = new(
+        @"/anime/(?<session>[\w-]+)",
+        RegexOptions.Compiled
+    );
+    private static readonly Regex _animeIdRegex = new(
+        @"(?:/a/|anime_id=)(?<id>\d+)",
+        RegexOptions.Compiled
+    );
+    private static readonly Regex _videoServerRegex = new(
+        @"(?<group>.+?)\s*·\s*(?<quality>\d+)p\s*\((?<size>.+?)MB\)\s*(?<audio>.*)",
+        RegexOptions.Compiled
+    );
+
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     public string Key => Name;
 
@@ -41,7 +56,7 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
 
     public bool IsDubAvailableSeparately => false;
 
-    public string BaseUrl => "https://animepahe.ru";
+    public string BaseUrl => "https://animepahe.pw";
 
     /// <summary>
     /// Initializes an instance of <see cref="AnimePahe"/>.
@@ -59,7 +74,7 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
     public async ValueTask<List<IAnimeInfo>> SearchAsync(
         string query,
         CancellationToken cancellationToken = default
-    ) => await SearchAsync(query, false, cancellationToken);
+    ) => await SearchAsync(query, true, cancellationToken);
 
     /// <inheritdoc cref="IAnimeProvider.SearchAsync" />
     public async ValueTask<List<IAnimeInfo>> SearchAsync(
@@ -68,75 +83,63 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        var animes = new List<IAnimeInfo>();
-
-        var http = _httpClientFactory.CreateClient().BypassDdg();
-
+        var http = CreateClient();
         var response = await http.ExecuteAsync(
             $"{BaseUrl}/api?m=search&q={Uri.EscapeDataString(query)}",
+            BuildHeaders(),
             cancellationToken
         );
-
-        if (string.IsNullOrWhiteSpace(response))
-            return animes;
-
-        var data = JsonNode.Parse(response)?["data"];
+        var data = JsonNode.Parse(response)?["data"] as JsonArray;
         if (data is null)
-            return animes;
+            return [];
 
-        return data.AsArray()
+        return data.OfType<JsonObject>()
             .Select(x =>
                 (IAnimeInfo)
-                    new AnimePaheInfo()
+                    new AnimePaheInfo
                     {
-                        Id = useId ? x!["id"]!.ToString() : x!["session"]!.ToString(),
-                        Title = x["title"]!.ToString(),
-                        Type = x["type"]!.ToString(),
-                        Episodes = int.TryParse(x["episodes"]?.ToString(), out var episodes)
-                            ? episodes
-                            : 0,
-                        Status = x["status"]!.ToString(),
-                        Season = x["season"]!.ToString(),
-                        Released = x["year"]?.ToString(),
-                        Score = int.TryParse(x["score"]?.ToString(), out var score) ? score : 0,
-                        Image = x["poster"]!.ToString(),
+                        Id = useId ? GetString(x, "id") : GetString(x, "session"),
+                        Title = GetString(x, "title"),
+                        Type = GetString(x, "type"),
+                        Episodes = GetInt(x, "episodes"),
+                        Status = GetString(x, "status"),
+                        Season = GetString(x, "season"),
+                        Released = GetString(x, "year"),
+                        Score = GetFloat(x, "score"),
+                        Image = GetString(x, "poster"),
                         Site = AnimeSites.AnimePahe,
+                        Link = BuildAnimeLink(useId ? GetString(x, "id") : GetString(x, "session")),
                     }
             )
             .ToList();
     }
 
-    /// <inheritdoc cref="IAnimeProvider.SearchAsync"/>
+    /// <inheritdoc cref="IPopularProvider.GetPopularAsync"/>
     public async ValueTask<List<IAnimeInfo>> GetAiringAsync(
         int page = 1,
         CancellationToken cancellationToken = default
     )
     {
-        var animes = new List<IAnimeInfo>();
-
-        var http = _httpClientFactory.CreateClient().BypassDdg();
-
+        var http = CreateClient();
         var response = await http.ExecuteAsync(
             $"{BaseUrl}/api?m=airing&page={page}",
+            BuildHeaders(),
             cancellationToken
         );
-
-        if (string.IsNullOrWhiteSpace(response))
-            return animes;
-
-        var data = JsonNode.Parse(response)?["data"];
+        var data = JsonNode.Parse(response)?["data"] as JsonArray;
         if (data is null)
-            return animes;
+            return [];
 
-        return data.AsArray()
+        return data.OfType<JsonObject>()
             .Select(x =>
                 (IAnimeInfo)
-                    new AnimeInfo()
+                    new AnimeInfo
                     {
-                        Id = x!["anime_session"]!.ToString(),
-                        Title = x["anime_title"]!.ToString(),
-                        Image = x["snapshot"]!.ToString(),
+                        Id = GetString(x, "anime_id"),
+                        Title = GetString(x, "anime_title"),
+                        Image = GetString(x, "snapshot"),
                         Site = AnimeSites.AnimePahe,
+                        Link = BuildAnimeLink(GetString(x, "anime_id")),
                     }
             )
             .ToList();
@@ -148,82 +151,63 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        var http = _httpClientFactory.CreateClient().BypassDdg();
-
-        var response = await http.ExecuteAsync($"{BaseUrl}/anime/{id}", cancellationToken);
-
+        var http = CreateClient();
+        var path = BuildAnimePath(id);
+        var response = await http.ExecuteAsync(
+            $"{BaseUrl}{path}",
+            BuildHeaders(),
+            cancellationToken
+        );
         var document = Html.Parse(response);
 
-        var anime = new AnimePaheInfo() { Id = id, Site = AnimeSites.AnimePahe };
+        var anime = new AnimePaheInfo { Id = NormalizeAnimeId(id), Site = AnimeSites.AnimePahe };
 
         anime.Title =
             document
+                .DocumentNode.SelectSingleNode("//div[contains(@class, 'title-wrapper')]/h1/span")
+                ?.InnerText.Trim()
+            ?? document
                 .DocumentNode.SelectSingleNode(
                     ".//div[contains(@class, 'header-wrapper')]/header/div/h1/span"
                 )
-                ?.InnerText
-            ?? "";
+                ?.InnerText.Trim()
+            ?? string.Empty;
 
-        anime.Image = document
-            .DocumentNode.SelectSingleNode(".//header/div/div/div/a/img")!
-            .Attributes["data-src"]!.Value;
+        anime.Image =
+            document
+                .DocumentNode.SelectSingleNode("//div[contains(@class, 'anime-poster')]//a")
+                ?.GetAttributeValue("href", string.Empty)
+            ?? document
+                .DocumentNode.SelectSingleNode(".//header/div/div/div/a/img")
+                ?.GetAttributeValue("data-src", string.Empty);
 
         anime.Summary =
             document
-                .DocumentNode.SelectSingleNode(".//div[contains(@class, 'anime-summary')]/div")
-                ?.InnerText
-            ?? "";
+                .DocumentNode.SelectSingleNode("//div[contains(@class, 'anime-summary')]")
+                ?.InnerText.Trim()
+            ?? string.Empty;
 
         anime.Genres =
             document
-                .DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/div/ul/li/a")
-                ?.Select(el => new Genre(el.Attributes["title"].Value))
+                .DocumentNode.SelectNodes(
+                    "//div[contains(@class, 'anime-genre')]//li | //div[contains(@class, 'anime-info')]//p[contains(., 'Demographic:')]/a | //div[contains(@class, 'anime-info')]//p[contains(., 'Theme:')]/a"
+                )
+                ?.Select(el => new Genre(el.InnerText.Trim()))
+                .Where(x => !string.IsNullOrWhiteSpace(x.Name))
                 .ToList()
             ?? [];
 
-        var list =
-            document.DocumentNode.SelectNodes(".//div[contains(@class, 'anime-info')]/p")?.ToList()
-            ?? [];
-
-        var typeNode = list.Find(x =>
-            x.ChildNodes.ElementAtOrDefault(0)?.InnerText?.ToLower().Contains("type") == true
+        anime.Status = SelectInfoValue(document, "Status");
+        anime.Category = SelectInfoValue(document, "Studios");
+        anime.Season = SelectInfoValue(document, "Season") ?? string.Empty;
+        anime.Released = SelectInfoValue(document, "Aired")
+            ?.Split(new[] { "to" }, StringSplitOptions.None)[0]
+            .Trim();
+        anime.OtherNames = DefaultIfBlank(
+            SelectInfoValue(document, "Synonyms"),
+            SelectInfoValue(document, "Japanese")
         );
-
-        var otherNamesCount = typeNode is not null ? list.IndexOf(typeNode) : 0;
-
-        anime.Type = typeNode?.SelectSingleNode(".//a")?.InnerText?.Trim() ?? "";
-
-        var otherNameNodes = list.Take(otherNamesCount).ToList();
-
-        anime.OtherNames =
-            otherNameNodes.FirstOrDefault()?.ChildNodes.ElementAtOrDefault(1)?.InnerText?.Trim()
-            ?? "";
-
-        var releasedNode = list.Find(x =>
-            x.ChildNodes.ElementAtOrDefault(1)?.InnerText?.ToLower().Contains("aired") == true
-        );
-
-        anime.Released =
-            releasedNode
-                ?.InnerText?.Split(new[] { "to" }, StringSplitOptions.None)[0]
-                .Trim()
-                .Replace("Aired:", "")
-                .Replace("\n", "")
-                .Replace("\r", "")
-                .Replace("\t", "")
-            ?? "";
-
-        var statusNode = list.Find(x =>
-            x.ChildNodes.ElementAtOrDefault(1)?.InnerText?.ToLower().Contains("status") == true
-        );
-
-        anime.Status = statusNode?.SelectSingleNode(".//a")?.InnerText?.Trim() ?? "";
-
-        var seasonNode = list.Find(x =>
-            x.ChildNodes.ElementAtOrDefault(0)?.InnerText?.ToLower().Contains("season") == true
-        );
-
-        anime.Season = seasonNode?.SelectSingleNode(".//a")?.InnerText?.Trim() ?? "";
+        anime.Link = $"{BaseUrl}{path}";
 
         return anime;
     }
@@ -234,66 +218,46 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        var list = new List<Episode>();
+        var session = await ResolveSessionAsync(id, cancellationToken);
+        if (string.IsNullOrWhiteSpace(session))
+            return [];
 
-        var http = _httpClientFactory.CreateClient().BypassDdg();
-
+        var http = CreateClient();
         var response = await http.ExecuteAsync(
-            $"{BaseUrl}/api?m=release&id={id}&sort=episode_asc&page=1",
+            $"{BaseUrl}/api?m=release&id={session}&sort=episode_asc&page=1",
+            BuildHeaders(),
             cancellationToken
         );
+        var firstPage = JsonNode.Parse(response) as JsonObject;
+        if (firstPage is null)
+            return [];
 
-        var data = JsonNode.Parse(response);
-
-        Episode epsSelector(JsonNode? el)
+        var episodes = ParseEpisodePage(firstPage, session).ToList();
+        var lastPage = GetInt(firstPage, "last_page", 1);
+        if (lastPage > 1)
         {
-            var link = $"{BaseUrl}/play/{id}/{el!["session"]}";
-            var epNum = Convert.ToInt32(el["episode"]?.ToString());
+            var functions = Enumerable
+                .Range(2, lastPage - 1)
+                .Select(page =>
+                    (Func<Task<string>>)(
+                        async () =>
+                            await http.ExecuteAsync(
+                                $"{BaseUrl}/api?m=release&id={session}&sort=episode_asc&page={page}",
+                                BuildHeaders(),
+                                cancellationToken
+                            )
+                    )
+                );
 
-            return new Episode()
-            {
-                //Description = el["description"]!.ToString(),
-                //Id = el["id"]!.ToString(),
-                //Id = el["session"]!.ToString(),
-                Id = link,
-                Name = $"Episode {epNum}",
-                Number = epNum,
-                Image = el["snapshot"]?.ToString(),
-                Description = el["title"]?.ToString(),
-                Link = link,
-                Duration = (float)TimeSpan.Parse(el["duration"]!.ToString()).TotalMilliseconds,
-            };
-        }
-
-        list.AddRange(data!["data"]!.AsArray().Select(epsSelector));
-
-        var lastPage = Convert.ToInt32(data["last_page"]?.ToString());
-
-        if (lastPage < 2)
-            return list;
-
-        // Start at index of 2 since we've already gotten the first page above.
-        var functions = Enumerable
-            .Range(2, lastPage - 1)
-            .Select(i =>
-                (Func<Task<string>>)(
-                    async () =>
-                        await http.ExecuteAsync(
-                            $"{BaseUrl}/api?m=release&id={id}&sort=episode_asc&page={i}",
-                            cancellationToken
-                        )
+            var results = await TaskEx.Run(functions, 20);
+            episodes.AddRange(
+                results.SelectMany(result =>
+                    ParseEpisodePage(JsonNode.Parse(result) as JsonObject ?? [], session)
                 )
             );
+        }
 
-        var results = await TaskEx.Run(functions, 20);
-
-        list.AddRange(
-            results.SelectMany(response =>
-                JsonNode.Parse(response)!["data"]!.AsArray().Select(epsSelector)
-            )
-        );
-
-        return list;
+        return episodes.OrderBy(x => x.Number).ToList();
     }
 
     /// <inheritdoc />
@@ -302,47 +266,73 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
         CancellationToken cancellationToken = default
     )
     {
-        //var test = $"{BaseUrl}/play/api?m=links&id={episodeId}";
-
-        var http = _httpClientFactory.CreateClient().BypassDdg();
-
+        var http = CreateClient();
+        var episodeUrl = Uri.IsWellFormedUriString(episodeId, UriKind.Absolute)
+            ? episodeId
+            : $"{BaseUrl}{episodeId}";
         var response = await http.ExecuteAsync(
-            //$"{BaseUrl}/api?m=links&id={episodeId}",
-            episodeId,
-            new Dictionary<string, string>() { { "Referer", BaseUrl } },
+            episodeUrl,
+            new Dictionary<string, string> { ["Referer"] = $"{BaseUrl}/" },
             cancellationToken
         );
-
         var document = Html.Parse(response);
+        var hlsButtons = document.DocumentNode.SelectNodes(
+            "//div[@id='resolutionMenu']/button[@data-src]"
+        );
+        if (hlsButtons is not null)
+        {
+            var hlsServers = hlsButtons
+                .Select(ParseHlsVideoServer)
+                .Where(x => x is not null)
+                .Cast<VideoServer>()
+                .ToList();
+            if (hlsServers.Count > 0)
+                return hlsServers;
+        }
 
-        return document
-            .GetElementbyId("pickDownload")
-            .SelectNodes(".//a")!
-            .Select(el =>
-            {
-                //var match = _videoServerRegex.Match(el.InnerText);
-                //var matches = _videoServerRegex.Matches(el.InnerText).OfType<Match>().ToList();
-                var match = _videoServerRegex.Match(el.InnerText);
-                var groups = match.Groups.OfType<Group>();
+        var downloadLinks = document.DocumentNode.SelectNodes("//div[@id='pickDownload']/a");
+        if (downloadLinks is null)
+            return [];
 
-                var subgroup = groups.ElementAtOrDefault(1)?.Value;
-                var quality = groups.ElementAtOrDefault(2)?.Value;
-                var mb = groups.ElementAtOrDefault(3)?.Value;
-                var audio = groups.ElementAtOrDefault(4)?.Value;
-
-                var audioName = !string.IsNullOrWhiteSpace(audio) ? $"{audio} " : "";
-
-                return new VideoServer
-                {
-                    Name = $"{subgroup} {audioName}- {quality}p",
-                    Embed = new FileUrl()
-                    {
-                        Url = el.Attributes["href"]!.Value,
-                        Headers = new() { { "Referer", BaseUrl } },
-                    },
-                };
-            })
+        return downloadLinks
+            .Select(ParseVideoServer)
+            .Where(x => x is not null)
+            .Cast<VideoServer>()
             .ToList();
+    }
+
+    private VideoServer? ParseHlsVideoServer(HtmlAgilityPack.HtmlNode element)
+    {
+        var src = element.GetAttributeValue("data-src", string.Empty);
+        if (string.IsNullOrWhiteSpace(src))
+            return null;
+
+        var fansub = element.GetAttributeValue("data-fansub", string.Empty);
+        var resolution = element.GetAttributeValue("data-resolution", string.Empty);
+        var audio = element.GetAttributeValue("data-audio", string.Empty);
+        var av1 =
+            element.GetAttributeValue("data-av1", string.Empty) == "1" ? " AV1" : string.Empty;
+        var name = string.Join(
+            " ",
+            new[]
+            {
+                DefaultIfBlank(fansub, "AnimePahe"),
+                string.IsNullOrWhiteSpace(resolution) ? string.Empty : $"- {resolution}p",
+                string.IsNullOrWhiteSpace(audio)
+                    ? string.Empty
+                    : $"({audio.ToUpperInvariant()}{av1})",
+                "HLS",
+            }.Where(x => !string.IsNullOrWhiteSpace(x))
+        );
+
+        return new VideoServer
+        {
+            Name = name,
+            Embed = new FileUrl(src)
+            {
+                Headers = new Dictionary<string, string> { ["Referer"] = $"{BaseUrl}/" },
+            },
+        };
     }
 
     /// <inheritdoc />
@@ -356,11 +346,200 @@ public class AnimePahe(IHttpClientFactory httpClientFactory)
 
         var videos = await new KwikExtractor(_httpClientFactory).ExtractAsync(
             server.Embed.Url,
+            server.Embed.Headers,
             cancellationToken
         );
 
         videos.ForEach(x => x.VideoServer = server);
-
         return videos;
     }
+
+    private VideoServer? ParseVideoServer(HtmlAgilityPack.HtmlNode element)
+    {
+        var href = element.GetAttributeValue("href", string.Empty);
+        if (string.IsNullOrWhiteSpace(href))
+            return null;
+
+        var text = element.InnerText.Trim();
+        var match = _videoServerRegex.Match(text);
+        var group = DefaultIfBlank(match.Groups["group"].Value, text);
+        var quality = match.Groups["quality"].Value;
+        var audio = match.Groups["audio"].Value.Trim();
+        var audioName = string.IsNullOrWhiteSpace(audio) ? string.Empty : $" {audio}";
+        var name = string.IsNullOrWhiteSpace(quality) ? group : $"{group}{audioName} - {quality}p";
+
+        return new VideoServer
+        {
+            Name = name,
+            Embed = new FileUrl(href)
+            {
+                Headers = new Dictionary<string, string> { ["Referer"] = $"{BaseUrl}/" },
+            },
+        };
+    }
+
+    private async ValueTask<string> ResolveSessionAsync(
+        string id,
+        CancellationToken cancellationToken
+    )
+    {
+        var session = ExtractSession(id);
+        if (!string.IsNullOrWhiteSpace(session))
+            return session!;
+
+        var animeId = ExtractAnimeId(id);
+        if (string.IsNullOrWhiteSpace(animeId))
+            return id.Trim('/');
+
+        return await FetchSessionAsync(animeId!, cancellationToken);
+    }
+
+    private async ValueTask<string> FetchSessionAsync(
+        string animeId,
+        CancellationToken cancellationToken
+    )
+    {
+        var http = CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/a/{animeId}");
+        foreach (var header in BuildHeaders())
+            request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+        using var response = await http.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+        response.EnsureSuccessStatusCode();
+
+        var redirectedPath = response.RequestMessage?.RequestUri?.AbsolutePath;
+        var session = ExtractSession(redirectedPath);
+        if (!string.IsNullOrWhiteSpace(session))
+            return session!;
+
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        return ExtractSession(body) ?? string.Empty;
+    }
+
+    private static IEnumerable<Episode> ParseEpisodePage(JsonObject page, string animeSession)
+    {
+        if (page["data"] is not JsonArray episodes)
+            yield break;
+
+        foreach (var episode in episodes.OfType<JsonObject>())
+        {
+            var session = GetString(episode, "session");
+            if (string.IsNullOrWhiteSpace(session))
+                continue;
+
+            var number = GetFloat(episode, "episode");
+            var name =
+                number % 1 == 0
+                    ? $"Episode {number:0}"
+                    : $"Episode {number.ToString(CultureInfo.InvariantCulture)}";
+            var link = $"/play/{animeSession}/{session}";
+
+            yield return new Episode
+            {
+                Id = link,
+                Name = name,
+                Number = number,
+                Image = GetString(episode, "snapshot"),
+                Description = GetString(episode, "title"),
+                Link = link,
+                Duration = ParseDuration(GetString(episode, "duration")),
+            };
+        }
+    }
+
+    private HttpClient CreateClient() => _httpClientFactory.CreateClient().BypassDdg();
+
+    private Dictionary<string, string> BuildHeaders() =>
+        new() { ["Referer"] = $"{BaseUrl}/", ["User-Agent"] = DesktopUserAgent };
+
+    private string BuildAnimePath(string id)
+    {
+        var session = ExtractSession(id);
+        if (!string.IsNullOrWhiteSpace(session))
+            return $"/anime/{session}";
+
+        var animeId = ExtractAnimeId(id);
+        if (!string.IsNullOrWhiteSpace(animeId))
+            return $"/a/{animeId}";
+
+        return id.StartsWith("/") ? id : $"/anime/{id.Trim('/')}";
+    }
+
+    private string BuildAnimeLink(string id) => $"{BaseUrl}{BuildAnimePath(id)}";
+
+    private string NormalizeAnimeId(string id) => ExtractAnimeId(id) ?? ExtractSession(id) ?? id;
+
+    private static string? ExtractSession(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        return NullIfBlank(_animeSessionRegex.Match(value).Groups["session"].Value);
+    }
+
+    private static string? ExtractAnimeId(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        if (int.TryParse(value.Trim('/'), out _))
+            return value.Trim('/');
+
+        return NullIfBlank(_animeIdRegex.Match(value).Groups["id"].Value);
+    }
+
+    private static string? SelectInfoValue(HtmlAgilityPack.HtmlDocument document, string label)
+    {
+        var node = document.DocumentNode.SelectSingleNode(
+            $"//div[contains(@class, 'anime-info')]//p[contains(., '{label}:')]"
+        );
+        var linkText = node?.SelectSingleNode(".//a")?.InnerText.Trim();
+        var text = node?.InnerText.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+            return linkText;
+
+        var prefix = label + ":";
+        if (text.StartsWith(prefix))
+            text = text.Substring(prefix.Length).Trim();
+
+        return DefaultIfBlank(linkText, text);
+    }
+
+    private static string GetString(JsonObject? obj, string key, string defaultValue = "") =>
+        obj?[key]?.ToString().Trim('"') ?? defaultValue;
+
+    private static int GetInt(JsonObject obj, string key, int defaultValue = 0) =>
+        int.TryParse(
+            GetString(obj, key),
+            NumberStyles.Any,
+            CultureInfo.InvariantCulture,
+            out var value
+        )
+            ? value
+            : defaultValue;
+
+    private static float GetFloat(JsonObject obj, string key) =>
+        float.TryParse(
+            GetString(obj, key),
+            NumberStyles.Any,
+            CultureInfo.InvariantCulture,
+            out var value
+        )
+            ? value
+            : 0;
+
+    private static float ParseDuration(string value) =>
+        TimeSpan.TryParse(value, CultureInfo.InvariantCulture, out var duration)
+            ? (float)duration.TotalMilliseconds
+            : 0;
+
+    private static string DefaultIfBlank(string? value, string? fallback) =>
+        string.IsNullOrWhiteSpace(value) ? fallback ?? string.Empty : value!;
+
+    private static string? NullIfBlank(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value;
 }

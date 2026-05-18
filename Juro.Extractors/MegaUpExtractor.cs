@@ -24,6 +24,8 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
     private readonly HttpClient _http = httpClientFactory.CreateClient();
 
     private const string ApiBase = "https://enc-dec.app/api";
+    private const string DefaultUserAgent =
+        "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36";
 
     /// <inheritdoc />
     public string ServerName => "MegaUp";
@@ -46,10 +48,23 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
     public async ValueTask<string> GenerateTokenAsync(
         string text,
         CancellationToken cancellationToken = default
+    ) => await GenerateTokenAsync(text, null, cancellationToken);
+
+    /// <summary>
+    /// Generates an encrypted token for use in AniKai AJAX requests.
+    /// </summary>
+    public async ValueTask<string> GenerateTokenAsync(
+        string text,
+        string? origin,
+        CancellationToken cancellationToken = default
     )
     {
         var url = $"{ApiBase}/enc-kai?text={Uri.EscapeDataString(text)}";
-        var response = await _http.ExecuteAsync(url, cancellationToken);
+        var response = await _http.ExecuteAsync(
+            url,
+            CreateEncDecHeaders(origin),
+            cancellationToken
+        );
         var json = JsonNode.Parse(response);
         return json?["result"]?.ToString() ?? "";
     }
@@ -60,6 +75,15 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
     public async ValueTask<(string Url, int[] Intro, int[] Outro)> DecodeIframeDataAsync(
         string text,
         CancellationToken cancellationToken = default
+    ) => await DecodeIframeDataAsync(text, null, cancellationToken);
+
+    /// <summary>
+    /// Decodes encrypted iframe data to get the video URL and skip timings.
+    /// </summary>
+    public async ValueTask<(string Url, int[] Intro, int[] Outro)> DecodeIframeDataAsync(
+        string text,
+        string? origin,
+        CancellationToken cancellationToken = default
     )
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"{ApiBase}/dec-kai");
@@ -68,6 +92,7 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
             Encoding.UTF8,
             "application/json"
         );
+        AddHeaders(request, CreateEncDecHeaders(origin));
 
         var response = await _http.ExecuteAsync(request, cancellationToken);
         var json = JsonNode.Parse(response);
@@ -102,13 +127,22 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
         CancellationToken cancellationToken = default
     )
     {
-        // Use a consistent User-Agent for both /media/ and dec-mega requests
-        var userAgent = Http.ChromeUserAgent();
+        var userAgent = GetHeaderValue(headers, "User-Agent") ?? DefaultUserAgent;
+        var referer = GetHeaderValue(headers, "Referer") ?? url;
 
         // Transform /e/ to /media/ to get the encrypted sources
         var mediaUrl = url.Replace("/e/", "/media/");
         var mediaRequest = new HttpRequestMessage(HttpMethod.Get, mediaUrl);
-        mediaRequest.Headers.TryAddWithoutValidation("User-Agent", userAgent);
+        AddHeaders(
+            mediaRequest,
+            new Dictionary<string, string>
+            {
+                ["User-Agent"] = userAgent,
+                ["Accept"] = "application/json, text/plain, */*",
+                ["X-Requested-With"] = "XMLHttpRequest",
+                ["Referer"] = url,
+            }
+        );
 
         var response = await _http.ExecuteAsync(mediaRequest, cancellationToken);
 
@@ -128,6 +162,7 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
             Encoding.UTF8,
             "application/json"
         );
+        AddHeaders(decRequest, CreateEncDecHeaders(referer, userAgent));
 
         var decResponse = await _http.ExecuteAsync(decRequest, cancellationToken);
         var decJson = JsonNode.Parse(decResponse);
@@ -142,6 +177,14 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
         var sources = result["sources"]?.AsArray();
         if (sources is not null)
         {
+            var megaHost = new Uri(url).GetLeftPart(UriPartial.Authority);
+            var videoHeaders = new Dictionary<string, string>
+            {
+                ["User-Agent"] = userAgent,
+                ["Origin"] = megaHost,
+                ["Referer"] = $"{megaHost}/",
+            };
+
             foreach (var source in sources)
             {
                 var file = source?["file"]?.ToString();
@@ -155,10 +198,7 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
                         VideoUrl = file,
                         Format = isM3u8 ? VideoType.M3u8 : VideoType.Container,
                         Resolution = isM3u8 ? "Multi Quality" : "Default",
-                        Headers = new Dictionary<string, string>
-                        {
-                            ["Referer"] = new Uri(url).GetLeftPart(UriPartial.Authority),
-                        },
+                        Headers = videoHeaders,
                     }
                 );
             }
@@ -191,5 +231,51 @@ public class MegaUpExtractor(IHttpClientFactory httpClientFactory) : IVideoExtra
         }
 
         return videos;
+    }
+
+    private static Dictionary<string, string> CreateEncDecHeaders(
+        string? originOrReferer,
+        string? userAgent = null
+    )
+    {
+        var origin = GetOrigin(originOrReferer) ?? "https://animekai.to";
+
+        return new Dictionary<string, string>
+        {
+            ["User-Agent"] = userAgent ?? DefaultUserAgent,
+            ["Accept"] = "application/json, text/plain, */*",
+            ["Origin"] = origin,
+            ["Referer"] = $"{origin}/watch",
+            ["Sec-Fetch-Dest"] = "empty",
+            ["Sec-Fetch-Mode"] = "cors",
+            ["Sec-Fetch-Site"] = "cross-site",
+        };
+    }
+
+    private static string? GetOrigin(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return null;
+
+        return uri.GetLeftPart(UriPartial.Authority);
+    }
+
+    private static string? GetHeaderValue(Dictionary<string, string> headers, string key)
+    {
+        foreach (var header in headers)
+        {
+            if (string.Equals(header.Key, key, StringComparison.OrdinalIgnoreCase))
+                return header.Value;
+        }
+
+        return null;
+    }
+
+    private static void AddHeaders(HttpRequestMessage request, Dictionary<string, string> headers)
+    {
+        foreach (var header in headers)
+        {
+            request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
     }
 }

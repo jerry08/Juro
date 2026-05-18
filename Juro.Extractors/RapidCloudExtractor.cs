@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
@@ -26,6 +25,10 @@ namespace Juro.Extractors;
 public class RapidCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoExtractor
 {
     private readonly HttpClient _http = httpClientFactory.CreateClient();
+    private string? _cachedKey;
+
+    private const string SourcesUrl = "/embed-2/v2/e-1/getSources?id=";
+    private const string SourcesSplitter = "/e-1/";
 
     /// <inheritdoc />
     public string ServerName => "RapidCloud";
@@ -42,57 +45,6 @@ public class RapidCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoE
     public RapidCloudExtractor()
         : this(Http.ClientProvider) { }
 
-    private async Task<List<(int Value1, int Value2)>> GetIndexPairsAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        var script = await _http.ExecuteAsync(
-            $"https://rapid-cloud.co/js/player/prod/e6-player-v2.min.js",
-            cancellationToken
-        );
-
-        var regex = new Regex(
-            "case\\s*0x[0-9a-f]+:(?![^;]*=partKey)\\s*\\w+\\s*=\\s*(\\w+)\\s*,\\s*\\w+\\s*=\\s*(\\w+);"
-        );
-        var matches = regex.Matches(script).OfType<Match>().ToList();
-
-        var list = new List<(int, int)>();
-
-        foreach (var match in matches)
-        {
-            var var1 = match.Groups[1].Value;
-            var var2 = match.Groups[2].Value;
-
-            var regexVar1 = new Regex($",{var1}=((?:0x)?([0-9a-fA-F]+))");
-            var regexVar2 = new Regex($",{var2}=((?:0x)?([0-9a-fA-F]+))");
-
-            var matchVar1 = regexVar1
-                .Match(script)
-                ?.Groups.OfType<Group>()
-                .ElementAtOrDefault(1)
-                ?.Value?.RemovePrefix("0x");
-            var matchVar2 = regexVar2
-                .Match(script)
-                ?.Groups.OfType<Group>()
-                .ElementAtOrDefault(1)
-                ?.Value;
-
-            if (matchVar1 is not null && matchVar2 is not null)
-            {
-                try
-                {
-                    list.Add(new(Convert.ToByte(matchVar1, 16), Convert.ToByte(matchVar2, 16)));
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex);
-                }
-            }
-        }
-
-        return list;
-    }
-
     /// <inheritdoc />
     public async ValueTask<List<VideoSource>> ExtractAsync(
         string url,
@@ -106,62 +58,39 @@ public class RapidCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoE
         CancellationToken cancellationToken = default
     )
     {
-        var id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
+        var uri = new Uri(url);
+        var serverUrl = uri.GetLeftPart(UriPartial.Authority);
+        var id = url.Split([SourcesSplitter], StringSplitOptions.None)
+            .LastOrDefault()
+            ?.Split('?')
+            .FirstOrDefault();
 
-        var host = new Uri(url).Host;
+        if (string.IsNullOrWhiteSpace(id))
+            id = new Stack<string>(url.Split('/')).Pop().Split('?')[0];
 
-        var indexPairs = await GetIndexPairsAsync(cancellationToken);
-        if (indexPairs.Count == 0)
+        if (string.IsNullOrWhiteSpace(id))
             return [];
 
-        headers = new Dictionary<string, string>() { { "X-Requested-With", "XMLHttpRequest" } };
+        headers = new Dictionary<string, string>(headers)
+        {
+            ["Accept"] = "*/*",
+            ["X-Requested-With"] = "XMLHttpRequest",
+            ["Referer"] = $"{serverUrl}/",
+        };
 
         var response = await _http.ExecuteAsync(
-            $"https://{host}/ajax/embed-6-v2/getSources?id={id}",
+            $"{serverUrl}{SourcesUrl}{id}",
             headers,
             cancellationToken
         );
 
         var data = JsonNode.Parse(response);
 
-        var sources = data?["sources"]?.ToString();
-        if (string.IsNullOrWhiteSpace(sources))
+        if (data?["sources"] is not JsonArray sources)
             return [];
 
-        var isEncrypted = (bool)data!["encrypted"]!;
-        if (isEncrypted)
-        {
-            try
-            {
-                var sourcesArray = sources!.Select(x => x.ToString()).ToList();
-                var extractedKey = "";
-                var currentIndex = 0;
-
-                foreach (var index in indexPairs)
-                {
-                    var start = index.Value1 + currentIndex;
-                    var end = start + index.Value2;
-
-                    for (var i = start; i < end; i++)
-                    {
-                        extractedKey += sources![i];
-                        sourcesArray[i] = "";
-                    }
-
-                    currentIndex += index.Value2;
-                }
-
-                sources = string.Concat(sourcesArray);
-                sources = sources.Trim();
-
-                sources = Decrypt(sources, extractedKey);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-                return [];
-            }
-        }
+        var isEncrypted = data["encrypted"]?.GetValue<bool>() ?? true;
+        var key = isEncrypted ? _cachedKey ?? await RequestNewKeyAsync(cancellationToken) : "";
 
         var subtitles = new List<Subtitle>();
 
@@ -185,19 +114,50 @@ public class RapidCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoE
             }
         }
 
-        var m3u8File = JsonNode.Parse(sources!)![0]!["file"]!.ToString();
+        var videoSources = new List<VideoSource>();
+        foreach (var source in sources)
+        {
+            var file = source?["file"]?.ToString();
+            if (string.IsNullOrWhiteSpace(file))
+                continue;
 
-        return
-        [
-            new()
-            {
-                VideoUrl = m3u8File,
-                Headers = headers,
-                Format = VideoType.M3u8,
-                Resolution = "Multi Quality",
-                Subtitles = subtitles,
-            },
-        ];
+            var m3u8File =
+                isEncrypted && !file.Contains(".m3u8", StringComparison.OrdinalIgnoreCase)
+                    ? Decrypt(file, key)
+                    : file;
+
+            videoSources.Add(
+                new()
+                {
+                    VideoUrl = m3u8File,
+                    Headers = headers,
+                    Format = VideoType.M3u8,
+                    Resolution = "Multi Quality",
+                    Subtitles = subtitles,
+                }
+            );
+        }
+
+        return videoSources;
+    }
+
+    private async Task<string> RequestNewKeyAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await _http.GetAsync(
+            "https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json",
+            cancellationToken
+        );
+
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        var data = JsonNode.Parse(json);
+        var key = data?["mega"]?.ToString();
+
+        if (string.IsNullOrWhiteSpace(key))
+            throw new Exception("Rapid key not found in keys.json");
+
+        _cachedKey = key;
+        return _cachedKey;
     }
 
     private static byte[] Md5(byte[] inputBytes) => MD5.Create().ComputeHash(inputBytes);

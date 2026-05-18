@@ -22,7 +22,7 @@ public class Kaido(IHttpClientFactory httpClientFactory) : ZoroTheme
     public override string Language => "en";
     public override string BaseUrl => "https://kaido.to";
 
-    protected override List<string> HosterNames => ["Vidstreaming", "VidCloud", "StreamTape"];
+    protected override List<string> HosterNames => ["Vidstreaming", "Vidcloud"];
 
     /// <summary>
     /// Initializes an instance of <see cref="Kaido"/>.
@@ -45,7 +45,7 @@ public class Kaido(IHttpClientFactory httpClientFactory) : ZoroTheme
         return serverNameLower switch
         {
             var s when s.Contains("vidcloud") || s.Contains("vidstreaming") =>
-                new MegaCloudExtractor(_httpClientFactory),
+                new RapidCloudExtractor(_httpClientFactory),
             var s when s.Contains("streamtape") => new StreamTapeExtractor(_httpClientFactory),
             _ => base.GetVideoExtractor(server),
         };

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -96,7 +95,7 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
 
         // 4. Decrypt Sources
         var isEncrypted = data["encrypted"]?.GetValue<bool>() ?? true;
-        var key = _cachedKey ?? await RequestNewKeyAsync();
+        var key = _cachedKey ?? await RequestNewKeyAsync(cancellationToken);
 
         // 5. Extract Subtitles from tracks (only captions)
         var subtitles = new List<Subtitle>();
@@ -183,22 +182,19 @@ public class MegaCloudExtractor(IHttpClientFactory httpClientFactory) : IVideoEx
         return DecryptOpenSSL(cipherText, secret);
     }
 
-    private async Task<string> RequestNewKeyAsync()
+    private async Task<string> RequestNewKeyAsync(CancellationToken cancellationToken = default)
     {
-        var json = await _http.GetStringAsync(
-            "https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json"
+        var response = await _http.GetAsync(
+            "https://raw.githubusercontent.com/yogesh-hacker/MegacloudKeys/refs/heads/main/keys.json",
+            cancellationToken
         );
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        var data = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(json);
+        var data = JsonNode.Parse(json);
+        var key = data?["mega"]?.ToString() ?? data?["cinesrc"]?["getStream"]?.ToString();
 
-        if (
-            data is null
-            || !data.TryGetValue("cinesrc", out var cinesrc)
-            || !cinesrc.TryGetValue("getStream", out var key)
-        )
-        {
+        if (string.IsNullOrWhiteSpace(key))
             throw new Exception("Key not found");
-        }
 
         _cachedKey = key;
         return _cachedKey;

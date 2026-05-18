@@ -51,7 +51,16 @@ public class AnimeBaseProvider(IHttpClientFactory httpClientFactory) : IVideoExt
         if (extractor is null)
             return [];
 
-        var videos = await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
+        // Forward any headers attached to the embed (e.g. Referer) — some
+        // extractors (like MegaUp/AniKai) return decoy CDN hosts when the
+        // upstream request lacks the originating site's Referer.
+        var videos = server.Embed.Headers is { Count: > 0 } embedHeaders
+            ? await extractor.ExtractAsync(
+                server.Embed.Url,
+                new Dictionary<string, string>(embedHeaders),
+                cancellationToken
+            )
+            : await extractor.ExtractAsync(server.Embed.Url, cancellationToken);
 
         videos.ForEach(x => x.VideoServer = server);
 

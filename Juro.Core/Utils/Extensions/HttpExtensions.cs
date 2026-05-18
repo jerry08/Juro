@@ -198,8 +198,9 @@ internal static class HttpExtensions
             request.Headers.Add("User-Agent", Http.ChromeUserAgent());
         }
 
-        // Set required cookies
-        //request.Headers.Add("Cookie", "CONSENT=YES+cb; YSC=DwKYllHNwuw");
+        // Strip .NET distributed tracing headers that leak non-browser fingerprints
+        request.Headers.Remove("traceparent");
+        request.Headers.Remove("tracestate");
 
         //Removed "using" to fix android.os.NetworkOnMainThreadException
         var response = await http.SendAsync(
