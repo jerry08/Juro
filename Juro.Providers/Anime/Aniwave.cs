@@ -294,9 +294,10 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
         if (!Uri.TryCreate(embedUrl, UriKind.Absolute, out var uri))
             return [];
 
+        var userAgent = Http.ChromeUserAgent();
         var pageBody = await _http.ExecuteAsync(
             embedUrl,
-            new Dictionary<string, string> { ["Referer"] = parentUrl },
+            new Dictionary<string, string> { ["Referer"] = parentUrl, ["User-Agent"] = userAgent },
             cancellationToken
         );
         var dataId = Regex.Match(pageBody, "data-id=\"(?<id>[^\"]+)\"").Groups["id"].Value;
@@ -307,9 +308,16 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
         var sourceHeaders = new Dictionary<string, string>
         {
             ["Accept"] = "*/*",
+            ["User-Agent"] = userAgent,
             ["X-Requested-With"] = "XMLHttpRequest",
             ["Referer"] = embedUrl,
             ["Origin"] = origin,
+        };
+        var playbackHeaders = new Dictionary<string, string>
+        {
+            ["Accept"] = "*/*",
+            ["User-Agent"] = userAgent,
+            ["Referer"] = $"{origin}/",
         };
         var sourcesBody = await _http.ExecuteAsync(
             $"{origin}/stream/getSources?id={Uri.EscapeDataString(dataId)}",
@@ -332,7 +340,7 @@ public class Aniwave(IHttpClientFactory httpClientFactory)
                 VideoUrl = videoUrl!,
                 Format = isDash ? VideoType.Dash : VideoType.M3u8,
                 FileType = isDash ? "mpd" : "m3u8",
-                Headers = sourceHeaders,
+                Headers = playbackHeaders,
                 Subtitles = subtitles,
                 VideoServer = server,
             },

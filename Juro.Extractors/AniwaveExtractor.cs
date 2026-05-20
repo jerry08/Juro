@@ -68,12 +68,21 @@ public class AniwaveExtractor(IHttpClientFactory httpClientFactory, string serve
             return list;
 
         var referer = isMcloud ? "https://mcloud.to/" : "https://9anime.to/";
+        var origin = new Uri(referer).GetLeftPart(UriPartial.Authority);
+        var sourceHeaders = new Dictionary<string, string>
+        {
+            ["Origin"] = origin,
+            ["Referer"] = referer,
+            ["User-Agent"] = Http.ChromeUserAgent(),
+        };
+        var playbackHeaders = new Dictionary<string, string>
+        {
+            ["Accept"] = "*/*",
+            ["Referer"] = referer,
+            ["User-Agent"] = sourceHeaders["User-Agent"],
+        };
 
-        response = await http.ExecuteAsync(
-            apiUrl!,
-            new() { ["Referer"] = referer },
-            cancellationToken
-        );
+        response = await http.ExecuteAsync(apiUrl!, sourceHeaders, cancellationToken);
 
         var data = JsonNode.Parse(response)!["data"]!;
 
@@ -83,7 +92,7 @@ public class AniwaveExtractor(IHttpClientFactory httpClientFactory, string serve
             new()
             {
                 VideoUrl = file,
-                Headers = new() { ["Referer"] = referer },
+                Headers = playbackHeaders,
                 Format = VideoType.M3u8,
                 Resolution = "Multi Quality",
             }
