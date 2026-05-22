@@ -5,7 +5,6 @@ using Juro.Core.Providers;
 using Juro.Core.Utils.Tasks;
 using Juro.DataBuilder.Models;
 using Juro.Providers.Anime;
-using Juro.Providers.Anime.Indonesian;
 using Microsoft.EntityFrameworkCore;
 using Spectre.Console;
 
@@ -51,11 +50,6 @@ internal class Program
         AnsiConsole.MarkupLine("[cyan]Matching all anime. This may take a while[/]");
 
         var animes = await db.AnimeItems.ToListAsync();
-
-        //var test1 = animes.Where(x => x.GogoanimeId is null).ToList();
-        //var test2 = animes.Where(x => x.GogoanimeId is null && x.AnimePaheId is null).ToList();
-        //
-        //var test3 = animes.Where(x => x.GogoanimeId is not null).ToList();
 
         //foreach (var item in root.Data)
         //{
@@ -108,13 +102,7 @@ internal class Program
 
     private static async Task TrySetProvidersForAnimeAsync(ManamiAnimeItem anime)
     {
-        var result = await TryFindBestAnime(Providers.Gogoanime, anime);
-        if (result is not null)
-        {
-            anime.GogoanimeId = result.Id;
-        }
-
-        result = await TryFindBestAnime(Providers.AnimePahe, anime);
+        var result = await TryFindBestAnime(Providers.AnimePahe, anime);
         if (result is not null)
         {
             anime.AnimePaheId = result.Id;
@@ -132,11 +120,6 @@ internal class Program
         //    anime.AniwaveId = result.Id;
         //}
         //
-        //result = await TryFindBestAnime(Providers.OtakuDesu, anime);
-        //if (result is not null)
-        //{
-        //    anime.OtakuDesuId = result.Id;
-        //}
     }
 
     private static async Task<IAnimeInfo?> TryFindBestAnime(
@@ -170,11 +153,7 @@ internal class Program
 
 public static class Providers
 {
-#pragma warning disable CS0618
-    public static Gogoanime Gogoanime { get; set; } = new();
-#pragma warning restore CS0618
     public static AnimePahe AnimePahe { get; set; } = new();
     public static Kaido Kaido { get; set; } = new();
     public static Aniwave Aniwave { get; set; } = new();
-    public static OtakuDesu OtakuDesu { get; set; } = new();
 }

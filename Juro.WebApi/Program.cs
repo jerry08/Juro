@@ -24,9 +24,6 @@ public class Program
 
         builder.Services.AddMvc(c => c.Conventions.Add(new ApiExplorerConvention()));
 
-        //builder.Services.AddSingleton<Gogoanime>();
-
-        //var gg = typeof(Gogoanime);
         AssemblyEx.LoadReferencedAssemblies();
 
         //var tt1 = AppDomain.CurrentDomain.GetAssemblies().ToList();

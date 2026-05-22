@@ -9,15 +9,11 @@ public class JuroContext : DbContext
 
     public DbSet<AnimeSeason> AnimeSeasons { get; set; }
 
-    public DbSet<AnimeModel> Gogoanime { get; set; }
-
     public DbSet<AnimeModel> AnimePahe { get; set; }
 
     public DbSet<AnimeModel> Kaido { get; set; }
 
     public DbSet<AnimeModel> Aniwave { get; set; }
-
-    public DbSet<AnimeModel> OtakuDesu { get; set; }
 
     public string DbPath { get; }
 
