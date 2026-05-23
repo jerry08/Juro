@@ -5,6 +5,6 @@ namespace Juro.WebApi.Controllers.Anime;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AnimeController(AnimeGG provider) : AnimeGGController(provider)
+public class AnimeController(Aniwave provider) : AniwaveController(provider)
 {
 }

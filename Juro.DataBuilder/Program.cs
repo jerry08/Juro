@@ -108,12 +108,6 @@ internal class Program
             anime.AnimePaheId = result.Id;
         }
 
-        result = await TryFindBestAnime(Providers.Kaido, anime);
-        if (result is not null)
-        {
-            anime.KaidoId = result.Id;
-        }
-
         //result = await TryFindBestAnime(Providers.Aniwave, anime);
         //if (result is not null)
         //{
@@ -154,6 +148,5 @@ internal class Program
 public static class Providers
 {
     public static AnimePahe AnimePahe { get; set; } = new();
-    public static Kaido Kaido { get; set; } = new();
     public static Aniwave Aniwave { get; set; } = new();
 }

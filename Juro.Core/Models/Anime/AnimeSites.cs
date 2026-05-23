@@ -36,11 +36,6 @@ public enum AnimeSites
     OtakuDesu,
 
     /// <summary>
-    /// Parses anime and information from Kaido.
-    /// </summary>
-    Kaido,
-
-    /// <summary>
     /// Parses anime and information from Zoro.
     /// </summary>
     Zoro,

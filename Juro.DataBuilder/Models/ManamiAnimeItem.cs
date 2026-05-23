@@ -68,7 +68,6 @@ public class ManamiAnimeItem
 
     public string? GogoanimeId { get; set; }
     public string? AnimePaheId { get; set; }
-    public string? KaidoId { get; set; }
     public string? AniwaveId { get; set; }
     public string? OtakuDesuId { get; set; }
 }

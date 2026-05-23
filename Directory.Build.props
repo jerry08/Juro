@@ -19,7 +19,7 @@
 
   <PropertyGroup>
     <Authors>$(Company)</Authors>
-    <PackageTags>anime video manga movie parser scraping crawler gogo zoro kaido flixhq mangadex mangakakalot</PackageTags>
+    <PackageTags>anime video manga movie parser scraping crawler gogo zoro kaido flixhq mangadex</PackageTags>
     <PackageProjectUrl>https://github.com/jerry08/Juro</PackageProjectUrl>
     <!--<PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>favicon.png</PackageIcon>-->

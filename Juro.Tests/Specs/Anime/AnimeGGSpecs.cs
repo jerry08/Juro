@@ -149,4 +149,10 @@ public class AnimeGGSpecs
         // Assert
         videos.Should().NotBeEmpty();
     }
+
+    [Fact]
+    public async Task I_can_get_video_quality_results_from_m3u8_video()
+    {
+        await AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new AnimeGG(), "AnimeGG");
+    }
 }

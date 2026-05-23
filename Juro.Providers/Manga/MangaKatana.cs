@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -21,6 +22,8 @@ namespace Juro.Providers.Manga;
 /// </remarks>
 public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
 {
+    private static readonly ConcurrentDictionary<string, List<IMangaResult>> SearchCache = new();
+    private static readonly SemaphoreSlim SearchLock = new(1, 1);
     private readonly HttpClient _http = httpClientFactory.CreateClient();
 
     public string Key => Name;
@@ -55,67 +58,118 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
         CancellationToken cancellationToken = default!
     )
     {
-        var url = $"{BaseUrl}/?search={Uri.EscapeDataString(query)}";
-        var response = await _http.ExecuteAsync(url, cancellationToken);
-
-        var document = Html.Parse(response);
-
-        var list = new List<IMangaResult>();
-
-        var bookListEl = document.GetElementbyId("book_list");
-        if (bookListEl is not null)
+        if (SearchCache.TryGetValue(query, out var cachedResults))
         {
-            var results = bookListEl
-                .SelectNodes(".//div[contains(@class, 'item')]")
-                ?.Select(el =>
-                    (IMangaResult)
-                        new MangaResult()
-                        {
-                            Id = el.SelectSingleNode(".//a")!.Attributes["href"].Value,
-                            Title = el.SelectSingleNode(".//img")?.Attributes["alt"]?.Value,
-                            Image = el.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
-                        }
-                );
-
-            if (results is not null)
-                list.AddRange(results);
+            return [.. cachedResults];
         }
 
-        var singleBookEl = document.GetElementbyId("single_book");
-        if (singleBookEl is not null)
+        await SearchLock.WaitAsync(cancellationToken);
+
+        try
         {
-            var result = new MangaResult()
+            if (SearchCache.TryGetValue(query, out cachedResults))
             {
-                Title = singleBookEl
-                    .SelectSingleNode(".//div[@class='info']/h1[@class='heading']")
-                    ?.InnerText,
-                Image = singleBookEl.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
-            };
+                return [.. cachedResults];
+            }
 
-            var i = 0;
+            var url = $"{BaseUrl}/?search={Uri.EscapeDataString(query)}";
+            List<IMangaResult> list = [];
+            string response = string.Empty;
 
-            var chapters = document
-                .DocumentNode.SelectNodes(".//div[@class='chapters']//div[@class='chapter']//a")!
-                .Select(el => new MangaChapterPage()
+            for (var attempt = 0; attempt < 5; attempt++)
+            {
+                response = await _http.ExecuteAsync(url, GetBrowserHeaders(), cancellationToken);
+                list = ParseSearchResults(response);
+                if (list.Count > 0)
                 {
-                    Image = el.Attributes["href"]!.Value,
-                    Title = el.InnerText,
-                    Page = i++,
-                })
-                .Reverse()
-                .ToList();
+                    break;
+                }
 
-            var imgSplit = chapters.FirstOrDefault()!.Image.Split('/');
+                await Task.Delay(TimeSpan.FromMilliseconds(250 * (attempt + 1)), cancellationToken);
+            }
 
-            result.Id = string.Join("/", imgSplit.Take(imgSplit.Length - 1));
+            var document = Html.Parse(response);
 
-            //result.Chapters = chapters;
+            var singleBookEl = document.GetElementbyId("single_book");
+            if (singleBookEl is not null)
+            {
+                var result = new MangaResult()
+                {
+                    Title = singleBookEl
+                        .SelectSingleNode(".//div[@class='info']/h1[@class='heading']")
+                        ?.InnerText,
+                    Image = singleBookEl.SelectSingleNode(".//img")?.Attributes["src"]?.Value,
+                };
 
-            list.Add(result);
+                var i = 0;
+
+                var chapters = document
+                    .DocumentNode.SelectNodes(
+                        ".//div[@class='chapters']//div[@class='chapter']//a"
+                    )!
+                    .Select(el => new MangaChapterPage()
+                    {
+                        Image = el.Attributes["href"]!.Value,
+                        Title = el.InnerText,
+                        Page = i++,
+                    })
+                    .Reverse()
+                    .ToList();
+
+                var imgSplit = chapters.FirstOrDefault()!.Image.Split('/');
+
+                result.Id = string.Join("/", imgSplit.Take(imgSplit.Length - 1));
+
+                list.Add(result);
+            }
+
+            if (list.Count > 0)
+            {
+                SearchCache[query] = [.. list];
+            }
+
+            return list;
         }
-
-        return list;
+        finally
+        {
+            SearchLock.Release();
+        }
     }
+
+    private List<IMangaResult> ParseSearchResults(string response)
+    {
+        var resultMatches = Regex.Matches(
+            response,
+            "<div class=\"item\"[\\s\\S]*?<div class=\"wrap_img\">[\\s\\S]*?<a href=\"(?<href>https://mangakatana\\.com/manga/[^\"]+)\"><img src=\"(?<image>[^\"]+)\"[\\s\\S]*?<h3 class=\"title\">[\\s\\S]*?<a href=\"https://mangakatana\\.com/manga/[^\"]+\"[^>]*>(?<title>[^<]+)</a>",
+            RegexOptions.IgnoreCase
+        );
+
+        return resultMatches
+            .Cast<Match>()
+            .Select(match =>
+                (IMangaResult)
+                    new MangaResult()
+                    {
+                        Id = match.Groups["href"].Value,
+                        Title = match.Groups["title"].Value.Trim(),
+                        Image = match.Groups["image"].Value,
+                    }
+            )
+            .GroupBy(result => result.Id)
+            .Select(group => group.First())
+            .ToList();
+    }
+
+    private Dictionary<string, string> GetBrowserHeaders() =>
+        new()
+        {
+            {
+                "Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+            },
+            { "Accept-Language", "en-US,en;q=0.9" },
+            { "Referer", $"{BaseUrl}/" },
+        };
 
     /// <inheritdoc />
     public async ValueTask<IMangaInfo> GetMangaInfoAsync(

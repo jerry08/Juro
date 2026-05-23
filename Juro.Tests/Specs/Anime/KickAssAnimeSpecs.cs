@@ -35,4 +35,13 @@ public class KickAssAnimeSpecs
         // Assert
         results.Should().NotBeEmpty();
     }
+
+    [Fact(Skip = "kaa.lt returns a Cloudflare managed challenge from this test environment.")]
+    public async Task I_can_get_video_quality_results_from_m3u8_video()
+    {
+        await AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(
+            new KickAssAnime(),
+            "KickAssAnime"
+        );
+    }
 }

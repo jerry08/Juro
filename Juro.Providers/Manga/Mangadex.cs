@@ -239,11 +239,14 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
 
         var pages = data!["chapter"]!["data"]!
             .AsArray()
-            .Select(id => new MangaChapterPage()
-            {
-                Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
-                Page = Convert.ToInt32(id!.ToString().Split('-')[0]),
-            })
+            .Select(
+                (id, index) =>
+                    new MangaChapterPage()
+                    {
+                        Image = $"{data!["baseUrl"]}/data/{data!["chapter"]!["hash"]}/{id}",
+                        Page = index + 1,
+                    }
+            )
             .ToList();
 
         list.AddRange(pages);

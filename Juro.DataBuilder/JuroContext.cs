@@ -11,8 +11,6 @@ public class JuroContext : DbContext
 
     public DbSet<AnimeModel> AnimePahe { get; set; }
 
-    public DbSet<AnimeModel> Kaido { get; set; }
-
     public DbSet<AnimeModel> Aniwave { get; set; }
 
     public string DbPath { get; }

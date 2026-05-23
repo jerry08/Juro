@@ -8,7 +8,7 @@ namespace Juro.Tests.Specs.Manga;
 public class MangadexSpecs
 {
     [Theory]
-    [InlineData("solo leveling")]
+    [InlineData("chainsaw man")]
     public async Task I_can_get_results_from_a_search_query(string query)
     {
         // Arrange
@@ -25,7 +25,7 @@ public class MangadexSpecs
     }
 
     [Theory]
-    [InlineData("solo leveling")]
+    [InlineData("chainsaw man")]
     public async Task I_can_get_details_from_a_manga(string query)
     {
         // Arrange
@@ -51,7 +51,7 @@ public class MangadexSpecs
     }
 
     [Theory]
-    [InlineData("solo leveling")]
+    [InlineData("chainsaw man")]
     public async Task I_can_get_chapter_results_from_a_manga(string query)
     {
         // Arrange
@@ -80,7 +80,7 @@ public class MangadexSpecs
     }
 
     [Theory]
-    [InlineData("solo leveling")]
+    [InlineData("chainsaw man")]
     public async Task I_can_get_chapter_pages_from_a_manga(string query)
     {
         // Arrange

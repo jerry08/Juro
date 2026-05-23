@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Juro.Core;
@@ -171,43 +173,45 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
                 ".//div[contains(@class, 'scrollbar-thumb-themecolor')]/div[contains(@class, 'group')]"
             )
             ?.Reverse();
-        if (chapterNodes is null)
-            return mangaInfo;
-
-        foreach (var chapterNode in chapterNodes)
+        if (chapterNodes is not null)
         {
-            var rawUrl = BaseUrl + chapterNode.SelectSingleNode(".//a")?.Attributes["href"].Value;
+            foreach (var chapterNode in chapterNodes)
+            {
+                var rawUrl =
+                    BaseUrl + chapterNode.SelectSingleNode(".//a")?.Attributes["href"].Value;
 
-            var id = GetChapterId(rawUrl);
-            //var mangaId = GetMangaId(rawUrl);
-            var url2 = GetChapterUrl(id, mangaId);
+                var id = GetChapterId(rawUrl);
+                var url2 = GetChapterUrl(id, mangaId);
 
-            // Extract the title
-            var titleNode = chapterNode.SelectSingleNode(".//a/span");
-            var title = titleNode?.InnerText.Trim() ?? string.Empty;
+                var titleNode = chapterNode.SelectSingleNode(".//a/span");
+                var title = titleNode?.InnerText.Trim() ?? string.Empty;
 
-            // Extract the chapter text
-            var chapterText =
-                chapterNode.SelectSingleNode(".//a")?.InnerText.Trim() ?? string.Empty;
+                var chapterText =
+                    chapterNode.SelectSingleNode(".//a")?.InnerText.Trim() ?? string.Empty;
 
-            if (string.IsNullOrEmpty(title))
-                title = chapterText;
+                if (string.IsNullOrEmpty(title))
+                    title = chapterText;
 
-            // Remove title and "Chapter" from the chapter text
-            var chapterNumberText = chapterText.Replace("Chapter", "").Trim();
-            if (!string.IsNullOrEmpty(title))
-                chapterNumberText = chapterNumberText.Replace(title, "");
+                var chapterNumberText = chapterText.Replace("Chapter", "").Trim();
+                if (!string.IsNullOrEmpty(title))
+                    chapterNumberText = chapterNumberText.Replace(title, "");
 
-            _ = int.TryParse(chapterNumberText, out var chapterNumber);
+                _ = int.TryParse(chapterNumberText, out var chapterNumber);
 
-            mangaInfo.Chapters.Add(
-                new MangaChapter()
-                {
-                    Id = url2,
-                    Number = chapterNumber,
-                    Title = title,
-                }
-            );
+                mangaInfo.Chapters.Add(
+                    new MangaChapter()
+                    {
+                        Id = url2,
+                        Number = chapterNumber,
+                        Title = title,
+                    }
+                );
+            }
+        }
+
+        if (mangaInfo.Chapters.Count == 0)
+        {
+            mangaInfo.Chapters.AddRange(ExtractSerializedChapters(response, mangaId));
         }
 
         return mangaInfo;
@@ -271,26 +275,18 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
     /// <returns></returns>
     private static string GetMangaId(string url)
     {
-        // Split the URL to ignore query parameters
         var path = url.Split('?').FirstOrDefault() ?? string.Empty;
 
-        // Find the segment containing "series" and get the next segment
-        var segments = path.Split('/');
-        for (var i = 0; i < segments.Length; i++)
+        var segments = path.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+        for (var i = 0; i < segments.Length - 1; i++)
         {
-            if (segments[i] == "series" && i + 1 < segments.Length)
+            if (segments[i] is "comics" or "series")
             {
-                var mangaSegment = segments[i + 1];
-                var pos = mangaSegment.LastIndexOf('-');
-                if (pos >= 0)
-                {
-                    var id = mangaSegment.Substring(0, pos + 1);
-                    return id;
-                }
+                return segments[i + 1];
             }
         }
 
-        throw new NotImplementedException();
+        throw new ArgumentException($"Unable to parse manga id from '{url}'.", nameof(url));
     }
 
     /// <summary>
@@ -298,7 +294,7 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
     /// </summary>
     /// <param name="mangaId"></param>
     /// <returns></returns>
-    public string GetMangaUrl(string mangaId) => $"{BaseUrl}/series/{mangaId}";
+    public string GetMangaUrl(string mangaId) => $"{BaseUrl}/comics/{mangaId}";
 
     /// <summary>
     /// Returns full URL of a chapter from a chapter ID and manga ID.
@@ -307,7 +303,46 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
     /// <param name="mangaId"></param>
     /// <returns></returns>
     public string GetChapterUrl(string chapterId, string mangaId) =>
-        $"{BaseUrl}/series/{mangaId}/chapter/{chapterId}";
+        $"{BaseUrl}/comics/{mangaId}/chapter/{chapterId}";
+
+    private List<IMangaChapter> ExtractSerializedChapters(string response, string mangaId)
+    {
+        var publicUrl = $"/comics/{mangaId}";
+        var matches = Regex.Matches(
+            response,
+            "&quot;id&quot;:\\[0,(?<id>\\d+)\\],&quot;name&quot;:\\[0,&quot;(?<name>[^&]+)&quot;\\],&quot;number&quot;:\\[0,(?<number>\\d+)\\],&quot;title&quot;:\\[0(?:,&quot;(?<title>.*?)&quot;)?\\],[\\s\\S]*?&quot;comic_public_url&quot;:\\[0,&quot;(?<publicUrl>/comics/[^&]+)&quot;\\]",
+            RegexOptions.Singleline
+        );
+
+        return matches
+            .Cast<Match>()
+            .Select(match =>
+            {
+                if (match.Groups["publicUrl"].Value != publicUrl)
+                {
+                    return null;
+                }
+
+                var chapterName = WebUtility.HtmlDecode(match.Groups["name"].Value).Trim();
+                var title = WebUtility.HtmlDecode(match.Groups["title"].Value).Trim();
+                _ = int.TryParse(match.Groups["number"].Value, out var chapterNumber);
+
+                return (IMangaChapter)
+                    new MangaChapter()
+                    {
+                        Id = GetChapterUrl(chapterName, mangaId),
+                        Number = chapterNumber,
+                        Title = string.IsNullOrWhiteSpace(title) ? $"Chapter {chapterName}" : title,
+                    };
+            })
+            .Where(chapter => chapter is not null)
+            .Cast<IMangaChapter>()
+            .GroupBy(chapter => chapter.Id)
+            .Select(group => group.First())
+            .OrderBy(chapter => chapter.Number)
+            .Cast<IMangaChapter>()
+            .ToList();
+    }
 
     /// <summary>
     /// Returns the chapter ID of a chapter from a URL.

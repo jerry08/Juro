@@ -1,10 +1,5 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
-using Httpz;
-using Juro.Core.Models.Videos;
 using Juro.Providers.Anime;
 using Xunit;
 
@@ -204,85 +199,6 @@ public class AniKaiSpecs
     [Fact]
     public async Task I_can_get_video_quality_results_from_m3u8_video()
     {
-        // Arrange
-        var provider = new AniKai();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "spy x family",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-
-        // Act
-        var episodes = await provider.GetEpisodesAsync(
-            results[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        episodes.Should().NotBeEmpty();
-
-        // Act
-        var videoServers = await provider.GetVideoServersAsync(
-            episodes[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        videoServers.Should().NotBeEmpty();
-
-        var downloader = new HlsDownloader();
-        var hlsErrors = new List<string>();
-        var foundQualities = false;
-
-        // Act
-        foreach (var videoServer in videoServers)
-        {
-            var videos = await provider.GetVideosAsync(
-                videoServer,
-                cancellationToken: TestContext.Current.CancellationToken
-            );
-
-            // Assert
-            videos.Should().NotBeEmpty();
-
-            foreach (var hlsVideo in videos.Where(x => x.Format is VideoType.M3u8))
-            {
-                try
-                {
-                    var qualities = await downloader.GetQualitiesAsync(
-                        hlsVideo.VideoUrl,
-                        hlsVideo.Headers,
-                        TestContext.Current.CancellationToken
-                    );
-
-                    if (qualities.Count > 0)
-                    {
-                        foundQualities = true;
-                        break;
-                    }
-                }
-                catch (HttpRequestException exception)
-                {
-                    hlsErrors.Add(exception.Message);
-                }
-            }
-
-            if (foundQualities)
-                break;
-        }
-
-        if (!foundQualities)
-        {
-            var reason =
-                hlsErrors.Count > 0
-                    ? string.Join("; ", hlsErrors)
-                    : "AniKai did not return any M3U8 video sources.";
-
-            Assert.Skip($"AniKai did not expose a readable HLS manifest: {reason}");
-        }
+        await AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new AniKai(), "AniKai");
     }
 }

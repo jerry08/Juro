@@ -39,9 +39,9 @@ internal static class Http
     {
         var random = new Random();
 
-        var major = random.Next(62, 70);
-        var build = random.Next(2100, 3538);
-        var branchBuild = random.Next(170);
+        var major = random.Next(132, 138);
+        var build = random.Next(6800, 7101);
+        var branchBuild = random.Next(50, 201);
 
         return $"Mozilla/5.0 ({RandomWindowsVersion()}) AppleWebKit/537.36 (KHTML, like Gecko) "
             + $"Chrome/{major}.0.{build}.{branchBuild} Safari/537.36";
