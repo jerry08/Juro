@@ -59,4 +59,9 @@ public enum AnimeSites
     /// Parses anime and information from KickAssAnime.
     /// </summary>
     KickAssAnime,
+
+    /// <summary>
+    /// Parses anime and information from Anikoto.
+    /// </summary>
+    Anikoto,
 }

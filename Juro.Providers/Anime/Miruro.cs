@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json.Nodes;
@@ -428,9 +429,17 @@ public class Miruro(IHttpClientFactory httpClientFactory)
             HttpMethod.Get,
             $"{BaseUrl}/api/secure/pipe?e={encoded}"
         );
-        request.Headers.TryAddWithoutValidation("Accept", "*/*");
-        request.Headers.TryAddWithoutValidation("Referer", $"{BaseUrl}/");
-        request.Headers.TryAddWithoutValidation("User-Agent", Http.ChromeUserAgent());
+
+#if NETCOREAPP
+        // Miruro's edge hard-403s HTTP/1.1 pipe requests; browsers use h2.
+        request.Version = HttpVersion.Version20;
+        request.VersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+#endif
+
+        // Miruro's Cloudflare edge enforces a WAF rule that 403s pipe-API
+        // requests whose headers don't match a real Chrome CORS fetch.
+        foreach (var header in Http.ApiFingerprintHeaders(BaseUrl))
+            request.Headers.TryAddWithoutValidation(header.Key, header.Value);
 
         using var response = await _http.SendAsync(
             request,

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -138,26 +139,44 @@ public class MangaKatana(IHttpClientFactory httpClientFactory) : IMangaProvider
 
     private List<IMangaResult> ParseSearchResults(string response)
     {
-        var resultMatches = Regex.Matches(
-            response,
-            "<div class=\"item\"[\\s\\S]*?<div class=\"wrap_img\">[\\s\\S]*?<a href=\"(?<href>https://mangakatana\\.com/manga/[^\"]+)\"><img src=\"(?<image>[^\"]+)\"[\\s\\S]*?<h3 class=\"title\">[\\s\\S]*?<a href=\"https://mangakatana\\.com/manga/[^\"]+\"[^>]*>(?<title>[^<]+)</a>",
-            RegexOptions.IgnoreCase
-        );
+        if (string.IsNullOrWhiteSpace(response))
+            return [];
 
-        return resultMatches
-            .Cast<Match>()
-            .Select(match =>
-                (IMangaResult)
-                    new MangaResult()
-                    {
-                        Id = match.Groups["href"].Value,
-                        Title = match.Groups["title"].Value.Trim(),
-                        Image = match.Groups["image"].Value,
-                    }
-            )
-            .GroupBy(result => result.Id)
-            .Select(group => group.First())
-            .ToList();
+        var document = Html.Parse(response);
+        var nodes = document.DocumentNode.SelectNodes(
+            "//div[@id='book_list']//div[contains(@class, 'item')]"
+        );
+        if (nodes is null)
+            return [];
+
+        var list = new List<IMangaResult>();
+        foreach (var node in nodes)
+        {
+            var linkNode =
+                node.SelectSingleNode(
+                    ".//h3[contains(@class, 'title')]//a[contains(@href, '/manga/')]"
+                )
+                ?? node.SelectSingleNode(
+                    ".//div[contains(@class, 'wrap_img')]//a[contains(@href, '/manga/')]"
+                );
+            var href = linkNode?.GetAttributeValue("href", string.Empty);
+            if (string.IsNullOrWhiteSpace(href))
+                continue;
+
+            // Covers are wrapped in <picture><source/><img/></picture>.
+            var imageNode = node.SelectSingleNode(".//div[contains(@class, 'wrap_img')]//img");
+
+            list.Add(
+                new MangaResult()
+                {
+                    Id = href,
+                    Title = WebUtility.HtmlDecode(linkNode!.InnerText).Trim(),
+                    Image = imageNode?.GetAttributeValue("src", string.Empty),
+                }
+            );
+        }
+
+        return list.GroupBy(result => result.Id).Select(group => group.First()).ToList();
     }
 
     private Dictionary<string, string> GetBrowserHeaders() =>

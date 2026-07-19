@@ -198,6 +198,14 @@ internal static class HttpExtensions
             request.Headers.Add("User-Agent", Http.ChromeUserAgent());
         }
 
+        // A manually-constructed HttpRequestMessage defaults to HTTP/1.1 and
+        // does NOT inherit HttpClient.DefaultRequestVersion, so negotiate the
+        // client's preferred version (HTTP/2 with fallback) like a browser.
+#if NETCOREAPP
+        request.Version = http.DefaultRequestVersion;
+        request.VersionPolicy = http.DefaultVersionPolicy;
+#endif
+
         // Strip .NET distributed tracing headers that leak non-browser fingerprints
         request.Headers.Remove("traceparent");
         request.Headers.Remove("tracestate");

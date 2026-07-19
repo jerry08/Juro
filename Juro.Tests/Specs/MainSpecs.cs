@@ -35,5 +35,7 @@ public class MainSpecs
         providerTypes.Should().Contain(typeof(AnimeGG));
         providerTypes.Should().Contain(typeof(Miruro));
         providerTypes.Should().Contain(typeof(KickAssAnime));
+        providerTypes.Should().Contain(typeof(Anikoto));
+        providerTypes.Should().Contain(typeof(Aniwave));
     }
 }

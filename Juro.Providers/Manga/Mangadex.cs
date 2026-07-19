@@ -49,6 +49,14 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
         : this(Http.ClientProvider) { }
 
     /// <summary>
+    /// MangaDex's edge rejects clients that don't look like a modern browser
+    /// with "400: Unsupported Browser", so every API call sends the full
+    /// Chrome fingerprint header set.
+    /// </summary>
+    private Dictionary<string, string> ApiHeaders() =>
+        Http.ApiFingerprintHeaders(BaseUrl, sameOrigin: false);
+
+    /// <summary>
     /// Search for manga.
     /// </summary>
     /// <param name="query">Search query.</param>
@@ -88,8 +96,8 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
             throw new Exception("not enough results");
 
         var url =
-            $"{_apiUrl}/manga?limit={limit}&title={Uri.EscapeDataString(query)}&limit={limit}&offset={limit * (page - 1)}&order[relevance]=desc";
-        var response = await _http.ExecuteAsync(url, cancellationToken);
+            $"{_apiUrl}/manga?limit={limit}&title={Uri.EscapeDataString(query)}&offset={limit * (page - 1)}&order[relevance]=desc";
+        var response = await _http.ExecuteAsync(url, ApiHeaders(), cancellationToken);
 
         var data = JsonNode.Parse(response);
         if (data?["result"]?.ToString() != "ok")
@@ -159,7 +167,7 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
     )
     {
         var url = $"{_apiUrl}/manga/{mangaId}";
-        var response = await _http.ExecuteAsync(url, cancellationToken);
+        var response = await _http.ExecuteAsync(url, ApiHeaders(), cancellationToken);
 
         var data = JsonNode.Parse(response);
         if (data?["result"]?.ToString() != "ok")
@@ -229,7 +237,7 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
     )
     {
         var url = $"{_apiUrl}/at-home/server/{chapterId}";
-        var response = await _http.ExecuteAsync(url, cancellationToken);
+        var response = await _http.ExecuteAsync(url, ApiHeaders(), cancellationToken);
 
         var data = JsonNode.Parse(response);
         if (data?["result"]?.ToString() != "ok")
@@ -269,7 +277,7 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
         {
             var url =
                 $"{_apiUrl}/manga/{mangaId}/feed?offset={offset}&limit=96&order[volume]=desc&order[chapter]=desc&translatedLanguage[]=en";
-            var response = await _http.ExecuteAsync(url, cancellationToken);
+            var response = await _http.ExecuteAsync(url, ApiHeaders(), cancellationToken);
 
             var data = JsonNode.Parse(response);
             if (data?["result"]?.ToString() != "ok")
@@ -317,7 +325,7 @@ public class Mangadex(IHttpClientFactory httpClientFactory) : IMangaProvider
     )
     {
         var url = $"{_apiUrl}/cover/{coverId}";
-        var response = await _http.ExecuteAsync(url, cancellationToken);
+        var response = await _http.ExecuteAsync(url, ApiHeaders(), cancellationToken);
 
         var data = JsonNode.Parse(response);
         if (data?["result"]?.ToString() != "ok")

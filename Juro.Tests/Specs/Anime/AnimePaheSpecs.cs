@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Juro.Providers.Anime;
@@ -5,200 +6,214 @@ using Xunit;
 
 namespace Juro.Tests.Specs.Anime;
 
+/// <summary>
+/// AnimePahe serves a Cloudflare JS challenge to plain HTTP clients, so every
+/// spec runs through <see cref="LiveSiteGuard.SkipOnCloudflareChallengeAsync"/>
+/// and is skipped (not failed) when the challenge blocks this environment.
+/// </summary>
 public class AnimePaheSpecs
 {
-    [Fact]
-    public async Task I_can_get_results_from_a_search_query()
-    {
-        // Arrange
-        var provider = new AnimePahe();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "naruto",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-    }
+    private static Task GuardAsync(Func<Task> body) =>
+        LiveSiteGuard.SkipOnCloudflareChallengeAsync("AnimePahe", body);
 
     [Fact]
-    public async Task I_can_get_more_details_from_an_anime()
-    {
-        // Arrange
-        var provider = new AnimePahe();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "naruto",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-
-        // Act
-        var animeInfo = await provider.GetAnimeInfoAsync(
-            results[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        animeInfo.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task I_can_get_episode_results_from_an_anime()
-    {
-        // Arrange
-        var provider = new AnimePahe();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "naruto",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-
-        // Act
-        var episodes = await provider.GetEpisodesAsync(
-            results[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        episodes.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task I_can_get_video_server_results_from_an_episode()
-    {
-        // Arrange
-        var provider = new AnimePahe();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "naruto",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-
-        // Act
-        var episodes = await provider.GetEpisodesAsync(
-            results[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        episodes.Should().NotBeEmpty();
-
-        // Act
-        var videoServers = await provider.GetVideoServersAsync(
-            episodes[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        videoServers.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task I_can_get_video_results_from_a_video_server()
-    {
-        // Arrange
-        var provider = new AnimePahe();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "naruto",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-
-        // Act
-        var episodes = await provider.GetEpisodesAsync(
-            results[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        episodes.Should().NotBeEmpty();
-
-        // Act
-        var videoServers = await provider.GetVideoServersAsync(
-            episodes[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        videoServers.Should().NotBeEmpty();
-
-        // Act
-        var videos = await provider.GetVideosAsync(
-            videoServers[0],
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        videos.Should().NotBeEmpty();
-    }
-
-    [Fact]
-    public async Task I_can_get_video_results_from_all_video_servers()
-    {
-        // Arrange
-        var provider = new AnimePahe();
-
-        // Act
-        var results = await provider.SearchAsync(
-            "naruto",
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        results.Should().NotBeEmpty();
-
-        // Act
-        var episodes = await provider.GetEpisodesAsync(
-            results[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        episodes.Should().NotBeEmpty();
-
-        // Act
-        var videoServers = await provider.GetVideoServersAsync(
-            episodes[0].Id,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-
-        // Assert
-        videoServers.Should().NotBeEmpty();
-
-        // Act
-        foreach (var videoServer in videoServers)
+    public Task I_can_get_results_from_a_search_query() =>
+        GuardAsync(async () =>
         {
+            // Arrange
+            var provider = new AnimePahe();
+
+            // Act
+            var results = await provider.SearchAsync(
+                "naruto",
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            results.Should().NotBeEmpty();
+        });
+
+    [Fact]
+    public Task I_can_get_more_details_from_an_anime() =>
+        GuardAsync(async () =>
+        {
+            // Arrange
+            var provider = new AnimePahe();
+
+            // Act
+            var results = await provider.SearchAsync(
+                "naruto",
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            results.Should().NotBeEmpty();
+
+            // Act
+            var animeInfo = await provider.GetAnimeInfoAsync(
+                results[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            animeInfo.Should().NotBeNull();
+        });
+
+    [Fact]
+    public Task I_can_get_episode_results_from_an_anime() =>
+        GuardAsync(async () =>
+        {
+            // Arrange
+            var provider = new AnimePahe();
+
+            // Act
+            var results = await provider.SearchAsync(
+                "naruto",
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            results.Should().NotBeEmpty();
+
+            // Act
+            var episodes = await provider.GetEpisodesAsync(
+                results[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            episodes.Should().NotBeEmpty();
+        });
+
+    [Fact]
+    public Task I_can_get_video_server_results_from_an_episode() =>
+        GuardAsync(async () =>
+        {
+            // Arrange
+            var provider = new AnimePahe();
+
+            // Act
+            var results = await provider.SearchAsync(
+                "naruto",
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            results.Should().NotBeEmpty();
+
+            // Act
+            var episodes = await provider.GetEpisodesAsync(
+                results[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            episodes.Should().NotBeEmpty();
+
+            // Act
+            var videoServers = await provider.GetVideoServersAsync(
+                episodes[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            videoServers.Should().NotBeEmpty();
+        });
+
+    [Fact]
+    public Task I_can_get_video_results_from_a_video_server() =>
+        GuardAsync(async () =>
+        {
+            // Arrange
+            var provider = new AnimePahe();
+
+            // Act
+            var results = await provider.SearchAsync(
+                "naruto",
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            results.Should().NotBeEmpty();
+
+            // Act
+            var episodes = await provider.GetEpisodesAsync(
+                results[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            episodes.Should().NotBeEmpty();
+
+            // Act
+            var videoServers = await provider.GetVideoServersAsync(
+                episodes[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            videoServers.Should().NotBeEmpty();
+
+            // Act
             var videos = await provider.GetVideosAsync(
-                videoServer,
+                videoServers[0],
                 cancellationToken: TestContext.Current.CancellationToken
             );
 
             // Assert
             videos.Should().NotBeEmpty();
-        }
-    }
+        });
 
     [Fact]
-    public async Task I_can_get_video_quality_results_from_m3u8_video()
-    {
-        await AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new AnimePahe(), "AnimePahe");
-    }
+    public Task I_can_get_video_results_from_all_video_servers() =>
+        GuardAsync(async () =>
+        {
+            // Arrange
+            var provider = new AnimePahe();
+
+            // Act
+            var results = await provider.SearchAsync(
+                "naruto",
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            results.Should().NotBeEmpty();
+
+            // Act
+            var episodes = await provider.GetEpisodesAsync(
+                results[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            episodes.Should().NotBeEmpty();
+
+            // Act
+            var videoServers = await provider.GetVideoServersAsync(
+                episodes[0].Id,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+
+            // Assert
+            videoServers.Should().NotBeEmpty();
+
+            // Act
+            foreach (var videoServer in videoServers)
+            {
+                var videos = await provider.GetVideosAsync(
+                    videoServer,
+                    cancellationToken: TestContext.Current.CancellationToken
+                );
+
+                // Assert
+                videos.Should().NotBeEmpty();
+            }
+        });
+
+    [Fact]
+    public Task I_can_get_video_quality_results_from_m3u8_video() =>
+        GuardAsync(() =>
+            AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new AnimePahe(), "AnimePahe")
+        );
 }
