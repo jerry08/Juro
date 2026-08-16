@@ -430,25 +430,30 @@ public abstract class AnikotoThemeProvider(IHttpClientFactory httpClientFactory)
         };
 
         var id = Uri.EscapeDataString(dataId);
-        var data = await TryGetJsonAsync(
-            $"{origin}/stream/getSources?id={id}&id={id}",
-            apiHeaders,
-            cancellationToken
-        );
+        var streamType = GetStreamType(embedUrl);
+        var sourceSelector = GetSourceSelector(embedUrl);
+        var url = $"{origin}/stream/getSourcesNew?id={id}&id={id}";
+        if (streamType is not null)
+            url += $"&type={streamType}&type={streamType}";
+        if (sourceSelector is not null)
+            url += $"&s={Uri.EscapeDataString(sourceSelector)}";
 
-        if (ExtractVideoUrl(data?["sources"]) is null)
+        // The current player rewrites getSources calls to getSourcesNew before
+        // making the request. Prefer the same endpoint so stale legacy CDN
+        // manifests do not shadow a healthy current source.
+        var data = await TryGetJsonAsync(url, apiHeaders, cancellationToken);
+        var videoUrl = ExtractVideoUrl(data?["sources"]);
+
+        if (string.IsNullOrWhiteSpace(videoUrl) || !videoUrl!.StartsWith("http"))
         {
-            // Newer embeds serve from getSourcesNew, optionally typed with the
-            // sub/dub suffix of the embed path.
-            var streamType = GetStreamType(embedUrl);
-            var url = $"{origin}/stream/getSourcesNew?id={id}&id={id}";
-            if (streamType is not null)
-                url += $"&type={streamType}&type={streamType}";
+            url = $"{origin}/stream/getSources?id={id}&id={id}";
+            if (sourceSelector is not null)
+                url += $"&s={Uri.EscapeDataString(sourceSelector)}";
 
             data = await TryGetJsonAsync(url, apiHeaders, cancellationToken);
+            videoUrl = ExtractVideoUrl(data?["sources"]);
         }
 
-        var videoUrl = ExtractVideoUrl(data?["sources"]);
         if (string.IsNullOrWhiteSpace(videoUrl) || !videoUrl!.StartsWith("http"))
             return [];
 
@@ -595,6 +600,34 @@ public abstract class AnikotoThemeProvider(IHttpClientFactory httpClientFactory)
 
         var lastSegment = uri.AbsolutePath.TrimEnd('/').Split('/').LastOrDefault();
         return lastSegment is "sub" or "dub" ? lastSegment : null;
+    }
+
+    private static string? GetSourceSelector(string embedUrl)
+    {
+        if (!Uri.TryCreate(embedUrl, UriKind.Absolute, out var uri))
+            return null;
+
+        foreach (var part in uri.Query.TrimStart('?').Split('&'))
+        {
+            var values = part.Split(new[] { '=' }, 2);
+            if (values.Length != 2 || values[0] != "s")
+                continue;
+
+            var value = WebUtility.UrlDecode(values[1]);
+            var sanitized = new string(
+                value
+                    .Where(character =>
+                        character is >= 'a' and <= 'z'
+                        || character is >= 'A' and <= 'Z'
+                        || character is >= '0' and <= '9'
+                        || character is '_' or '-'
+                    )
+                    .ToArray()
+            );
+            return string.IsNullOrWhiteSpace(sanitized) ? null : sanitized;
+        }
+
+        return null;
     }
 
     private static Dictionary<string, string> ParseHostMap(string html)
