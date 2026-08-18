@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Juro.Providers.Anime;
@@ -151,8 +153,42 @@ public class AnikotoSpecs
     }
 
     [Fact]
-    public async Task I_can_get_video_quality_results_from_m3u8_video()
+    public async Task Bleach_episode_282_sub_servers_return_playable_media()
     {
-        await AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new Anikoto(), "Anikoto");
+        // Arrange
+        var provider = new Anikoto();
+        var results = await provider.SearchAsync(
+            "bleach",
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        var bleach = results.First(x =>
+            x.Title.Equals("Bleach", StringComparison.OrdinalIgnoreCase)
+        );
+        var episodes = await provider.GetEpisodesAsync(
+            bleach.Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        var episode = episodes.Single(x => x.Number == 282);
+        var servers = await provider.GetVideoServersAsync(
+            episode.Id,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        var subServers = servers
+            .Where(x => x.Name.StartsWith("Sub -", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        // Act / Assert
+        await AnimeVideoAssertions.AssertEveryServerPlayableAsync(
+            provider,
+            subServers,
+            "Anikoto / Bleach / Episode 282 / Sub",
+            TestContext.Current.CancellationToken
+        );
+    }
+
+    [Fact]
+    public async Task I_can_get_a_playable_video()
+    {
+        await AnimeVideoAssertions.AssertPlayableVideoAsync(new Anikoto(), "Anikoto", "bleach");
     }
 }

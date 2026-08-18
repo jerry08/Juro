@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,6 +24,8 @@ namespace Juro.Providers.Manga;
 /// </remarks>
 public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
 {
+    private const string ApiUrl = "https://api.asurascans.com";
+
     private readonly HttpClient _http = httpClientFactory.CreateClient();
 
     public string Key => Name;
@@ -30,9 +34,9 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
 
     public string Language => "en";
 
-    public string BaseUrl => "https://asuracomic.net";
+    public string BaseUrl => "https://asurascans.com";
 
-    public string Logo => "https://asuracomic.net/_next/image?url=%2Fimages%2Flogo.png&w=2048&q=75";
+    public string Logo => $"{BaseUrl}/images/logo.webp";
 
     /// <summary>
     /// Initializes an instance of <see cref="AsuraScans"/>.
@@ -52,42 +56,36 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
         CancellationToken cancellationToken = default!
     )
     {
-        var page = 1;
-
         var response = await _http.ExecuteAsync(
-            $"{BaseUrl}/series?page={page}&name={Uri.EscapeDataString(query)}",
+            $"{ApiUrl}/api/series?search={Uri.EscapeDataString(query)}&limit=30&offset=0",
             cancellationToken
         );
 
-        var document = Html.Parse(response);
-
-        var nodes = document
-            //.DocumentNode.SelectNodes(".//div[@class='grid']/a")
-            .DocumentNode.SelectNodes(".//div[contains(@class, 'grid')]/a")
-            ?.Where(x => x.Attributes.Contains("href"))
-            ?.ToList();
-        if (nodes is null)
-            return [];
-
         var list = new List<IMangaResult>();
+        var nodes = JsonNode.Parse(response)?["data"] as JsonArray;
+        if (nodes is null)
+            return list;
 
         foreach (var node in nodes)
         {
-            var rawUrl = node.Attributes["href"]!.Value;
+            var rawUrl = GetString(node, "public_url");
+            var slug = GetString(node, "slug");
+            if (string.IsNullOrWhiteSpace(rawUrl))
+            {
+                if (string.IsNullOrWhiteSpace(slug))
+                    continue;
+
+                rawUrl = $"/comics/{slug}";
+            }
 
             var id = GetMangaId(rawUrl);
-            var url = GetMangaUrl(id);
 
             list.Add(
                 new MangaResult()
                 {
                     Id = id,
-                    Title = node.SelectSingleNode(
-                        ".//div[contains(@class, 'block')]/span[contains(@class, 'block')]"
-                    )?.InnerText,
-                    Image = Uri.UnescapeDataString(
-                        BaseUrl + node.SelectSingleNode(".//img")!.Attributes["src"]!.Value
-                    ),
+                    Title = GetString(node, "title"),
+                    Image = GetString(node, "cover") ?? GetString(node, "cover_url"),
                     Headers = new() { { "Referer", BaseUrl } },
                 }
             );
@@ -103,116 +101,75 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
     )
     {
         var mangaInfo = new MangaInfo { Id = mangaId, Title = string.Empty };
+        var apiSlug = GetApiSlug(mangaId);
 
-        var url = GetMangaUrl(mangaId);
-        var response = await _http.ExecuteAsync(url, cancellationToken);
-
-        var document = Html.Parse(response);
-
-        var wrapper = document.DocumentNode.SelectSingleNode(
-            ".//div[contains(@class, 'relative') and contains(@class, 'grid')]"
+        var response = await _http.ExecuteAsync(
+            $"{ApiUrl}/api/series/{Uri.EscapeDataString(apiSlug)}",
+            cancellationToken
         );
+        var series = JsonNode.Parse(response)?["series"];
+        if (series is null)
+            return mangaInfo;
 
-        mangaInfo.Title = document
-            .DocumentNode.SelectSingleNode(
-                ".//span[contains(@class, 'text-xl') and contains(@class, 'font-bold')]"
-            )
-            ?.InnerText;
-
-        mangaInfo.Description = document
-            .DocumentNode.SelectSingleNode(
-                ".//span[contains(@class, 'font-medium') and contains(@class, 'text-sm')]"
-            )
-            ?.InnerText;
-
+        mangaInfo.Title = GetString(series, "title");
+        mangaInfo.Description = GetPlainText(GetString(series, "description"));
         mangaInfo.Headers = new() { { "Referer", BaseUrl } };
-
-        mangaInfo.Image = Uri.UnescapeDataString(
-            BaseUrl + wrapper?.SelectSingleNode(".//img[@alt='poster']")?.Attributes["src"].Value
-        );
-
+        mangaInfo.Image = GetString(series, "cover") ?? GetString(series, "cover_url");
+        mangaInfo.AltTitles = GetStringArray(series["alt_titles"]);
         mangaInfo.Genres =
-            document
-                .DocumentNode.SelectNodes(
-                    ".//div[starts-with(@class, 'space')]//div[contains(@class, 'flex')]//button[contains(@class, 'text-white')]"
-                )
-                ?.Select(x => x.InnerText)
+            (series["genres"] as JsonArray)
+                ?.Select(genre => GetString(genre, "name"))
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Cast<string>()
                 .ToList()
             ?? [];
 
-        var statusText = document
-            .DocumentNode.SelectSingleNode(
-                ".//div[contains(@class, 'flex')][h3[1][contains(text(), 'Status')]]/h3[2]"
-            )
-            ?.InnerText;
-
-        mangaInfo.Status = statusText switch
+        mangaInfo.Status = GetString(series, "status")?.Trim().ToLowerInvariant() switch
         {
-            "Ongoing" => MediaStatus.Ongoing,
-            "Hiatus" => MediaStatus.Hiatus,
-            "Completed" => MediaStatus.Completed,
-            "Dropped" => MediaStatus.Cancelled,
-            "Season End" => MediaStatus.Hiatus,
+            "ongoing" => MediaStatus.Ongoing,
+            "hiatus" => MediaStatus.Hiatus,
+            "completed" => MediaStatus.Completed,
+            "dropped" => MediaStatus.Cancelled,
+            "season end" => MediaStatus.Hiatus,
             _ => MediaStatus.Unknown,
         };
 
-        var authorNode = document.DocumentNode.SelectSingleNode(
-            ".//div[h3[1][text() = 'Author']]/h3[2]"
-        );
-        if (authorNode != null)
+        var author = GetString(series, "author")?.Trim();
+        if (!string.IsNullOrWhiteSpace(author) && author != "_")
         {
-            var text = authorNode.InnerText.Trim();
-            if (text != "_")
-            {
-                mangaInfo.Authors = [text];
-            }
+            mangaInfo.Authors = [author];
         }
 
-        var chapterNodes = document
-            .DocumentNode.SelectNodes(
-                ".//div[contains(@class, 'scrollbar-thumb-themecolor')]/div[contains(@class, 'group')]"
-            )
-            ?.Reverse();
-        if (chapterNodes is not null)
+        var publicUrl = GetString(series, "public_url");
+        var publicMangaId = !string.IsNullOrWhiteSpace(publicUrl) ? GetMangaId(publicUrl) : mangaId;
+        var chaptersResponse = await _http.ExecuteAsync(
+            $"{ApiUrl}/api/series/{Uri.EscapeDataString(apiSlug)}/chapters",
+            cancellationToken
+        );
+        var chapters = JsonNode.Parse(chaptersResponse)?["data"] as JsonArray;
+        if (chapters is not null)
         {
-            foreach (var chapterNode in chapterNodes)
+            foreach (var chapter in chapters)
             {
-                var rawUrl =
-                    BaseUrl + chapterNode.SelectSingleNode(".//a")?.Attributes["href"].Value;
+                if (!TryGetFloat(chapter?["number"], out var chapterNumber))
+                    continue;
 
-                var id = GetChapterId(rawUrl);
-                var url2 = GetChapterUrl(id, mangaId);
-
-                var titleNode = chapterNode.SelectSingleNode(".//a/span");
-                var title = titleNode?.InnerText.Trim() ?? string.Empty;
-
-                var chapterText =
-                    chapterNode.SelectSingleNode(".//a")?.InnerText.Trim() ?? string.Empty;
-
-                if (string.IsNullOrEmpty(title))
-                    title = chapterText;
-
-                var chapterNumberText = chapterText.Replace("Chapter", "").Trim();
-                if (!string.IsNullOrEmpty(title))
-                    chapterNumberText = chapterNumberText.Replace(title, "");
-
-                _ = int.TryParse(chapterNumberText, out var chapterNumber);
+                var chapterId = chapterNumber.ToString(CultureInfo.InvariantCulture);
+                var title = GetString(chapter, "title");
 
                 mangaInfo.Chapters.Add(
                     new MangaChapter()
                     {
-                        Id = url2,
+                        Id = GetChapterUrl(chapterId, publicMangaId),
                         Number = chapterNumber,
-                        Title = title,
+                        Title = string.IsNullOrWhiteSpace(title) ? $"Chapter {chapterId}" : title,
+                        ReleasedDate = GetString(chapter, "published_at"),
                     }
                 );
             }
         }
 
-        if (mangaInfo.Chapters.Count == 0)
-        {
-            mangaInfo.Chapters.AddRange(ExtractSerializedChapters(response, mangaId));
-        }
+        mangaInfo.Chapters = mangaInfo.Chapters.OrderBy(chapter => chapter.Number).ToList();
 
         return mangaInfo;
     }
@@ -229,14 +186,20 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
         var document = Html.Parse(response);
 
         var nodes = document
-            .DocumentNode.SelectNodes(".//img[contains(@alt, 'chapter')]")
+            .DocumentNode.SelectNodes(
+                ".//img[starts-with(@alt, 'Page ') or contains(translate(@alt, 'CHAPTER', 'chapter'), 'chapter')]"
+            )
             ?.ToList();
 
         var list = new List<IMangaChapterPage>();
 
         for (var i = 0; i < nodes?.Count; i++)
         {
-            url = nodes[i].Attributes["src"]!.Value;
+            url = nodes[i].GetAttributeValue("src", string.Empty);
+            if (string.IsNullOrWhiteSpace(url))
+                url = nodes[i].GetAttributeValue("data-src", string.Empty);
+            if (string.IsNullOrWhiteSpace(url))
+                continue;
 
             // Extract the substring after the last '/'
             var afterLastSlash = url.Substring(url.LastIndexOf('/') + 1);
@@ -259,17 +222,20 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
             );
         }
 
-        return list;
+        if (list.Count == 0)
+        {
+            AddSerializedReaderPages(document, list);
+        }
+
+        return list.GroupBy(page => page.Image)
+            .Select(group => group.First())
+            .OrderBy(page => page.Page)
+            .ToList();
     }
 
     /// <summary>
-    /// Asura Scans appends a random string at the end of each series slug.
-    /// The random string is not necessary, but we must leave the trailing '-' else
-    /// the url will break.
-    /// Example Url: https://asuracomic.net/series/swordmasters-youngest-son-cb22671f
-    /// Example Url: https://asuracomic.net/series/swordmasters-youngest-son-cb22671f?blahblah
-    /// Example Url: https://asuracomic.net/series/swordmasters-youngest-son-cb22671f/chapter/1
-    /// parse "swordmasters-youngest-son-" from the url.
+    /// Asura Scans appends an eight-character cache suffix to public series URLs.
+    /// Preserve it in public IDs because the website requires the complete route.
     /// </summary>
     /// <param name="url"></param>
     /// <returns></returns>
@@ -305,43 +271,80 @@ public class AsuraScans(IHttpClientFactory httpClientFactory) : IMangaProvider
     public string GetChapterUrl(string chapterId, string mangaId) =>
         $"{BaseUrl}/comics/{mangaId}/chapter/{chapterId}";
 
-    private List<IMangaChapter> ExtractSerializedChapters(string response, string mangaId)
+    private static string GetApiSlug(string mangaId)
     {
-        var publicUrl = $"/comics/{mangaId}";
-        var matches = Regex.Matches(
-            response,
-            "&quot;id&quot;:\\[0,(?<id>\\d+)\\],&quot;name&quot;:\\[0,&quot;(?<name>[^&]+)&quot;\\],&quot;number&quot;:\\[0,(?<number>\\d+)\\],&quot;title&quot;:\\[0(?:,&quot;(?<title>.*?)&quot;)?\\],[\\s\\S]*?&quot;comic_public_url&quot;:\\[0,&quot;(?<publicUrl>/comics/[^&]+)&quot;\\]",
-            RegexOptions.Singleline
+        var id = mangaId.Contains("/") ? GetMangaId(mangaId) : mangaId;
+        return Regex.Replace(id, "-[a-f0-9]{8}$", string.Empty, RegexOptions.IgnoreCase);
+    }
+
+    private static string? GetString(JsonNode? node, string propertyName) =>
+        node?[propertyName]?.GetValue<string>();
+
+    private static List<string> GetStringArray(JsonNode? node) =>
+        (node as JsonArray)
+            ?.Select(value => value?.GetValue<string>())
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Cast<string>()
+            .ToList()
+        ?? [];
+
+    private static string? GetPlainText(string? html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+            return html;
+
+        return WebUtility.HtmlDecode(Html.Parse(html).DocumentNode.InnerText).Trim();
+    }
+
+    private static bool TryGetFloat(JsonNode? node, out float value) =>
+        float.TryParse(
+            node?.ToString(),
+            NumberStyles.Float,
+            CultureInfo.InvariantCulture,
+            out value
         );
 
-        return matches
-            .Cast<Match>()
-            .Select(match =>
-            {
-                if (match.Groups["publicUrl"].Value != publicUrl)
+    private static void AddSerializedReaderPages(
+        HtmlAgilityPack.HtmlDocument document,
+        List<IMangaChapterPage> pages
+    )
+    {
+        var reader = document.DocumentNode.SelectSingleNode(
+            ".//astro-island[contains(@component-url, 'ChapterReader')]"
+        );
+        var props = reader?.GetAttributeValue("props", string.Empty);
+        if (string.IsNullOrWhiteSpace(props))
+            return;
+
+        JsonArray? serializedPages;
+        try
+        {
+            serializedPages =
+                JsonNode.Parse(WebUtility.HtmlDecode(props))?["pages"]?[1] as JsonArray;
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return;
+        }
+
+        if (serializedPages is null)
+            return;
+
+        for (var i = 0; i < serializedPages.Count; i++)
+        {
+            var image = serializedPages[i]?[1]?["url"]?[1]?.GetValue<string>();
+            if (string.IsNullOrWhiteSpace(image))
+                continue;
+
+            pages.Add(
+                new MangaChapterPage()
                 {
-                    return null;
+                    Image = image,
+                    Page = i + 1,
+                    Title = $"Page {i + 1}",
                 }
-
-                var chapterName = WebUtility.HtmlDecode(match.Groups["name"].Value).Trim();
-                var title = WebUtility.HtmlDecode(match.Groups["title"].Value).Trim();
-                _ = int.TryParse(match.Groups["number"].Value, out var chapterNumber);
-
-                return (IMangaChapter)
-                    new MangaChapter()
-                    {
-                        Id = GetChapterUrl(chapterName, mangaId),
-                        Number = chapterNumber,
-                        Title = string.IsNullOrWhiteSpace(title) ? $"Chapter {chapterName}" : title,
-                    };
-            })
-            .Where(chapter => chapter is not null)
-            .Cast<IMangaChapter>()
-            .GroupBy(chapter => chapter.Id)
-            .Select(group => group.First())
-            .OrderBy(chapter => chapter.Number)
-            .Cast<IMangaChapter>()
-            .ToList();
+            );
+        }
     }
 
     /// <summary>

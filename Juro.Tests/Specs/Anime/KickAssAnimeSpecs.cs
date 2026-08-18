@@ -37,11 +37,8 @@ public class KickAssAnimeSpecs
     }
 
     [Fact(Skip = "kaa.lt returns a Cloudflare managed challenge from this test environment.")]
-    public async Task I_can_get_video_quality_results_from_m3u8_video()
+    public async Task I_can_get_a_playable_video()
     {
-        await AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(
-            new KickAssAnime(),
-            "KickAssAnime"
-        );
+        await AnimeVideoAssertions.AssertPlayableVideoAsync(new KickAssAnime(), "KickAssAnime");
     }
 }

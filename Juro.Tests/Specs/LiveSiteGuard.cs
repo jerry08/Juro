@@ -35,6 +35,22 @@ internal static class LiveSiteGuard
     }
 
     /// <summary>
+    /// Runs the test body and skips it when a provider's media CDN uses a
+    /// Cloudflare security rule to block this test machine's network.
+    /// </summary>
+    public static async Task SkipOnCloudflareNetworkBlockAsync(string providerName, Func<Task> body)
+    {
+        try
+        {
+            await body();
+        }
+        catch (HttpRequestException exception) when (exception.Message.Contains("403"))
+        {
+            Assert.Skip($"{providerName} is blocked by Cloudflare (403) from this test network.");
+        }
+    }
+
+    /// <summary>
     /// Runs the test body and skips the test when the site is unreachable at
     /// the transport level (connection reset/refused/timeout), which indicates
     /// a network or region block rather than a provider defect. DNS failures

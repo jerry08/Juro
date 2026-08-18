@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Juro.Providers.Anime;
@@ -7,6 +8,9 @@ namespace Juro.Tests.Specs.Anime;
 
 public class MiruroSpecs
 {
+    private static Task GuardPlaybackAsync(Func<Task> body) =>
+        LiveSiteGuard.SkipOnCloudflareNetworkBlockAsync("Miruro playback CDN", body);
+
     [Fact]
     public async Task I_can_get_results_from_a_search_query()
     {
@@ -151,8 +155,8 @@ public class MiruroSpecs
     }
 
     [Fact]
-    public async Task I_can_get_video_quality_results_from_m3u8_video()
-    {
-        await AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new Miruro(), "Miruro", "naruto");
-    }
+    public Task I_can_get_a_playable_video() =>
+        GuardPlaybackAsync(() =>
+            AnimeVideoAssertions.AssertPlayableVideoAsync(new Miruro(), "Miruro", "naruto")
+        );
 }

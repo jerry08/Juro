@@ -212,8 +212,8 @@ public class AnimePaheSpecs
         });
 
     [Fact]
-    public Task I_can_get_video_quality_results_from_m3u8_video() =>
+    public Task I_can_get_a_playable_video() =>
         GuardAsync(() =>
-            AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new AnimePahe(), "AnimePahe")
+            AnimeVideoAssertions.AssertPlayableVideoAsync(new AnimePahe(), "AnimePahe")
         );
 }

@@ -166,8 +166,6 @@ public class AnimeGGSpecs
         });
 
     [Fact]
-    public Task I_can_get_video_quality_results_from_m3u8_video() =>
-        GuardAsync(() =>
-            AnimeHlsAssertions.AssertReadableHlsQualitiesAsync(new AnimeGG(), "AnimeGG")
-        );
+    public Task I_can_get_a_playable_video() =>
+        GuardAsync(() => AnimeVideoAssertions.AssertPlayableVideoAsync(new AnimeGG(), "AnimeGG"));
 }

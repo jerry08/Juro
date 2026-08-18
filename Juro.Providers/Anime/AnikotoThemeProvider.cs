@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -69,6 +71,11 @@ public abstract class AnikotoThemeProvider(IHttpClientFactory httpClientFactory)
         @"'(?<origin>[^']+)'\s*:\s*'(?<proxy>[^']+)'",
         RegexOptions.Compiled
     );
+    private static readonly Regex _hlsUriAttributeRegex = new(
+        "URI=\\\"(?<uri>[^\\\"]+)\\\"",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase
+    );
+    private static readonly TimeSpan _sourceProbeTimeout = TimeSpan.FromSeconds(15);
 
     private readonly HttpClient _http = httpClientFactory.CreateClient();
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
@@ -432,47 +439,334 @@ public abstract class AnikotoThemeProvider(IHttpClientFactory httpClientFactory)
         var id = Uri.EscapeDataString(dataId);
         var streamType = GetStreamType(embedUrl);
         var sourceSelector = GetSourceSelector(embedUrl);
-        var url = $"{origin}/stream/getSourcesNew?id={id}&id={id}";
+        var currentUrl = $"{origin}/stream/getSourcesNew?id={id}&id={id}";
         if (streamType is not null)
-            url += $"&type={streamType}&type={streamType}";
+            currentUrl += $"&type={streamType}&type={streamType}";
         if (sourceSelector is not null)
-            url += $"&s={Uri.EscapeDataString(sourceSelector)}";
+            currentUrl += $"&s={Uri.EscapeDataString(sourceSelector)}";
 
-        // The current player rewrites getSources calls to getSourcesNew before
-        // making the request. Prefer the same endpoint so stale legacy CDN
-        // manifests do not shadow a healthy current source.
-        var data = await TryGetJsonAsync(url, apiHeaders, cancellationToken);
-        var videoUrl = ExtractVideoUrl(data?["sources"]);
+        var legacyUrl = $"{origin}/stream/getSources?id={id}&id={id}";
+        var candidateApiUrls = new List<string> { currentUrl };
+        if (sourceSelector is not null)
+            candidateApiUrls.Add($"{legacyUrl}&s={Uri.EscapeDataString(sourceSelector)}");
+        candidateApiUrls.Add(legacyUrl);
 
-        if (string.IsNullOrWhiteSpace(videoUrl) || !videoUrl!.StartsWith("http"))
+        // A successful master manifest is not enough to prove an HLS source is
+        // usable: stale manifests can reference dead segment hosts, and some
+        // fallback CDNs return image decoys. Probe the first media segment and
+        // fall through to the next API/CDN candidate when it is not media.
+        var playbackHeaders = BuildPlaybackHeaders(origin);
+        var checkedVideoUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var candidateApiUrl in candidateApiUrls.Distinct())
         {
-            url = $"{origin}/stream/getSources?id={id}&id={id}";
-            if (sourceSelector is not null)
-                url += $"&s={Uri.EscapeDataString(sourceSelector)}";
+            var data = await TryGetJsonAsync(candidateApiUrl, apiHeaders, cancellationToken);
+            foreach (var videoUrl in ExtractVideoUrls(data?["sources"]))
+            {
+                if (!IsHttpUrl(videoUrl) || !checkedVideoUrls.Add(videoUrl))
+                    continue;
 
-            data = await TryGetJsonAsync(url, apiHeaders, cancellationToken);
-            videoUrl = ExtractVideoUrl(data?["sources"]);
+                if (!await IsPlayableVideoSourceAsync(videoUrl, playbackHeaders, cancellationToken))
+                    continue;
+
+                var subtitles = ParsePlayerSubtitles(data?["tracks"] as JsonArray);
+                var isDash = ContainsIgnoreCase(videoUrl, ".mpd");
+                var isHls = ContainsIgnoreCase(videoUrl, ".m3u8");
+                return
+                [
+                    new VideoSource
+                    {
+                        Title = server.Name,
+                        Resolution = "Multi Quality",
+                        VideoUrl = videoUrl,
+                        Format =
+                            isDash ? VideoType.Dash
+                            : isHls ? VideoType.M3u8
+                            : VideoType.Container,
+                        FileType =
+                            isDash ? "mpd"
+                            : isHls ? "m3u8"
+                            : GetFileType(videoUrl),
+                        Headers = playbackHeaders,
+                        Subtitles = subtitles,
+                        VideoServer = server,
+                    },
+                ];
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(videoUrl) || !videoUrl!.StartsWith("http"))
-            return [];
+        return [];
+    }
 
-        var subtitles = ParsePlayerSubtitles(data?["tracks"] as JsonArray);
-        var isDash = ContainsIgnoreCase(videoUrl!, ".mpd");
-        return
-        [
-            new VideoSource
+    private async ValueTask<bool> IsPlayableVideoSourceAsync(
+        string videoUrl,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken
+    )
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(_sourceProbeTimeout);
+        var probeToken = timeout.Token;
+
+        try
+        {
+            if (ContainsIgnoreCase(videoUrl, ".m3u8"))
+                return await IsPlayableHlsAsync(videoUrl, headers, probeToken);
+
+            if (ContainsIgnoreCase(videoUrl, ".mpd"))
             {
-                Title = server.Name,
-                Resolution = "Multi Quality",
-                VideoUrl = videoUrl!,
-                Format = isDash ? VideoType.Dash : VideoType.M3u8,
-                FileType = isDash ? "mpd" : "m3u8",
-                Headers = BuildPlaybackHeaders(origin),
-                Subtitles = subtitles,
-                VideoServer = server,
-            },
-        ];
+                var manifest = await _http.ExecuteAsync(videoUrl, headers, probeToken);
+                return ContainsIgnoreCase(manifest, "<MPD");
+            }
+
+            var prefix = await ReadMediaPrefixAsync(videoUrl, headers, probeToken);
+            return prefix is not null && IsMediaPayload(prefix.Value.Buffer, prefix.Value.Length);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            return false;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UriFormatException)
+        {
+            return false;
+        }
+    }
+
+    private async ValueTask<bool> IsPlayableHlsAsync(
+        string masterUrl,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken
+    )
+    {
+        var playlistUrl = masterUrl;
+        for (var depth = 0; depth < 3; depth++)
+        {
+            var playlist = await _http.ExecuteAsync(playlistUrl, headers, cancellationToken);
+            if (!playlist.TrimStart().StartsWith("#EXTM3U", StringComparison.Ordinal))
+                return false;
+
+            var lines = playlist
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0)
+                .ToList();
+            var firstUri = lines.FirstOrDefault(line => !line.StartsWith("#"));
+            if (string.IsNullOrWhiteSpace(firstUri))
+                return false;
+
+            if (lines.Any(line => line.StartsWith("#EXT-X-STREAM-INF", StringComparison.Ordinal)))
+            {
+                playlistUrl = ResolvePlaylistUrl(firstUri!, playlistUrl);
+                continue;
+            }
+
+            if (!lines.Any(line => line.StartsWith("#EXTINF", StringComparison.Ordinal)))
+                return false;
+
+            var keyLine = lines.FirstOrDefault(line =>
+                line.StartsWith("#EXT-X-KEY", StringComparison.Ordinal)
+                && !ContainsIgnoreCase(line, "METHOD=NONE")
+            );
+            var isEncrypted = keyLine is not null;
+            if (keyLine is not null)
+            {
+                var keyUrl = ExtractHlsAttributeUrl(keyLine, playlistUrl);
+                if (keyUrl is null)
+                    return false;
+                if (!keyUrl.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var key = await ReadMediaPrefixAsync(keyUrl, headers, cancellationToken);
+                    if (
+                        key is null
+                        || key.Value.Length < 16
+                        || LooksLikeErrorPayload(key.Value.Buffer)
+                    )
+                        return false;
+                }
+            }
+
+            var mapLine = lines.FirstOrDefault(line =>
+                line.StartsWith("#EXT-X-MAP", StringComparison.Ordinal)
+            );
+            if (mapLine is not null)
+            {
+                var mapUrl = ExtractHlsAttributeUrl(mapLine, playlistUrl);
+                if (mapUrl is null)
+                    return false;
+
+                var map = await ReadMediaPrefixAsync(mapUrl, headers, cancellationToken);
+                if (map is null || !IsMediaPayload(map.Value.Buffer, map.Value.Length))
+                    return false;
+            }
+
+            var segmentUrl = ResolvePlaylistUrl(firstUri!, playlistUrl);
+            var segment = await ReadMediaPrefixAsync(segmentUrl, headers, cancellationToken);
+            if (segment is null)
+                return false;
+
+            return isEncrypted
+                ? segment.Value.Length >= 16 && !LooksLikeErrorPayload(segment.Value.Buffer)
+                : IsMediaPayload(segment.Value.Buffer, segment.Value.Length);
+        }
+
+        return false;
+    }
+
+    private async ValueTask<(byte[] Buffer, int Length)?> ReadMediaPrefixAsync(
+        string url,
+        Dictionary<string, string> headers,
+        CancellationToken cancellationToken
+    )
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Range = new RangeHeaderValue(0, 1023);
+        foreach (var header in headers)
+            request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+
+        using var response = await _http.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken
+        );
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var buffer = new byte[1024];
+        var length = 0;
+        while (length < buffer.Length)
+        {
+            var read = await stream.ReadAsync(
+                buffer,
+                length,
+                buffer.Length - length,
+                cancellationToken
+            );
+            if (read == 0)
+                break;
+            length += read;
+        }
+
+        return (buffer, length);
+    }
+
+    private static bool IsMediaPayload(byte[] buffer, int length)
+    {
+        if (length < 4 || LooksLikeErrorPayload(buffer))
+            return false;
+
+        if (HasBytes(buffer, length, 0, 0x1A, 0x45, 0xDF, 0xA3))
+            return true;
+        if (HasAscii(buffer, length, 0, "OggS") || HasAscii(buffer, length, 0, "FLV"))
+            return true;
+        if (HasAscii(buffer, length, 0, "ID3"))
+            return true;
+        if (HasBytes(buffer, length, 0, 0x00, 0x00, 0x01, 0xBA))
+            return true;
+        if (length >= 2 && buffer[0] == 0xFF && (buffer[1] & 0xF0) == 0xF0)
+            return true;
+
+        foreach (var boxType in new[] { "ftyp", "styp", "moof", "mdat" })
+        {
+            if (HasAscii(buffer, length, 4, boxType))
+                return true;
+        }
+
+        for (var offset = 0; offset < Math.Min(188, length); offset++)
+        {
+            if (
+                buffer[offset] == 0x47
+                && offset + 188 < length
+                && buffer[offset + 188] == 0x47
+                && (offset + 376 >= length || buffer[offset + 376] == 0x47)
+            )
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool LooksLikeErrorPayload(byte[] buffer) =>
+        HasAsciiIgnoreCase(buffer, "<!doctype")
+        || HasAsciiIgnoreCase(buffer, "<html")
+        || HasAsciiIgnoreCase(buffer, "<?xml")
+        || HasBytes(buffer, buffer.Length, 0, 0x89, 0x50, 0x4E, 0x47)
+        || HasAscii(buffer, buffer.Length, 0, "GIF8")
+        || HasBytes(buffer, buffer.Length, 0, 0xFF, 0xD8, 0xFF)
+        || (
+            HasAscii(buffer, buffer.Length, 0, "RIFF") && HasAscii(buffer, buffer.Length, 8, "WEBP")
+        );
+
+    private static bool HasAscii(byte[] buffer, int length, int offset, string value)
+    {
+        if (offset < 0 || offset + value.Length > length)
+            return false;
+
+        for (var index = 0; index < value.Length; index++)
+        {
+            if (buffer[offset + index] != value[index])
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool HasAsciiIgnoreCase(byte[] buffer, string value)
+    {
+        if (value.Length > buffer.Length)
+            return false;
+
+        for (var index = 0; index < value.Length; index++)
+        {
+            var character = (char)buffer[index];
+            if (char.ToLowerInvariant(character) != value[index])
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool HasBytes(byte[] buffer, int length, int offset, params byte[] values)
+    {
+        if (offset < 0 || offset + values.Length > length)
+            return false;
+
+        for (var index = 0; index < values.Length; index++)
+        {
+            if (buffer[offset + index] != values[index])
+                return false;
+        }
+
+        return true;
+    }
+
+    private static string? ExtractHlsAttributeUrl(string line, string playlistUrl)
+    {
+        var value = _hlsUriAttributeRegex.Match(line).Groups["uri"].Value;
+        return string.IsNullOrWhiteSpace(value) ? null : ResolvePlaylistUrl(value, playlistUrl);
+    }
+
+    private static string ResolvePlaylistUrl(string value, string playlistUrl) =>
+        new Uri(new Uri(playlistUrl), WebUtility.HtmlDecode(value)).AbsoluteUri;
+
+    private static bool IsHttpUrl(string value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    private static string GetFileType(string value)
+    {
+        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+            return "mp4";
+
+        var extension = Path.GetExtension(uri.AbsolutePath).TrimStart('.');
+        return string.IsNullOrWhiteSpace(extension) ? "mp4" : extension;
     }
 
     private async ValueTask<List<VideoSource>> FetchSourcesFromPageAsync(
@@ -816,26 +1110,42 @@ public abstract class AnikotoThemeProvider(IHttpClientFactory httpClientFactory)
         };
     }
 
-    private static string? ExtractVideoUrl(JsonNode? sources)
+    private static IEnumerable<string> ExtractVideoUrls(JsonNode? sources)
     {
         if (sources is JsonObject sourceObject)
-            return sourceObject["file"]?.ToString();
+        {
+            var file = sourceObject["file"]?.ToString();
+            if (!string.IsNullOrWhiteSpace(file))
+                yield return file!;
+            yield break;
+        }
 
         if (sources is JsonArray sourceArray)
         {
             foreach (var source in sourceArray)
             {
                 if (source is JsonObject obj)
-                    return obj["file"]?.ToString();
+                {
+                    var file = obj["file"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(file))
+                        yield return file!;
+                }
                 if (source is JsonValue)
-                    return source.ToString();
+                {
+                    var file = source.ToString();
+                    if (!string.IsNullOrWhiteSpace(file))
+                        yield return file;
+                }
             }
+            yield break;
         }
 
         if (sources is JsonValue)
-            return sources.ToString();
-
-        return null;
+        {
+            var file = sources.ToString();
+            if (!string.IsNullOrWhiteSpace(file))
+                yield return file;
+        }
     }
 
     private static List<Subtitle> ParsePlayerSubtitles(JsonArray? tracks)
